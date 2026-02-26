@@ -12,3 +12,4 @@ export const errorHandlerMarketing = (err, req, res, next) => {
     stack: process.env.NODE_ENV === "production" ? "hidden" : err.stack
   });
 };
+

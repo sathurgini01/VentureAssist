@@ -2,7 +2,7 @@ import express from "express";
 import { body } from "express-validator";
 import { validate } from "../utils/validate.js";
 
-import { registerUser, loginUser } from "../controllers/authControllerMarketing.js";
+import { registerUser, loginUser } from "../controllers/authControllermarketing.js";
 
 const router = express.Router();
 

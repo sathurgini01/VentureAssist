@@ -14,4 +14,4 @@ const allowMarketingRoles = (...roles) => {
   };
 };
 
-module.exports = { allowMarketingRoles };
+export { allowMarketingRoles };
