@@ -2,8 +2,8 @@ import axios from "axios";
 
 export const getRate = async (from, to) => {
   const res = await axios.get(
-    `https://api.exchangerate.host/convert?from=${from}&to=${to}`
+    `https://open.er-api.com/v6/latest/${from}`
   );
 
-  return res.data.result;
+  return res.data.rates[to];
 };
