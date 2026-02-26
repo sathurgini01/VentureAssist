@@ -1,7 +1,7 @@
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
-const protectMarketing = async (req, res, next) => {
+export const protectMarketing = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -13,6 +13,7 @@ const protectMarketing = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id).select("-password");
+
     if (!user) {
       return res.status(401).json({ message: "Not authorized, user not found" });
     }
@@ -23,5 +24,3 @@ const protectMarketing = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
-
-module.exports = { protectMarketing };
