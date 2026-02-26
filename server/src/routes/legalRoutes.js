@@ -1,12 +1,5 @@
 import express from "express";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
-
-// Load CommonJS auth safely
-const { protectMarketing } = require(
-  "../middleware/authMiddlewareMarketing.cjs"
-);
+import { protectMarketing } from "../middleware/authMiddlewareMarketing.js";
 
 import {
   getTasks,
