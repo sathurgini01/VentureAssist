@@ -3,6 +3,7 @@ import cors from "cors";
 
 import authRoutesMarketing from "./routes/authRoutesMarketing.js";
 import legalRoutes from "./routes/legalRoutes.js";
+import legalActionRoutes from "./routes/legalActionRoutes.js";
 
 import {
   notFoundMarketing,
@@ -18,6 +19,7 @@ app.get("/", (req, res) => res.send("VentureAssist Backend Running..."));
 
 app.use("/api/marketing/auth", authRoutesMarketing);
 app.use("/api/legal", legalRoutes);
+app.use("/api/legal", legalActionRoutes);
 
 app.use(notFoundMarketing);
 app.use(errorHandlerMarketing);
