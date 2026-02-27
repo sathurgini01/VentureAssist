@@ -38,6 +38,8 @@ const campaignMarketingSchema = new mongoose.Schema(
     tasks: { type: [campaignTaskSchema], default: [] },
 
     metrics: {
+      impressions: { type: Number, default: 0, min: 0 },
+      clicks: { type: Number, default: 0, min: 0 },
       leads: { type: Number, default: 0, min: 0 },
       engagement: { type: Number, default: 0, min: 0 },
       sales: { type: Number, default: 0, min: 0 },

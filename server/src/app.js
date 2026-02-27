@@ -8,6 +8,7 @@ import campaignRoutesMarketing from "./routes/campaignRoutesMarketing.js";
 import mentorRoutesMarketing from "./routes/mentorRoutesMarketing.js";
 import mentorRequestRoutesMarketing from "./routes/mentorRequestRoutesMarketing.js";
 import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
+import aiRoutes from "./routes/aiRoutes.js";
 
 import {
   notFoundMarketing,
@@ -15,6 +16,8 @@ import {
 } from "./middleware/errorMiddlewareMarketing.js";
 
 const app = express();
+
+
 
 app.use(express.json());
 app.use(cors());
@@ -29,6 +32,7 @@ app.use("/api/marketing/campaigns", campaignRoutesMarketing);
 app.use("/api/marketing/mentors", mentorRoutesMarketing);
 app.use("/api/marketing/mentor-requests", mentorRequestRoutesMarketing);
 app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
+app.use("/api/ai", aiRoutes);
 
 // Error middleware MUST be last
 app.use(notFoundMarketing);
