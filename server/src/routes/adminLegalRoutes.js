@@ -1,68 +1,51 @@
 import express from "express";
-import { protectMarketing } from "../middleware/authMiddlewareMarketing.js";
-import { allowMarketingRoles } from "../middleware/roleMiddlewareMarketing.js";
+import * as authPkg from "../middleware/authMiddlewareMarketing.js";
+import * as rolePkg from "../middleware/roleMiddlewareMarketing.js";
+import LegalTask from "../models/LegalTask.js";
 
-import LegalSubmission from "../models/LegalSubmission.js";
-import LegalHelpRequest from "../models/LegalHelpRequest.js";
+const { protectMarketing } = authPkg;
+const { allowMarketingRoles } = rolePkg;
 
 const router = express.Router();
 
-/** GET /api/legal/admin/reviews */
-router.get(
-  "/admin/reviews",
-  protectMarketing,
-  allowMarketingRoles("admin"),
-  async (req, res, next) => {
-    try {
-      const submissions = await LegalSubmission.find()
-        .populate("taskId", "title category")
-        .populate("userId", "name email");
+// CREATE
+router.post("/admin/tasks", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
+  try {
+    const task = await LegalTask.create(req.body);
+    res.status(201).json({ task });
+  } catch (e) { next(e); }
+});
 
-      res.json({ submissions });
-    } catch (e) {
-      next(e);
-    }
-  }
-);
+// READ list
+router.get("/admin/tasks", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
+  try {
+    const tasks = await LegalTask.find().sort({ order: 1 });
+    res.json({ tasks });
+  } catch (e) { next(e); }
+});
 
-/** PATCH /api/legal/admin/submissions/:id */
-router.patch(
-  "/admin/submissions/:id",
-  protectMarketing,
-  allowMarketingRoles("admin"),
-  async (req, res, next) => {
-    try {
-      const { status, adminFeedback } = req.body;
+// READ one
+router.get("/admin/tasks/:taskId", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
+  try {
+    const task = await LegalTask.findById(req.params.taskId);
+    res.json({ task });
+  } catch (e) { next(e); }
+});
 
-      const updated = await LegalSubmission.findByIdAndUpdate(
-        req.params.id,
-        { $set: { status, adminFeedback } },
-        { new: true }
-      );
+// UPDATE
+router.put("/admin/tasks/:taskId", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
+  try {
+    const task = await LegalTask.findByIdAndUpdate(req.params.taskId, req.body, { new: true });
+    res.json({ task });
+  } catch (e) { next(e); }
+});
 
-      res.json({ submission: updated });
-    } catch (e) {
-      next(e);
-    }
-  }
-);
-
-/** GET /api/legal/admin/help-requests */
-router.get(
-  "/admin/help-requests",
-  protectMarketing,
-  allowMarketingRoles("admin"),
-  async (req, res, next) => {
-    try {
-      const requests = await LegalHelpRequest.find()
-        .populate("taskId", "title")
-        .populate("userId", "name email");
-
-      res.json({ requests });
-    } catch (e) {
-      next(e);
-    }
-  }
-);
+// DELETE
+router.delete("/admin/tasks/:taskId", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
+  try {
+    await LegalTask.findByIdAndDelete(req.params.taskId);
+    res.json({ message: "Deleted" });
+  } catch (e) { next(e); }
+});
 
 export default router;

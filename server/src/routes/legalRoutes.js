@@ -7,7 +7,6 @@ import {
   getMySubmissions,
   getMySubmissionForTask,
   getMyProgress,
-  createSubmission,
 } from "../controllers/legalController.js";
 
 const router = express.Router();
@@ -23,12 +22,5 @@ router.get(
 );
 
 router.get("/progress/me", protectMarketing, getMyProgress);
-
-// ✅ NEW ROUTE (THIS FIXES YOUR ERROR)
-router.post(
-  "/tasks/:taskId/submissions",
-  protectMarketing,
-  createSubmission
-);
 
 export default router;

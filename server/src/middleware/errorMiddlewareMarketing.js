@@ -5,7 +5,7 @@ export const notFoundMarketing = (req, res, next) => {
 
 export const errorHandlerMarketing = (err, req, res, next) => {
   const statusCode =
-    res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+    res.statusCode >= 400 && res.statusCode < 600 ? res.statusCode : 500;
 
   res.status(statusCode).json({
     message: err.message,

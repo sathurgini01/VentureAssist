@@ -21,7 +21,8 @@ const legalSubmissionSchema = new mongoose.Schema(
     },
 
     evidence: { type: [evidenceSchema], default: [] },
-    mentorFeedback: { type: String, default: "" }
+    mentorFeedback: { type: String, default: "" },
+    adminFeedback: { type: String, default: "" }
   },
   { timestamps: true }
 );

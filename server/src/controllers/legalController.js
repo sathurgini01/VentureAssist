@@ -109,34 +109,3 @@ export const getMyProgress = async (req, res, next) => {
     next(err);
   }
 };
-
-export const createSubmission = async (req, res) => {
-  try {
-    const { taskId } = req.params;
-    const { fileUrl, note } = req.body;
-
-    if (!fileUrl) {
-      return res.status(400).json({ message: "fileUrl is required" });
-    }
-
-    // TODO: Replace with your real Mongo model save
-    // Example:
-    // const submission = await LegalSubmission.create({
-    //   user: req.user._id,
-    //   task: taskId,
-    //   fileUrl,
-    //   note
-    // });
-
-    return res.status(201).json({
-      message: "Submission created successfully",
-      taskId,
-      fileUrl,
-      note,
-    });
-
-  } catch (error) {
-    res.status(500);
-    throw new Error("Failed to create submission");
-  }
-};
