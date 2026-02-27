@@ -1,8 +1,9 @@
 import { Router } from "express";
-import {protectMarketing} from "../middleware/authMiddlewareMarketing.js";
+import { protectMarketing } from "../middleware/authMiddlewareMarketing.js";
 import * as controller from "../controllers/financeController.js";
 import * as breakeven from "../services/breakevenService.js";
 import * as currency from "../services/currencyService.js";
+import * as intelligenceService from "../services/financialIntelligenceService.js";
 
 const router = Router();
 
@@ -15,6 +16,15 @@ router.get("/exchange", async (req, res) => {
   const { from, to } = req.query;
   const rate = await currency.getRate(from, to);
   res.json({ rate });
+});
+
+router.get("/intelligence/:id", protectMarketing, async (req, res) => {
+  try {
+    const report = await intelligenceService.generateFinancialReport(req.params.id);
+    res.json(report);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 router.post("/", protectMarketing, controller.createProfile);
