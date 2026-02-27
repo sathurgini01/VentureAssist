@@ -2,10 +2,14 @@ import dotenv from "dotenv";
 import app from "./app.js";
 import { connectDB } from "./config/db.js";
 import { seedIfEmpty } from "./config/seed.js";
+import express from "express";
 
 dotenv.config();
 
 await connectDB();
+
+// ✅ Very Important – Serve static files (PDF download)
+app.use(express.static("public"));
 
 // ✅ Seed toolkits + mentors if DB empty
 await seedIfEmpty();

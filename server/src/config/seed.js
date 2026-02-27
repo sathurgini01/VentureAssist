@@ -12,15 +12,15 @@ export async function seedIfEmpty() {
         description: "1-page template to map key business parts.",
         content:
           "Sections: Key Partners, Key Activities, Value Props, Customer Segments, Channels, Revenue Streams, Cost Structure...",
-        downloadUrl: "/downloads/toolkits/business-model-canvas.pdf"
+        downloadUrl: "/toolkits/Business_Model_Canvas_Toolkit.pdf"
       },
       {
-        title: "Value Proposition Canvas",
-        category: "Canvas",
-        description: "Match customer pains with your product gains.",
+        title: "Market Research Toolkit",
+        category: "Research",
+        description: "Validate market demand and analyze competitors.",
         content:
-          "Customer Jobs, Pains, Gains + Products & Services, Pain Relievers, Gain Creators...",
-        downloadUrl: "/downloads/toolkits/value-proposition-canvas.pdf"
+          "Target market, competitor analysis, demand validation steps, survey ideas, pilot testing checklist...",
+        downloadUrl: "/toolkits/Market_Research_Toolkit.pdf"
       },
       {
         title: "Customer Persona Builder",
@@ -28,25 +28,26 @@ export async function seedIfEmpty() {
         description: "Define target user persona clearly.",
         content:
           "Name, Age, Goals, Frustrations, Buying behavior, Channels, Price sensitivity...",
-        downloadUrl: "/downloads/toolkits/customer-persona.pdf"
+        downloadUrl: "/toolkits/Customer_Persona_Template.pdf"
       },
       {
-        title: "Competitor Analysis Checklist",
-        category: "Competitor",
-        description: "Compare competitors across price/features/USP.",
+        title: "SWOT Analysis Toolkit",
+        category: "Strategy",
+        description: "Analyze strengths, weaknesses, opportunities, threats.",
         content:
-          "List competitors, strengths, weaknesses, pricing, channels, reviews summary...",
-        downloadUrl: "/downloads/toolkits/competitor-analysis.pdf"
+          "SWOT matrix + prompts to fill Strengths, Weaknesses, Opportunities, Threats with examples...",
+        downloadUrl: "/toolkits/SWOT_Analysis_Toolkit.pdf"
       },
       {
-        title: "Pitch Deck Outline",
-        category: "Pitch",
-        description: "Simple pitch deck structure for startups.",
+        title: "Lean Startup Guide",
+        category: "Startup",
+        description: "MVP + Build-Measure-Learn approach.",
         content:
-          "Problem, Solution, Market, Business Model, Traction, Go-to-market, Team, Ask...",
-        downloadUrl: "/downloads/toolkits/pitch-deck-outline.pdf"
+          "Problem validation, MVP checklist, Build-Measure-Learn loop, iteration plan...",
+        downloadUrl: "/toolkits/Lean_Startup_Guide.pdf"
       }
     ]);
+
     console.log("Seeded 5 toolkits ✅");
   }
 
@@ -73,6 +74,7 @@ export async function seedIfEmpty() {
         bio: "Product mentor: user research, MVP design, and product-market fit guidance."
       }
     ]);
+
     console.log("Seeded mentors ✅");
   }
 }
