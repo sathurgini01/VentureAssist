@@ -22,10 +22,10 @@ export const generateFinancialReport = async (profileId) => {
   const expenses = totalExpenses[0]?.total || 0;
   const revenue = totalRevenue[0]?.total || 0;
 
-  // 🔥 Burn Rate
+  // Burn Rate
   const burnRate = expenses - revenue;
 
-  // 🚀 Runway
+  // Runway
   let runway;
   if (burnRate <= 0) {
     runway = "Infinite (Profitable)";
@@ -33,11 +33,11 @@ export const generateFinancialReport = async (profileId) => {
     runway = (profile.initialCapital / burnRate).toFixed(2);
   }
 
-  // 📊 Profit Margin
+  //  Profit Margin
   const profitMargin =
     revenue === 0 ? 0 : ((revenue - expenses) / revenue) * 100;
 
-  // 🧮 Financial Health Score
+  //  Financial Health Score
   let score = 0;
 
   // Runway Score
