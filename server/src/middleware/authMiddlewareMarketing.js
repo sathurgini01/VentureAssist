@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-const protectMarketing = async (req, res, next) => {
+export const protectMarketing = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -23,5 +23,3 @@ const protectMarketing = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized, token failed" });
   }
 };
-
-export { protectMarketing };

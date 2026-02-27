@@ -3,8 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 
 import authRoutesMarketing from "./routes/authRoutesMarketing.js";
-import businessRoutes from "./routes/business.routes.js";
+import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
 
+import businessRoutes from "./routes/business.routes.js";
 
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -20,6 +21,9 @@ app.get("/", (req, res) => res.send("VentureAssist Backend Running..."));
 
 // Marketing Auth (common)
 app.use("/api/marketing/auth", authRoutesMarketing);
+
+// ✅ Marketing Mentor Applications (NEW)
+app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 
 // ✅ Business module (YOUR PART)
 app.use("/api/business", businessRoutes);
