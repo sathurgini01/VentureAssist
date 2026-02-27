@@ -8,7 +8,7 @@ import LegalHelpRequest from "../models/LegalHelpRequest.js";
 const router = express.Router();
 
 /** GET /api/legal/mentor/reviews */
-router.get("/mentor/reviews", protectMarketing, allowMarketingRoles("mentor"), async (req, res, next) => {
+router.get("/mentor/reviews", protectMarketing, allowMarketingRoles("mentor", "admin"), async (req, res, next) => {
   try {
     const submissions = await LegalSubmission.find({ status: "UNDER_REVIEW" })
       .populate("taskId", "title category")
@@ -19,7 +19,7 @@ router.get("/mentor/reviews", protectMarketing, allowMarketingRoles("mentor"), a
 });
 
 /** PATCH /api/legal/mentor/submissions/:id */
-router.patch("/mentor/submissions/:id", protectMarketing, allowMarketingRoles("mentor"), async (req, res, next) => {
+router.patch("/mentor/submissions/:id", protectMarketing, allowMarketingRoles("mentor", "admin"), async (req, res, next) => {
   try {
     const { status, mentorFeedback } = req.body;
     const updated = await LegalSubmission.findByIdAndUpdate(
@@ -33,7 +33,7 @@ router.patch("/mentor/submissions/:id", protectMarketing, allowMarketingRoles("m
 });
 
 /** GET /api/legal/mentor/help-requests */
-router.get("/mentor/help-requests", protectMarketing, allowMarketingRoles("mentor"), async (req, res, next) => {
+router.get("/mentor/help-requests", protectMarketing, allowMarketingRoles("mentor", "admin"), async (req, res, next) => {
   try {
     const requests = await LegalHelpRequest.find({ status: "OPEN" })
       .populate("taskId", "title")
