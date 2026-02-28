@@ -77,14 +77,6 @@ app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 // Business module
 app.use("/api/business", businessRoutes);
 
-// ✅ Must be LAST
-app.use(notFound);
-app.use(errorHandler);
-
-
-// Middleware
-app.use(express.json());
-app.use(cors());
 
 // Health check
 app.get("/", (req, res) => {
@@ -107,5 +99,9 @@ app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 // Error handling
 app.use(notFoundMarketing);
 app.use(errorHandlerMarketing);
+
+// ✅ Must be LAST
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
