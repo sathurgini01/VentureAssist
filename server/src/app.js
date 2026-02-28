@@ -77,7 +77,6 @@ app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 // Business module
 app.use("/api/business", businessRoutes);
 
-
 // Health check
 app.get("/", (req, res) => {
   res.send("VentureAssist Backend Running...");
@@ -103,5 +102,7 @@ app.use(errorHandlerMarketing);
 // ✅ Must be LAST
 app.use(notFound);
 app.use(errorHandler);
+
+
 
 export default app;
