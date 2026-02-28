@@ -1,11 +1,9 @@
 import "dotenv/config";
 import dotenv from "dotenv";
 import app from "./app.js";
-import { connectDB } from "./config/db.js";
 import { seedIfEmpty } from "./config/seed.js";
 import express from "express";
 
-import app from "./app.js";
 import connectDB from "./config/db.js";
 
 await connectDB();

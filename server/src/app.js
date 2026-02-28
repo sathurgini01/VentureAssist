@@ -24,7 +24,6 @@ import revenueRoutes from "./routes/revenueRoutes.js";
 
 
 
-import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
 import businessRoutes from "./routes/business.routes.js";
 
 import { notFound } from "./middleware/notFound.js";
