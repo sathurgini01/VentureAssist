@@ -1,4 +1,4 @@
-const allowMarketingRoles = (...roles) => {
+export const allowMarketingRoles = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: "Not authorized" });
@@ -12,6 +12,5 @@ const allowMarketingRoles = (...roles) => {
 
     next();
   };
-};
 
-export { allowMarketingRoles };
+};

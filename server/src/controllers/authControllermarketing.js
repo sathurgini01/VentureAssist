@@ -22,7 +22,7 @@ export const registerUser = async (req, res, next) => {
       name,
       email,
       password: hashed,
-      role: safeRole,
+      role: "user",
     });
 
     res.status(201).json({
