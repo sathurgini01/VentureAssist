@@ -18,7 +18,6 @@ import toolkitRoutes from "./routes/toolkitRoutes.js";
 import mentorLegalRoutes from "./routes/mentorLegalRoutes.js";
 import adminLegalRoutes from "./routes/adminLegalRoutes.js";
 import legalAiRoutes from "./routes/legalAiRoutes.js";
-import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
 
 import {
   notFoundMarketing,
@@ -35,6 +34,9 @@ import businessRoutes from "./routes/business.routes.js";
 
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+
+
+const app = express();
 
 dotenv.config();
 
@@ -79,7 +81,6 @@ app.use("/api/business", businessRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-const app = express();
 
 // Middleware
 app.use(express.json());

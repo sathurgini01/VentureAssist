@@ -8,15 +8,21 @@ import express from "express";
 
 import connectDB from "./config/db.js";
 
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Always load server/.env even when command is run from project root
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 await connectDB();
 
 // ✅ Very Important – Serve static files (PDF download)
 app.use(express.static("public"));
 
-// ✅ Seed toolkits + mentors if DB emptys
-await seedIfEmpty();
 
-const PORT = process.env.PORT || 5000;
+
+const PORT = process.env.PORT || 5050;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
