@@ -77,9 +77,7 @@ app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 // Business module
 app.use("/api/business", businessRoutes);
 
-// ✅ Must be LAST
-app.use(notFound);
-app.use(errorHandler);
+
 
 
 // Middleware
@@ -107,5 +105,11 @@ app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 // Error handling
 app.use(notFoundMarketing);
 app.use(errorHandlerMarketing);
+
+// ✅ Must be LAST
+app.use(notFound);
+app.use(errorHandler);
+
+
 
 export default app;
