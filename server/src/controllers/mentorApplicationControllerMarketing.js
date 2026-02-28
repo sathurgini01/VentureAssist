@@ -52,7 +52,7 @@ export const approveMentorApplicationMarketing = async (req, res, next) => {
     if (!app) return res.status(404).json({ message: "Application not found" });
 
     app.status = "approved";
-    app.adminNote = req.body.adminNote || "";
+    app.adminNote = req.body?.adminNote || "";
     await app.save();
 
     // ✅ Promote user to mentor

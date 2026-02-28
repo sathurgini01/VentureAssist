@@ -12,6 +12,13 @@ import mentorRoutesMarketing from "./routes/mentorRoutesMarketing.js";
 import mentorRequestRoutesMarketing from "./routes/mentorRequestRoutesMarketing.js";
 import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
 import aiRoutes from "./routes/aiRoutes.js";
+import legalRoutes from "./routes/legalRoutes.js";
+import legalActionRoutes from "./routes/legalActionRoutes.js";
+import toolkitRoutes from "./routes/toolkitRoutes.js";
+import mentorLegalRoutes from "./routes/mentorLegalRoutes.js";
+import adminLegalRoutes from "./routes/adminLegalRoutes.js";
+import legalAiRoutes from "./routes/legalAiRoutes.js";
+import mentorApplicationRoutesMarketing from "./routes/mentorApplicationRoutesMarketing.js";
 
 import {
   notFoundMarketing,
@@ -31,7 +38,6 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
 
-const app = express();
 
 // ES Module fix for __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -72,5 +78,33 @@ app.use("/api/business", businessRoutes);
 // ✅ Must be LAST
 app.use(notFound);
 app.use(errorHandler);
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(cors());
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("VentureAssist Backend Running...");
+});
+
+// Routes
+app.use("/api/marketing/auth", authRoutesMarketing);
+app.use("/api/auth", authRoutesMarketing);
+app.use("/api/legal", legalRoutes);
+app.use("/api/legal", legalActionRoutes);
+app.use("/api/legal", toolkitRoutes);
+app.use("/api/legal", adminLegalRoutes);
+app.use("/api/legal", legalAiRoutes);
+app.use("/api/legal", mentorLegalRoutes);
+
+// ✅ Mentor Applications route (Added)
+app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
+
+// Error handling
+app.use(notFoundMarketing);
+app.use(errorHandlerMarketing);
 
 export default app;
