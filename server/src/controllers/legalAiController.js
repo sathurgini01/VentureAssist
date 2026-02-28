@@ -4,9 +4,9 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
  * POST /api/legal/ai/compliance
  * Body: { question }
  */
+
 export const askGeminiCompliance = async (req, res) => {
   try {
-    // Validate question
     const question = String(req.body?.question || "").trim();
 
     if (!question) {
@@ -15,7 +15,6 @@ export const askGeminiCompliance = async (req, res) => {
       });
     }
 
-    // Validate Gemini API key
     const apiKey = process.env.GEMINI_API_KEY?.trim();
 
     if (!apiKey) {
@@ -24,18 +23,13 @@ export const askGeminiCompliance = async (req, res) => {
       });
     }
 
-    // Create Gemini client (runtime safe)
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    // Choose model
     const modelName =
       process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
 
-    const model = genAI.getGenerativeModel({
-      model: modelName
-    });
+    const model = genAI.getGenerativeModel({ model: modelName });
 
-    // Build prompt
     const prompt = `
 You are a legal and startup compliance assistant for Sri Lanka.
 Provide clear, practical, and concise general guidance.
@@ -45,10 +39,14 @@ User question:
 ${question}
 `;
 
-    // Call Gemini
-    const result = await model.generateContent(prompt);
+    // Add timeout protection (prevents hanging forever)
+    const result = await Promise.race([
+      model.generateContent(prompt),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 12000)
+      )
+    ]);
 
-    // Extract response text safely
     const answer =
       result?.response?.text?.() ||
       "Sorry, I could not generate a response at the moment.";
@@ -56,11 +54,33 @@ ${question}
     return res.status(200).json({
       answer,
       disclaimer:
-        "This is AI-generated guidance and not official legal advice."
+        "This is AI-generated guidance and not official legal advice.",
+      source: "gemini"
     });
 
   } catch (error) {
     console.error("Gemini Error FULL:", error);
+
+    const message = String(error?.message || "");
+
+    // ✅ If network timeout / fetch failure — return fallback instead of 500
+    if (
+      message.includes("fetch failed") ||
+      message.includes("UND_ERR_CONNECT_TIMEOUT") ||
+      message.includes("GEMINI_TIMEOUT") ||
+      message.includes("network")
+    ) {
+      return res.status(200).json({
+        answer:
+          "The AI service is temporarily unreachable (network timeout). " +
+          "Please check your internet connection or try again later. " +
+          "Meanwhile, ensure your business registration, tax registration, " +
+          "and required permits are properly completed according to Sri Lankan regulations.",
+        disclaimer:
+          "General guidance only. Not official legal advice.",
+        source: "fallback"
+      });
+    }
 
     return res.status(500).json({
       message: "Unexpected error while generating answer",
