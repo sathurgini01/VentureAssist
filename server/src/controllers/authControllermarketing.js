@@ -18,7 +18,7 @@ export const registerUser = async (req, res, next) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashed = await bcrypt.hash(password, salt);
 
     // ✅ ALWAYS force role = "user"
     const user = await User.create({
