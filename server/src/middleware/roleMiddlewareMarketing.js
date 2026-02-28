@@ -12,5 +12,4 @@ export const allowMarketingRoles = (...roles) => {
 
     next();
   };
-
 };
