@@ -1,0 +1,53 @@
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 1.35rem;
+  box-shadow: var(--shadow-soft);
+}
+
+.card-title {
+  margin: 0 0 0.75rem;
+  line-height: 1.2;
+}
+
+.card-muted {
+  color: var(--color-text-soft);
+}
+
+.metric-value {
+  font-size: 2rem;
+  margin-bottom: 0.2rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(15, 118, 110, 0.12);
+  color: var(--color-primary-dark);
+}
+
+.toast-card {
+  background: #ffffff;
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.16);
+}
+
+.toast-info {
+  border-left: 4px solid #0f766e;
+}
+
+.toast-success {
+  border-left: 4px solid #15803d;
+}
+
+.toast-warning {
+  border-left: 4px solid #d97706;
+}
+
+.toast-error {
+  border-left: 4px solid #dc2626;
+}
