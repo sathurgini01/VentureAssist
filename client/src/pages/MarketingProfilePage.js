@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import Modal from '../components/Modal'
 import Navbar from '../components/MarketingNavbar'
 import Sidebar from '../components/MarketingSidebar'
+import { useAuth } from '../context/AuthContext'
 import '../styles/MarketingDashboard.css'
 import '../styles/Cards.css'
 import '../styles/Buttons.css'
@@ -16,30 +18,31 @@ const dashboardLinks = [
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
   { to: '/dashboard/articles', label: 'Knowledge Hub' },
-  { to: '/profile', label: 'Profile' },
 ]
 
-const mockUser = {
-  name: 'Ayesha Fernando',
-  email: 'ayesha@ventureassist.app',
-  role: 'Founder',
-  phone: '+94 77 123 4567',
-  jobTitle: 'Founder & Operator',
-  company: 'Venture Assist Labs',
-  bio: 'Building practical tools that help founders move faster with better support.',
-  linkedin: 'linkedin.com/in/ayeshafernando',
-  website: 'ventureassist.app',
-  notifications: 'weekly',
-  twoFactor: 'enabled',
-}
-
 function Profile() {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [profile, setProfile] = useState(mockUser)
+  const [profile, setProfile] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    role: user?.role || '',
+  })
 
   const handleChange = (event) => {
     const { name, value } = event.target
     setProfile((current) => ({ ...current, [name]: value }))
+  }
+
+  const handleSaveChanges = () => {
+    // For now, only updates local state
+    // TODO: Add PUT /api/auth/profile endpoint to backend
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -53,7 +56,7 @@ function Profile() {
           <Card>
             <div className="profile-hero">
               <div className="profile-avatar">
-                {profile.name
+                {(profile.name || 'VA')
                   .split(' ')
                   .slice(0, 2)
                   .map((part) => part[0])
@@ -61,18 +64,23 @@ function Profile() {
               </div>
 
               <div>
-                <h1 className="page-title">{profile.name}</h1>
+                <h1 className="page-title">{profile.name || 'User Profile'}</h1>
                 <p className="page-subtitle">
                   Manage your profile details, preferences, and account security.
                 </p>
-                <span className="badge">{profile.role}</span>
+                <span className="badge">{profile.role || 'user'}</span>
               </div>
 
-              <Button variant="secondary">Edit Profile</Button>
+              <div style={{ display: 'grid', gap: '0.5rem', justifyContent: 'end' }}>
+                <Button variant="secondary">Edit Profile</Button>
+                <Button onClick={handleLogout} variant="secondary">
+                  Logout
+                </Button>
+              </div>
             </div>
           </Card>
 
-          <Card title="Profile Information" subtitle="Mock profile form ready for backend integration.">
+          <Card title="Profile Information" subtitle="Update your profile details.">
             <div className="form-grid">
               <div className="form-group">
                 <label htmlFor="profile-name">Full name</label>
@@ -98,80 +106,25 @@ function Profile() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="profile-phone">Phone</label>
+                <label htmlFor="profile-role">Role</label>
                 <input
-                  id="profile-phone"
-                  name="phone"
+                  id="profile-role"
+                  name="role"
                   className="form-control"
-                  value={profile.phone}
+                  value={profile.role}
                   onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="profile-job-title">Job title</label>
-                <input
-                  id="profile-job-title"
-                  name="jobTitle"
-                  className="form-control"
-                  value={profile.jobTitle}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="profile-company">Company</label>
-                <input
-                  id="profile-company"
-                  name="company"
-                  className="form-control"
-                  value={profile.company}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="profile-bio">Bio</label>
-                <textarea
-                  id="profile-bio"
-                  name="bio"
-                  className="form-control"
-                  rows="5"
-                  value={profile.bio}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="profile-linkedin">LinkedIn</label>
-                <input
-                  id="profile-linkedin"
-                  name="linkedin"
-                  className="form-control"
-                  value={profile.linkedin}
-                  onChange={handleChange}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="profile-website">Website</label>
-                <input
-                  id="profile-website"
-                  name="website"
-                  className="form-control"
-                  value={profile.website}
-                  onChange={handleChange}
+                  readOnly
                 />
               </div>
             </div>
 
             <div className="inline-actions">
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveChanges}>Save Changes</Button>
               <Button variant="secondary">Cancel</Button>
             </div>
           </Card>
 
-          <Card title="Account Settings" subtitle="Security and communication preferences placeholders.">
+          <Card title="Account Settings" subtitle="Change your password.">
             <div className="form-grid">
               <div className="form-group">
                 <label htmlFor="current-password">Current password</label>
@@ -192,47 +145,18 @@ function Profile() {
                   placeholder="New password"
                 />
               </div>
-
-              <div className="form-group">
-                <label htmlFor="email-preference">Email preference</label>
-                <select
-                  id="email-preference"
-                  name="notifications"
-                  className="form-control"
-                  value={profile.notifications}
-                  onChange={handleChange}
-                >
-                  <option value="instant">Instant</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="two-factor">Two-factor authentication</label>
-                <select
-                  id="two-factor"
-                  name="twoFactor"
-                  className="form-control"
-                  value={profile.twoFactor}
-                  onChange={handleChange}
-                >
-                  <option value="enabled">Enabled</option>
-                  <option value="disabled">Disabled</option>
-                </select>
-              </div>
             </div>
 
             <div className="inline-actions">
-              <Button>Update Settings</Button>
+              <Button>Update Password</Button>
               <Button variant="secondary">Reset</Button>
             </div>
           </Card>
 
-          <Card title="Danger Zone" subtitle="Destructive actions should require an extra confirmation step.">
+          <Card title="Danger Zone" subtitle="Destructive actions should require extra confirmation.">
             <div className="danger-zone card">
               <p className="card-muted">
-                Deleting an account is irreversible. This is a placeholder for a future protected API flow.
+                Deleting an account is irreversible. This action cannot be undone.
               </p>
               <Button variant="secondary" onClick={() => setShowDeleteModal(true)}>
                 Delete Account
@@ -244,7 +168,7 @@ function Profile() {
 
       <Modal isOpen={showDeleteModal} title="Confirm Account Deletion">
         <p className="card-muted">
-          This is a placeholder confirmation modal for deleting the user account.
+          Are you sure you want to delete your account? This action is permanent and cannot be undone.
         </p>
         <div className="inline-actions">
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>

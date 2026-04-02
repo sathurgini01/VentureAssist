@@ -17,7 +17,6 @@ const dashboardLinks = [
   { to: '/dashboard/mentors', label: 'Mentors' },
   { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
-  { to: '/profile', label: 'Profile' },
 ]
 
 const mockArticles = [

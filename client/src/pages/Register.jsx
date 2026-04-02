@@ -6,13 +6,12 @@ import { useAuth } from '../context/AuthContext.jsx'
 
 function Register() {
   const navigate = useNavigate()
-  const { login, authLoading } = useAuth()
+  const { register, authLoading, authError } = useAuth()
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: '',
   })
   const [errors, setErrors] = useState({})
 
@@ -21,8 +20,8 @@ function Register() {
   const validate = () => {
     const nextErrors = {}
 
-    if (!formData.fullName.trim()) {
-      nextErrors.fullName = 'Full name is required.'
+    if (!formData.name.trim()) {
+      nextErrors.name = 'Full name is required.'
     }
 
     if (!formData.email.trim()) {
@@ -39,10 +38,6 @@ function Register() {
       nextErrors.confirmPassword = 'Please confirm your password.'
     } else if (formData.password !== formData.confirmPassword) {
       nextErrors.confirmPassword = 'Passwords do not match.'
-    }
-
-    if (!formData.role) {
-      nextErrors.role = 'Role selection is required.'
     }
 
     setErrors(nextErrors)
@@ -62,9 +57,12 @@ function Register() {
       return
     }
 
-    await login(formData.email, formData.password, formData.role, formData.fullName)
-
-    navigate('/', { replace: true })
+    try {
+      await register(formData.name, formData.email, formData.password)
+      navigate('/dashboard', { replace: true })
+    } catch (error) {
+      // Error is already stored in authError state
+    }
   }
 
   return (
@@ -74,23 +72,28 @@ function Register() {
           <p className="page-kicker">Create Account</p>
           <h1 className="page-title">Register</h1>
           <p className="page-subtitle">
-            Mock signup is ready now and can be swapped to a real registration API later.
+            Create a Venture Assist account to get started.
           </p>
         </div>
         <Card title="Create your account">
+          {authError && (
+            <div className="auth-error-banner">
+              <p className="error-text">{authError}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="auth-form" noValidate>
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="register-full-name">Full name</label>
+                <label htmlFor="register-name">Full name</label>
                 <input
-                  id="register-full-name"
-                  name="fullName"
-                  value={formData.fullName}
+                  id="register-name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
-                  className={`form-control ${errors.fullName ? 'is-invalid' : ''}`.trim()}
+                  className={`form-control ${errors.name ? 'is-invalid' : ''}`.trim()}
                   placeholder="Enter your full name"
                 />
-                {errors.fullName ? <p className="error-text">{errors.fullName}</p> : null}
+                {errors.name ? <p className="error-text">{errors.name}</p> : null}
               </div>
               <div className="form-group">
                 <label htmlFor="register-email">Email</label>
@@ -130,25 +133,9 @@ function Register() {
                 />
                 {errors.confirmPassword ? <p className="error-text">{errors.confirmPassword}</p> : null}
               </div>
-              <div className="form-group">
-                <label htmlFor="register-role">Role</label>
-                <select
-                  id="register-role"
-                  name="role"
-                  className={`form-control ${errors.role ? 'is-invalid' : ''}`.trim()}
-                  value={formData.role}
-                  onChange={handleChange}
-                >
-                  <option value="">Select a role</option>
-                  <option value="user">User</option>
-                  <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
-                </select>
-                {errors.role ? <p className="error-text">{errors.role}</p> : null}
-              </div>
             </div>
             <div className="inline-actions">
-              <Button type="submit">
+              <Button type="submit" disabled={authLoading}>
                 {authLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
               <Link to="/login">Already have an account?</Link>

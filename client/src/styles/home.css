@@ -135,6 +135,18 @@
   backdrop-filter: blur(10px);
 }
 
+.avatar-circle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--teal-deep);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .home-navbar {
   position: fixed;
   inset: 18px 0 auto;

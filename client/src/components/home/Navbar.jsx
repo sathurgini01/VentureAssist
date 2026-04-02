@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const navItems = [
   { label: 'How It Works', href: '#how-it-works' },
@@ -11,6 +12,7 @@ const navItems = [
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const { user } = useAuth()
 
   const closeMenu = () => setIsOpen(false)
 
@@ -53,12 +55,27 @@ function Navbar() {
           </nav>
 
           <div className="home-nav-actions">
-            <NavLink to="/login" className="home-btn home-btn-ghost" onClick={closeMenu}>
-              Login
-            </NavLink>
-            <NavLink to="/register" className="home-btn home-btn-primary" onClick={closeMenu}>
-              Start Free
-            </NavLink>
+            {user ? (
+              <NavLink to="/profile" className="home-btn home-btn-ghost" onClick={closeMenu}>
+                <span className="avatar-circle">
+                  {(user.name ?? 'VA')
+                    .split(' ')
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join('')}
+                </span>
+                {user.name ?? 'User'}
+              </NavLink>
+            ) : (
+              <>
+                <NavLink to="/login" className="home-btn home-btn-ghost" onClick={closeMenu}>
+                  Login
+                </NavLink>
+                <NavLink to="/register" className="home-btn home-btn-primary" onClick={closeMenu}>
+                  Start Free
+                </NavLink>
+              </>
+            )}
           </div>
         </div>
       </div>

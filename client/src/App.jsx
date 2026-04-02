@@ -30,7 +30,7 @@ import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
 import Home from './pages/Home'
 import Login from './pages/Login'
-import Profile from './pages/MarketingProfilePage'
+import Profile from './pages/Profile'
 import Register from './pages/Register'
 
 function AppShell() {

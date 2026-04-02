@@ -7,11 +7,10 @@ import { useAuth } from '../context/AuthContext.jsx'
 function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { login, authLoading } = useAuth()
+  const { login, authLoading, authError } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    role: 'user',
   })
   const [errors, setErrors] = useState({})
 
@@ -43,9 +42,12 @@ function Login() {
       return
     }
 
-    await login(formData.email, formData.password, formData.role)
-
-    navigate(location.state?.from?.pathname || '/', { replace: true })
+    try {
+      await login(formData.email, formData.password)
+      navigate(location.state?.from?.pathname || '/', { replace: true })
+    } catch (error) {
+      // Error is already stored in authError state
+    }
   }
 
   return (
@@ -55,10 +57,15 @@ function Login() {
           <p className="page-kicker">Welcome Back</p>
           <h1 className="page-title">Login</h1>
           <p className="page-subtitle">
-            Sign in with a mock account now, then replace this with the real API later.
+            Sign in to your Venture Assist account to continue.
           </p>
         </div>
         <Card title="Sign in to Venture Assist">
+          {authError && (
+            <div className="auth-error-banner">
+              <p className="error-text">{authError}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="auth-form" noValidate>
             <div className="form-grid">
               <div className="form-group">
@@ -69,7 +76,7 @@ function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className={`form-control ${errors.email ? 'is-invalid' : ''}`.trim()}
-                  placeholder="user@ventureassist.app"
+                  placeholder="you@example.com"
                 />
                 {errors.email ? <p className="error-text">{errors.email}</p> : null}
               </div>
@@ -86,23 +93,9 @@ function Login() {
                 />
                 {errors.password ? <p className="error-text">{errors.password}</p> : null}
               </div>
-              <div className="form-group">
-                <label htmlFor="login-role">Role</label>
-                <select
-                  id="login-role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="form-control"
-                >
-                  <option value="user">User</option>
-                  <option value="mentor">Mentor</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
             </div>
             <div className="inline-actions">
-              <Button type="submit">
+              <Button type="submit" disabled={authLoading}>
                 {authLoading ? 'Signing In...' : 'Login'}
               </Button>
               <Link to="/register">Create an account</Link>

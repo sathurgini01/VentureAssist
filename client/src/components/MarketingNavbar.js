@@ -133,7 +133,10 @@ function Navbar() {
               .map((part) => part[0])
               .join('')}
           </span>
-          <span className="nav-icon-label">Profile</span>
+          <span className="profile-info">
+            <span className="profile-name">{user?.name ?? 'User'}</span>
+            <span className="nav-icon-label">Profile</span>
+          </span>
         </NavLink>
       </div>
     </header>
