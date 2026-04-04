@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
@@ -17,7 +17,6 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
@@ -163,4 +162,5 @@ function Analytics() {
 }
 
 export default Analytics
+
 

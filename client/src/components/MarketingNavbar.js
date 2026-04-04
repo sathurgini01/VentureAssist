@@ -63,7 +63,7 @@ function Navbar() {
       </div>
       <div className="nav-actions">
         <NavLink
-          to="/"
+          to={location.pathname.startsWith('/admin') ? '/admin/dashboard' : '/'}
           className="nav-icon-button nav-home-button"
           aria-label="Go to home page"
         >
@@ -144,4 +144,5 @@ function Navbar() {
 }
 
 export default Navbar
+
 

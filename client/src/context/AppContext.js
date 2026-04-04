@@ -73,12 +73,18 @@ export function AppProvider({ children }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [userInfo, setUserInfo] = useState(user)
 
+  const refreshArticles = async () => {
+    const articleData = await getArticles()
+    setArticles(articleData)
+    return articleData
+  }
+
   useEffect(() => {
     Promise.all([
       getCampaigns(),
       getTemplates(),
       getMentors(),
-      getArticles(),
+      refreshArticles(),
       getMentorRequests(),
     ]).then(([campaignData, templateData, mentorData, articleData, requestData]) => {
       setCampaigns(campaignData)
@@ -305,6 +311,7 @@ export function AppProvider({ children }) {
       submitMentorApplication,
       reviewMentorApplication,
       updateArticleStatus,
+      refreshArticles,
       updateUserProfile,
       setUsers,
     }),

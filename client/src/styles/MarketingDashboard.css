@@ -318,6 +318,49 @@
   align-items: flex-start;
 }
 
+.admin-dashboard-surface {
+  gap: 1.1rem;
+}
+
+.admin-dashboard-hero {
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+}
+
+.admin-dashboard-hero-meta {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.admin-status-pill {
+  width: fit-content;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary-dark);
+  background: rgba(15, 118, 110, 0.12);
+  border: 1px solid rgba(15, 118, 110, 0.2);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+}
+
+.admin-module-grid {
+  gap: 1rem;
+}
+
+.admin-module-card {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.admin-module-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .profile-name {
   font-size: 0.85rem;
   font-weight: 500;

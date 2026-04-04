@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
 import Navbar from '../../components/MarketingNavbar'
@@ -12,7 +12,6 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 

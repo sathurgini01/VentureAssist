@@ -5,24 +5,25 @@ import Table from '../../components/Table'
 import { useAppContext } from '../../context/AppContext'
 
 const adminLinks = [
-  { to: '/admin/users', label: 'Users' },
-  { to: '/admin/mentor-applications', label: 'Mentor Apps' },
-  { to: '/admin/articles', label: 'Articles' },
-  { to: '/admin/settings', label: 'Settings' },
+  { to: '/admin/dashboard', label: 'Dashboard' },
+  { to: '/admin/mentor-approvals', label: 'Mentor Approve' },
 ]
 
-function MentorApplications() {
+function AdminMentorApprovalPage() {
   const { mentorApplications, reviewMentorApplication } = useAppContext()
+
   return (
     <div className="dashboard-shell">
       <Sidebar links={adminLinks} />
       <div className="dashboard-main">
         <Navbar />
-        <div className="dashboard-content">
+        <div className="dashboard-content section-stack">
           <div>
-            <h1 className="page-title">Mentor Applications</h1>
-            <p className="page-subtitle">Review mentor application placeholders with decision actions.</p>
+            <p className="page-kicker">Admin Workspace</p>
+            <h1 className="page-title">Mentor Approve</h1>
+            <p className="page-subtitle">Approve or reject user requests to become mentors.</p>
           </div>
+
           <Table
             columns={[
               { key: 'name', label: 'Name' },
@@ -51,5 +52,4 @@ function MentorApplications() {
   )
 }
 
-export default MentorApplications
-
+export default AdminMentorApprovalPage

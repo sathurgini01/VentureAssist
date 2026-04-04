@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import Button from '../../components/Button'
 import MentorCard from '../../components/MarketingMentorCard'
 import Modal from '../../components/Modal'
@@ -12,7 +12,6 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 

@@ -1,4 +1,4 @@
-import Button from '../../components/Button'
+﻿import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
@@ -11,7 +11,6 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
