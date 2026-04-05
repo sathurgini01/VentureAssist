@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { useAppContext } from '../../context/AppContext'
 
 const navItems = [
   { label: 'How It Works', href: '#how-it-works' },
@@ -13,6 +14,8 @@ const navItems = [
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const { user } = useAuth()
+  const { notifications, dismissNotification } = useAppContext()
+  const [showNotifications, setShowNotifications] = useState(false)
 
   const closeMenu = () => setIsOpen(false)
 
@@ -52,20 +55,51 @@ function Navbar() {
                 </a>
               )
             ))}
+            {String(user?.role || '').toLowerCase() === 'mentor' ? (
+              <NavLink to="/mentor-hub/businessIdea" onClick={closeMenu}>
+                Mentor Hub
+              </NavLink>
+            ) : null}
           </nav>
 
           <div className="home-nav-actions">
             {user ? (
-              <NavLink to="/profile" className="home-btn home-btn-ghost" onClick={closeMenu}>
-                <span className="avatar-circle">
-                  {(user.name ?? 'VA')
-                    .split(' ')
-                    .slice(0, 2)
-                    .map((part) => part[0])
-                    .join('')}
-                </span>
-                {user.name ?? 'User'}
-              </NavLink>
+              <>
+                <div className="notification-shell">
+                  <button type="button" className="notification-button" onClick={() => setShowNotifications((current) => !current)}>
+                    <span className="notification-icon" aria-hidden="true">🔔</span>
+                    {notifications.length > 0 ? <span className="notification-badge">{notifications.length}</span> : null}
+                  </button>
+                  {showNotifications ? (
+                    <div className="notification-panel card">
+                      <div className="notification-panel-header">
+                        <strong>Notifications</strong>
+                        <span className="card-muted">{notifications.length} items</span>
+                      </div>
+                      <div className="notification-list">
+                        {notifications.length > 0 ? notifications.map((notification) => (
+                          <div key={notification.id} className="notification-item">
+                            <p>{notification.message}</p>
+                            <button type="button" className="notification-link" onClick={() => dismissNotification(notification.id)}>
+                              Dismiss
+                            </button>
+                          </div>
+                        )) : <div className="notification-item"><p>No new notifications</p></div>}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+                <NavLink to="/profile" className="home-btn home-btn-ghost" onClick={closeMenu}>
+                  <span className="avatar-circle">
+                    {(user.name ?? 'VA')
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((part) => part[0])
+                      .join('')}
+                  </span>
+                  {user.name ?? 'User'}
+                </NavLink>
+              </>
             ) : (
               <>
                 <NavLink to="/login" className="home-btn home-btn-ghost" onClick={closeMenu}>

@@ -9,6 +9,19 @@ const templateStepSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const templateMetricSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    type: {
+      type: String,
+      enum: ["number", "percentage", "currency"],
+      default: "number"
+    },
+    required: { type: Boolean, default: false }
+  },
+  { _id: false }
+);
+
 const templateMarketingSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 140 },
@@ -27,6 +40,7 @@ const templateMarketingSchema = new mongoose.Schema(
     estimatedDurationDays: { type: Number, default: 30, min: 1 },
 
     steps: { type: [templateStepSchema], default: [] },
+    metricDefinitions: { type: [templateMetricSchema], default: [] },
 
     avgRating: { type: Number, default: 0, min: 0, max: 5 },
     ratingCount: { type: Number, default: 0, min: 0 },

@@ -6,11 +6,14 @@ import { useAppContext } from '../context/AppContext'
 
 function TemplateCard({ template }) {
   const navigate = useNavigate()
-  const { applyTemplateToCampaign, addToast } = useAppContext()
+  const { applyTemplateToCampaign } = useAppContext()
 
   return (
-    <Card title={template.name} subtitle={template.category}>
-      <p className="card-muted">Format: {template.format}</p>
+    <Card title={template.name} subtitle={template.description || template.category}>
+      <p className="card-muted">Stage: {template.stage}</p>
+      <p className="card-muted">Category: {template.category}</p>
+      <p className="card-muted">Duration: {template.estimatedDurationDays} days</p>
+      <p className="card-muted">Estimated Budget: LKR {template.estimatedBudgetLKR.toLocaleString()}</p>
       <div className="inline-actions">
         <Button
           onClick={() => {
@@ -20,7 +23,7 @@ function TemplateCard({ template }) {
         >
           Use Template
         </Button>
-        <Button variant="secondary" onClick={() => addToast(`Previewing ${template.name}.`)}>
+        <Button variant="secondary" onClick={() => navigate(`/dashboard/templates?preview=${template.id}`)}>
           Preview
         </Button>
       </div>

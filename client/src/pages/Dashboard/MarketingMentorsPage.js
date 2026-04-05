@@ -20,6 +20,7 @@ function Mentors() {
   const [selectedMentor, setSelectedMentor] = useState(null)
   const [bookingForm, setBookingForm] = useState({
     topic: '',
+    domain: 'marketingDevelopment',
     preferredDateTime: '',
     message: '',
   })
@@ -44,6 +45,7 @@ function Mentors() {
     setSelectedMentor(null)
     setBookingForm({
       topic: '',
+      domain: 'marketingDevelopment',
       preferredDateTime: '',
       message: '',
     })
@@ -63,6 +65,7 @@ function Mentors() {
 
     bookMentorSession(selectedMentor, {
       topic: bookingForm.topic.trim(),
+      domain: bookingForm.domain,
       preferredDateTime: bookingForm.preferredDateTime,
       message: bookingForm.message.trim(),
     })
@@ -200,6 +203,21 @@ function Mentors() {
             />
           </div>
           <div className="form-group">
+            <label htmlFor="booking-domain">Category</label>
+            <select
+              id="booking-domain"
+              className="form-control"
+              value={bookingForm.domain}
+              onChange={(event) =>
+                setBookingForm((current) => ({ ...current, domain: event.target.value }))
+              }
+            >
+              <option value="businessIdea">Business Idea</option>
+              <option value="marketingDevelopment">Marketing and Development</option>
+              <option value="law">Law</option>
+            </select>
+          </div>
+          <div className="form-group">
             <label htmlFor="booking-message">Optional Message</label>
             <textarea
               id="booking-message"
@@ -225,4 +243,5 @@ function Mentors() {
 }
 
 export default Mentors
+
 

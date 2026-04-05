@@ -23,6 +23,7 @@ import CampaignDetails from './pages/Dashboard/MarketingCampaignDetailsPage'
 import Campaigns from './pages/Dashboard/MarketingCampaignsPage'
 import CreateCampaign from './pages/Dashboard/MarketingCreateCampaignPage'
 import Mentors from './pages/Dashboard/MarketingMentorsPage'
+import MentorHub from './pages/Dashboard/MarketingMentorHubPage'
 import Templates from './pages/Dashboard/MarketingTemplatesPage'
 import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
@@ -128,6 +129,18 @@ function AppShell() {
             }
           />
           <Route
+            path="/mentor-hub"
+            element={<Navigate to="/mentor-hub/businessIdea" replace />}
+          />
+          <Route
+            path="/mentor-hub/:domain"
+            element={
+              <ProtectedRoute allowedRoles={['mentor']}>
+                <MentorHub />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/dashboard/articles"
             element={
               <ProtectedRoute>
@@ -201,6 +214,7 @@ function App() {
 }
 
 export default App
+
 
 
 

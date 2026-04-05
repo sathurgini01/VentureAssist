@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import Button from '../../components/Button'
 import Navbar from '../../components/MarketingNavbar'
@@ -17,20 +17,21 @@ const dashboardLinks = [
 
 function Campaigns() {
   const navigate = useNavigate()
-  const { campaigns, searchQuery, filters, setFilters } = useAppContext()
+  const { campaigns, filters, setFilters, deleteCampaign } = useAppContext()
+  const [searchTerm, setSearchTerm] = useState('')
   const sortedCampaigns = useMemo(() => {
     const filtered = campaigns
       .filter((campaign) =>
-        `${campaign.name} ${campaign.platform} ${campaign.status}`
+        `${campaign.name} ${campaign.status}`
           .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
+          .includes(searchTerm.toLowerCase()),
       )
       .filter((campaign) =>
         filters.status === 'all' ? true : campaign.status === filters.status,
       )
 
     return [...filtered].sort((left, right) => left.name.localeCompare(right.name))
-  }, [campaigns, searchQuery, filters.status])
+  }, [campaigns, searchTerm, filters.status])
 
   return (
     <div className="dashboard-shell">
@@ -41,7 +42,7 @@ function Campaigns() {
           <div className="toolbar-row">
             <div>
               <h1 className="page-title">Campaigns</h1>
-              <p className="page-subtitle">Campaign listing and status placeholders.</p>
+              <p className="page-subtitle">Track campaigns created from templates.</p>
             </div>
             <NavLink to="/dashboard/campaigns/new">
               <Button>New Campaign</Button>
@@ -49,7 +50,7 @@ function Campaigns() {
           </div>
 
           <div className="toolbar-row">
-            <input className="search-input" placeholder="Search campaigns" value={searchQuery} readOnly />
+            <input className="search-input" placeholder="Search campaigns" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
             <select
               className="form-control"
               value={filters.status}
@@ -58,9 +59,10 @@ function Campaigns() {
               }
             >
               <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="draft">Draft</option>
+              <option value="planned">Planned</option>
+              <option value="running">Running</option>
               <option value="paused">Paused</option>
+              <option value="completed">Completed</option>
             </select>
           </div>
 
@@ -74,8 +76,8 @@ function Campaigns() {
                   <span className={`status-badge status-${value}`}>{value}</span>
                 ),
               },
-              { key: 'platform', label: 'Platform' },
-              { key: 'impressions', label: 'Impressions' },
+              { key: 'progress', label: 'Progress' },
+              { key: 'clicks', label: 'Clicks' },
               {
                 key: 'actions',
                 label: 'Actions',
@@ -86,6 +88,9 @@ function Campaigns() {
                     </Button>
                     <Button variant="ghost" onClick={() => navigate(`/dashboard/campaigns/${row.id}/edit`)}>
                       Edit
+                    </Button>
+                    <Button variant="secondary" onClick={() => deleteCampaign(row.id)}>
+                      Delete
                     </Button>
                   </div>
                 ),
@@ -100,4 +105,5 @@ function Campaigns() {
 }
 
 export default Campaigns
+
 

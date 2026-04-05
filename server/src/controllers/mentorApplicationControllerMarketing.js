@@ -4,7 +4,7 @@ import User from "../models/User.js";
 // POST /api/marketing/mentor-applications  (user)
 export const applyForMentorMarketing = async (req, res, next) => {
   try {
-    const { expertiseAreas, bio, portfolioLink, availability } = req.body;
+    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability } = req.body;
 
     // prevent duplicate pending application
     const existing = await MentorApplicationMarketing.findOne({
@@ -19,6 +19,8 @@ export const applyForMentorMarketing = async (req, res, next) => {
     const created = await MentorApplicationMarketing.create({
       userId: req.user._id,
       expertiseAreas: Array.isArray(expertiseAreas) ? expertiseAreas : [],
+      qualification: qualification || "",
+      yearsExperience: Number(yearsExperience || 0),
       bio: bio || "",
       portfolioLink: portfolioLink || "",
       availability: availability || ""

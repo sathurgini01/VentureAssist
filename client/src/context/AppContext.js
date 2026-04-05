@@ -1,8 +1,27 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { useAuth } from './AuthContext.jsx'
-import { getCampaigns } from '../services/campaignService'
-import { getTemplates } from '../services/templateService'
-import { getMentors, getMentorRequests } from '../services/mentorService'
+import {
+  createCampaign as createCampaignApi,
+  deleteCampaign as deleteCampaignApi,
+  getCampaigns,
+  updateCampaign as updateCampaignApi,
+} from '../services/campaignService'
+import {
+  createTemplate as createTemplateApi,
+  deleteTemplate as deleteTemplateApi,
+  getTemplates,
+  updateTemplate as updateTemplateApi,
+} from '../services/templateService'
+import {
+  approveMentorApplication,
+  createMentorRequest,
+  getMentorApplications,
+  getMentorRequests,
+  getMentors,
+  rejectMentorApplication,
+  respondMentorRequest,
+  submitMentorApplication as submitMentorApplicationApi,
+} from '../services/mentorService'
 import { getArticles } from '../services/articleService'
 
 const AppContext = createContext(null)
@@ -37,27 +56,10 @@ const initialUsers = [
   },
 ]
 
-const initialMentorApplications = [
-  {
-    id: 'a1',
-    name: 'Nadia Perera',
-    expertise: 'Fundraising',
-    experience: '8 years',
-    appliedDate: '2026-03-14',
-    status: 'Reviewing',
-  },
-  {
-    id: 'a2',
-    name: 'Liam Santos',
-    expertise: 'Growth',
-    experience: '6 years',
-    appliedDate: '2026-03-18',
-    status: 'Pending',
-  },
-]
+const initialMentorApplications = []
 
 export function AppProvider({ children }) {
-  const { user, setUser } = useAuth()
+  const { user, setUser, token, isAuthenticated } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toasts, setToasts] = useState([])
   const [notifications, setNotifications] = useState(initialNotifications)
@@ -73,19 +75,92 @@ export function AppProvider({ children }) {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [userInfo, setUserInfo] = useState(user)
 
+  const refreshTemplates = async () => {
+    const data = await getTemplates()
+    setTemplates(data)
+    return data
+  }
+
+  const refreshCampaigns = async () => {
+    const data = await getCampaigns()
+    setCampaigns(data)
+    return data
+  }
+
   const refreshArticles = async () => {
     const articleData = await getArticles()
     setArticles(articleData)
     return articleData
   }
 
+  const refreshMentorRequests = async () => {
+    const data = await getMentorRequests(token)
+    setMentorRequests(data)
+
+    if (user && user.role === 'user') {
+      data
+        .filter((item) => item.userId === user.id && item.status !== 'pending')
+        .forEach((item) => {
+          const key = `mentor_request_status_${item.id}`
+          if (localStorage.getItem(key) !== item.status) {
+            if (item.status === 'accepted') {
+              addNotification(
+                `${item.mentorName} approved your mentor session for ${item.topic}.`,
+                'success',
+              )
+            } else if (item.status === 'rejected') {
+              addNotification(
+                `${item.mentorName} rejected your mentor session for ${item.topic}.`,
+                'info',
+              )
+            }
+            localStorage.setItem(key, item.status)
+          }
+        })
+    }
+
+    return data
+  }
+
+  const refreshMentorApplications = async () => {
+    const data = await getMentorApplications(token)
+    setMentorApplications(data)
+
+    if (user && user.role !== 'admin') {
+      const myLatest = data.find((item) => item.userId === user.id)
+      if (myLatest && myLatest.status !== 'pending') {
+        const key = `mentor_application_status_${myLatest.id}`
+        if (localStorage.getItem(key) !== myLatest.status) {
+          const isApproved = myLatest.status === 'approved'
+          addNotification(
+            isApproved
+              ? 'Your mentor request is approved. Please logout and login again as mentor.'
+              : 'Your mentor request was not approved. Please improve your profile and re-apply.',
+            isApproved ? 'success' : 'info',
+          )
+          localStorage.setItem(key, myLatest.status)
+        }
+      }
+    }
+
+    return data
+  }
+
   useEffect(() => {
+    if (!isAuthenticated) {
+      setCampaigns([])
+      setTemplates([])
+      setArticles([])
+      return
+    }
+
     Promise.all([
-      getCampaigns(),
-      getTemplates(),
+      refreshCampaigns(),
+      refreshTemplates(),
       getMentors(),
       refreshArticles(),
-      getMentorRequests(),
+      refreshMentorRequests(),
+      refreshMentorApplications(),
     ]).then(([campaignData, templateData, mentorData, articleData, requestData]) => {
       setCampaigns(campaignData)
       setTemplates(templateData)
@@ -93,7 +168,7 @@ export function AppProvider({ children }) {
       setArticles(articleData)
       setMentorRequests(requestData)
     })
-  }, [])
+  }, [isAuthenticated, token])
 
   useEffect(() => {
     setUserInfo(user)
@@ -119,40 +194,23 @@ export function AppProvider({ children }) {
     setNotifications((current) => current.filter((item) => item.id !== id))
   }
 
-  const createCampaign = (campaignInput) => {
-    const newCampaign = {
-      id: `cmp-${Date.now()}`,
-      name: campaignInput.campaignName,
-      title: campaignInput.campaignName,
-      status: 'draft',
-      platform: campaignInput.platform,
-      impressions: '0',
-      owner: userInfo?.name ?? 'Venture Assist User',
-      description: campaignInput.description,
-      audience: campaignInput.interests?.join(', ') || 'General',
-      budget: campaignInput.budget,
-      cta: campaignInput.cta,
-      startDate: campaignInput.startDate,
-      endDate: campaignInput.endDate,
-    }
-
-    setCampaigns((current) => [newCampaign, ...current])
-    addNotification(`Campaign created: ${newCampaign.name}`)
+  const createCampaign = async (campaignInput) => {
+    const created = await createCampaignApi(campaignInput, token)
+    await refreshCampaigns()
+    addNotification(`Campaign created: ${created.name}`)
     addToast('Campaign created successfully.', 'success')
-    return newCampaign
+    return created
   }
 
-  const updateCampaign = (id, updates) => {
-    setCampaigns((current) =>
-      current.map((campaign) =>
-        campaign.id === id ? { ...campaign, ...updates } : campaign,
-      ),
-    )
+  const updateCampaign = async (id, updates) => {
+    await updateCampaignApi(id, updates, token)
+    await refreshCampaigns()
     addToast('Campaign updated.', 'success')
   }
 
-  const deleteCampaign = (id) => {
-    setCampaigns((current) => current.filter((campaign) => campaign.id !== id))
+  const deleteCampaign = async (id) => {
+    await deleteCampaignApi(id, token)
+    await refreshCampaigns()
     addToast('Campaign deleted.', 'info')
   }
 
@@ -162,103 +220,92 @@ export function AppProvider({ children }) {
     addToast('Template applied to campaign draft.', 'success')
   }
 
-  const bookMentorSession = (mentor, sessionInput) => {
+  const createTemplate = async (templateInput) => {
+    const created = await createTemplateApi(templateInput, token)
+    await refreshTemplates()
+    addToast('Template created successfully.', 'success')
+    return created
+  }
+
+  const updateTemplate = async (templateId, templateInput) => {
+    const updated = await updateTemplateApi(templateId, templateInput, token)
+    await refreshTemplates()
+    addToast('Template updated successfully.', 'success')
+    return updated
+  }
+
+  const deleteTemplate = async (templateId) => {
+    await deleteTemplateApi(templateId, token)
+    await refreshTemplates()
+    addToast('Template deleted successfully.', 'success')
+  }
+
+  const bookMentorSession = async (mentor, sessionInput) => {
     const {
       topic = 'General mentoring session',
       preferredDateTime = 'Next available slot',
       message = '',
     } = sessionInput
 
-    const request = {
-      id: `req-${Date.now()}`,
-      userId: userInfo?.id ?? 'guest-user',
-      userName: userInfo?.name ?? 'Founder',
-      userEmail: userInfo?.email ?? 'user@ventureassist.app',
-      mentorId: mentor.id,
-      topic,
-      preferredTime: preferredDateTime,
-      message: message || `Request sent to ${mentor.name} for ${topic}.`,
-      status: 'pending',
-      mentor: mentor.name,
-      mentorName: mentor.name,
-      confirmedDateTime: '',
-      medium: '',
-    }
+    const request = await createMentorRequest(
+      {
+        mentorId: mentor.id,
+        topic,
+        message: message || `Request sent to ${mentor.name} for ${topic}.`,
+        preferredDateTime,
+        domain: sessionInput?.domain || 'marketingDevelopment',
+      },
+      token,
+    )
 
-    setMentorRequests((current) => [request, ...current])
+    await refreshMentorRequests()
     addNotification(`Request sent to ${mentor.name}. Booking is pending approval.`)
     addToast('Request sent. Booking is pending approval.', 'info')
     return request
   }
 
-  const updateMentorRequest = (id, status) => {
-    let updatedRequest = null
+  const updateMentorRequest = async (id, payload) => {
+    const nextPayload = typeof payload === 'string' ? { status: payload } : payload
+    const updated = await respondMentorRequest(id, nextPayload, token)
+    await refreshMentorRequests()
 
-    setMentorRequests((current) =>
-      current.map((request) => {
-        if (request.id !== id) {
-          return request
-        }
-
-        updatedRequest = {
-          ...request,
-          status,
-          confirmedDateTime:
-            status === 'accepted' ? request.preferredTime : request.confirmedDateTime,
-          medium: status === 'accepted' ? 'Zoom' : '',
-        }
-
-        return updatedRequest
-      }),
-    )
-
-    if (!updatedRequest) {
-      return
-    }
-
-    if (status === 'accepted') {
+    if (updated.status === 'accepted') {
       addNotification(
-        `${updatedRequest.mentorName} accepted your session request for ${updatedRequest.topic}.`,
+        `${updated.mentorName} accepted your session request for ${updated.topic}.`,
         'success',
       )
       addToast('Mentor request accepted.', 'success')
-      return
+      return updated
     }
 
-    if (status === 'declined') {
+    if (updated.status === 'rejected') {
       addNotification(
-        `${updatedRequest.mentorName} declined your session request for ${updatedRequest.topic}.`,
+        `${updated.mentorName} declined your session request for ${updated.topic}.`,
         'info',
       )
       addToast('Mentor request declined.', 'info')
-      return
+      return updated
     }
 
-    addToast(`Request ${status}.`, 'info')
+    addToast(`Request ${updated.status}.`, 'info')
+    return updated
   }
 
-  const submitMentorApplication = (application) => {
-    const newApplication = {
-      id: `app-${Date.now()}`,
-      name: userInfo?.name ?? 'New Mentor',
-      expertise: application.expertise.join(', '),
-      experience: application.background,
-      appliedDate: new Date().toISOString().slice(0, 10),
-      status: 'Pending',
-    }
-
-    setMentorApplications((current) => [newApplication, ...current])
+  const submitMentorApplication = async (application) => {
+    await submitMentorApplicationApi(application, token)
+    await refreshMentorApplications()
     addNotification('Mentor application submitted.')
     addToast('Mentor application submitted.', 'success')
   }
 
-  const reviewMentorApplication = (id, status) => {
-    setMentorApplications((current) =>
-      current.map((application) =>
-        application.id === id ? { ...application, status } : application,
-      ),
-    )
-    addToast(`Application ${status.toLowerCase()}.`, 'success')
+  const reviewMentorApplication = async (id, status, adminNote = '') => {
+    if (String(status).toLowerCase() === 'approved') {
+      await approveMentorApplication(id, adminNote, token)
+    } else {
+      await rejectMentorApplication(id, adminNote, token)
+    }
+    await refreshMentorApplications()
+    addToast(`Application ${String(status).toLowerCase()}.`, 'success')
   }
 
   const updateArticleStatus = (id, status) => {
@@ -305,11 +352,18 @@ export function AppProvider({ children }) {
       createCampaign,
       updateCampaign,
       deleteCampaign,
+      refreshCampaigns,
       applyTemplateToCampaign,
+      createTemplate,
+      updateTemplate,
+      deleteTemplate,
+      refreshTemplates,
       bookMentorSession,
       updateMentorRequest,
       submitMentorApplication,
       reviewMentorApplication,
+      refreshMentorApplications,
+      refreshMentorRequests,
       updateArticleStatus,
       refreshArticles,
       updateUserProfile,
@@ -330,6 +384,7 @@ export function AppProvider({ children }) {
       users,
       userInfo,
       selectedTemplate,
+      token,
     ],
   )
 

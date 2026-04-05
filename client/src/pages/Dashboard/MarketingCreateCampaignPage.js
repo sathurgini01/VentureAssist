@@ -103,22 +103,19 @@ function CreateCampaign() {
 
     if (editingCampaign) {
       updateCampaign(editingCampaign.id, {
-        name: formData.campaignName,
-        title: formData.headline || formData.campaignName,
-        description: formData.description,
-        platform: formData.platform,
-        budget: formData.budget,
-        cta: formData.cta,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-      })
-      navigate(`/dashboard/campaigns/${editingCampaign.id}`)
+        title: formData.campaignName,
+      }).then(() => navigate(`/dashboard/campaigns/${editingCampaign.id}`))
       return
     }
 
-    createCampaign(formData)
-    setSelectedTemplate(null)
-    navigate('/dashboard/campaigns')
+    const payload = selectedTemplate?.id
+      ? { templateId: selectedTemplate.id, title: formData.campaignName }
+      : { title: formData.campaignName }
+
+    createCampaign(payload).then((created) => {
+      setSelectedTemplate(null)
+      navigate(`/dashboard/campaigns/${created.id}`)
+    })
   }
 
   return (
@@ -312,4 +309,5 @@ function CreateCampaign() {
 }
 
 export default CreateCampaign
+
 

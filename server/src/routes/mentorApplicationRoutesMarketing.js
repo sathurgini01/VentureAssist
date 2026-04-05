@@ -22,6 +22,8 @@ router.post(
   "/",
   [
     body("expertiseAreas").optional().isArray().withMessage("expertiseAreas must be an array"),
+    body("qualification").optional().isString(),
+    body("yearsExperience").optional().isInt({ min: 0 }),
     body("bio").optional().isString(),
     body("portfolioLink").optional().isString(),
     body("availability").optional().isString()

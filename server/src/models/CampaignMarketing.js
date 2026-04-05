@@ -11,6 +11,32 @@ const campaignTaskSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const campaignMetricDefinitionSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    type: {
+      type: String,
+      enum: ["number", "percentage", "currency"],
+      default: "number"
+    },
+    required: { type: Boolean, default: false }
+  },
+  { _id: false }
+);
+
+const campaignMetricValueSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true, maxlength: 80 },
+    value: { type: Number, default: 0 },
+    type: {
+      type: String,
+      enum: ["number", "percentage", "currency"],
+      default: "number"
+    }
+  },
+  { _id: false }
+);
+
 const campaignMarketingSchema = new mongoose.Schema(
   {
     owner: {
@@ -36,6 +62,8 @@ const campaignMarketingSchema = new mongoose.Schema(
     progress: { type: Number, default: 0, min: 0, max: 100 },
 
     tasks: { type: [campaignTaskSchema], default: [] },
+    metricDefinitions: { type: [campaignMetricDefinitionSchema], default: [] },
+    metricValues: { type: [campaignMetricValueSchema], default: [] },
 
     metrics: {
       impressions: { type: Number, default: 0, min: 0 },
@@ -44,6 +72,7 @@ const campaignMarketingSchema = new mongoose.Schema(
       engagement: { type: Number, default: 0, min: 0 },
       sales: { type: Number, default: 0, min: 0 },
       budgetSpentLKR: { type: Number, default: 0, min: 0 },
+      revenue: { type: Number, default: 0, min: 0 },
       notes: { type: String, default: "" }
     }
   },

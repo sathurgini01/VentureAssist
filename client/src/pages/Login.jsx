@@ -44,8 +44,12 @@ function Login() {
 
     try {
       const user = await login(formData.email, formData.password)
-      if (user && user.role && user.role.toLowerCase() === 'admin') {
+      const normalizedRole = String(user?.role || '').trim().toLowerCase()
+
+      if (normalizedRole === 'admin') {
         navigate('/admin/dashboard', { replace: true })
+      } else if (normalizedRole === 'mentor') {
+        navigate('/', { replace: true })
       } else {
         navigate(location.state?.from?.pathname || '/', { replace: true })
       }

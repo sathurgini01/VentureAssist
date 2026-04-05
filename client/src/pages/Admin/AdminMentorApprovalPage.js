@@ -1,4 +1,5 @@
 import Button from '../../components/Button'
+import { useState } from 'react'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import Table from '../../components/Table'
@@ -10,6 +11,7 @@ const adminLinks = [
 ]
 
 function AdminMentorApprovalPage() {
+  const [notes, setNotes] = useState({})
   const { mentorApplications, reviewMentorApplication } = useAppContext()
 
   return (
@@ -29,17 +31,26 @@ function AdminMentorApprovalPage() {
               { key: 'name', label: 'Name' },
               { key: 'expertise', label: 'Expertise' },
               { key: 'experience', label: 'Experience' },
+              { key: 'qualification', label: 'Qualification' },
               { key: 'appliedDate', label: 'Applied Date' },
               { key: 'status', label: 'Status' },
               {
                 key: 'actions',
                 label: 'Actions',
                 render: (_, row) => (
-                  <div className="inline-actions">
-                    <Button onClick={() => reviewMentorApplication(row.id, 'Approved')}>Approve</Button>
-                    <Button variant="secondary" onClick={() => reviewMentorApplication(row.id, 'Rejected')}>
-                      Reject
-                    </Button>
+                  <div className="section-stack">
+                    <input
+                      className="form-control"
+                      placeholder="Admin note"
+                      value={notes[row.id] || ''}
+                      onChange={(event) => setNotes((current) => ({ ...current, [row.id]: event.target.value }))}
+                    />
+                    <div className="inline-actions">
+                      <Button onClick={() => reviewMentorApplication(row.id, 'Approved', notes[row.id] || '')}>Approve</Button>
+                      <Button variant="secondary" onClick={() => reviewMentorApplication(row.id, 'Rejected', notes[row.id] || '')}>
+                        Reject
+                      </Button>
+                    </div>
                   </div>
                 ),
               },
