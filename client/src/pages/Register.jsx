@@ -59,7 +59,7 @@ function Register() {
 
     try {
       await register(formData.name, formData.email, formData.password)
-      navigate('/dashboard', { replace: true })
+      navigate('/', { replace: true })
     } catch (error) {
       // Error is already stored in authError state
     }

@@ -9,6 +9,8 @@ export const createCampaignMarketing = async (req, res, next) => {
 
     let campaignTitle = title;
     let tasks = [];
+    let metricDefinitions = [];
+    let metricValues = [];
     let usedTemplateId = null;
 
     // If creating from template, copy steps -> tasks
@@ -28,6 +30,18 @@ export const createCampaignMarketing = async (req, res, next) => {
         isDone: false,
         completedAt: null
       }));
+
+      metricDefinitions = (template.metricDefinitions || []).map((m) => ({
+        name: m.name,
+        type: m.type || "number",
+        required: Boolean(m.required)
+      }));
+
+      metricValues = metricDefinitions.map((m) => ({
+        name: m.name,
+        type: m.type,
+        value: 0
+      }));
     }
 
     if (!campaignTitle) {
@@ -38,7 +52,9 @@ export const createCampaignMarketing = async (req, res, next) => {
       owner: req.user._id,
       templateId: usedTemplateId,
       title: campaignTitle,
-      tasks
+      tasks,
+      metricDefinitions,
+      metricValues
     });
 
     res.status(201).json({ message: "Campaign created", campaign: created });
@@ -80,7 +96,7 @@ export const updateCampaignMarketing = async (req, res, next) => {
   try {
     const campaign = req.campaign;
 
-    const { status, progress, metrics, tasks, title } = req.body;
+    const { status, progress, metrics, tasks, title, metricValues } = req.body;
 
     if (title !== undefined) campaign.title = title;
 
@@ -114,6 +130,18 @@ export const updateCampaignMarketing = async (req, res, next) => {
         order: t.order ?? idx + 1,
         isDone: Boolean(t.isDone),
         completedAt: t.isDone ? (t.completedAt ? new Date(t.completedAt) : new Date()) : null
+      }));
+    }
+
+    if (metricValues !== undefined) {
+      if (!Array.isArray(metricValues)) {
+        return res.status(400).json({ message: "metricValues must be an array" });
+      }
+
+      campaign.metricValues = metricValues.map((item) => ({
+        name: item.name,
+        type: item.type || "number",
+        value: Number(item.value || 0)
       }));
     }
 

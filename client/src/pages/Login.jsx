@@ -43,8 +43,16 @@ function Login() {
     }
 
     try {
-      await login(formData.email, formData.password)
-      navigate(location.state?.from?.pathname || '/', { replace: true })
+      const user = await login(formData.email, formData.password)
+      const normalizedRole = String(user?.role || '').trim().toLowerCase()
+
+      if (normalizedRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else if (normalizedRole === 'mentor') {
+        navigate('/', { replace: true })
+      } else {
+        navigate(location.state?.from?.pathname || '/', { replace: true })
+      }
     } catch (error) {
       // Error is already stored in authError state
     }

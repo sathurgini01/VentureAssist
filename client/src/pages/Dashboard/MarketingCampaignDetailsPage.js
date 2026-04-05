@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -13,34 +13,61 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
 function CampaignDetails() {
   const navigate = useNavigate()
   const { campaignId } = useParams()
-  const { campaigns, createCampaign, addToast } = useAppContext()
+  const { campaigns, updateCampaign } = useAppContext()
+  const [activeTab, setActiveTab] = useState('overview')
   const campaign =
     campaigns.find((item) => item.id === campaignId) ?? campaigns[0]
-  const metrics = useMemo(
-    () => [
-      { label: 'Impressions', value: '64.8K', helper: 'Trend up 12%' },
-      { label: 'Clicks', value: '3,420', helper: 'CTR placeholder' },
-      { label: 'Conversions', value: '214', helper: 'Goal actions' },
-      { label: 'Spend', value: '$860', helper: 'Mock spend' },
-    ],
-    [],
-  )
+  const [metricValues, setMetricValues] = useState(campaign?.metricValues || [])
 
-  const activity = useMemo(
-    () => [
-      'Creative assets uploaded to the campaign workspace.',
-      'Audience segment refined for startup founders in Colombo.',
-      'Campaign paused for copy review and re-approval.',
-    ],
-    [],
-  )
+  const metrics = useMemo(() => {
+    if (!campaign) return []
+    return [
+      { label: 'Progress', value: `${campaign.progress}%`, helper: campaign.status },
+      { label: 'Tasks', value: `${campaign.tasks?.length || 0}`, helper: 'Timeline items' },
+      { label: 'Clicks', value: `${campaign.metrics?.clicks || 0}`, helper: 'Base metric' },
+      { label: 'Sales', value: `${campaign.metrics?.sales || 0}`, helper: 'Base metric' },
+    ]
+  }, [campaign])
+
+  if (!campaign) {
+    return null
+  }
+
+  const saveTimeline = async (tasks) => {
+    const doneCount = tasks.filter((task) => task.isDone).length
+    const progress = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0
+    await updateCampaign(campaign.id, { tasks, progress })
+  }
+
+  const toggleTask = (index) => {
+    const tasks = (campaign.tasks || []).map((task, idx) =>
+      idx === index ? { ...task, isDone: !task.isDone } : task,
+    )
+    saveTimeline(tasks)
+  }
+
+  const saveMetrics = async () => {
+    const mappedMetrics = metricValues.reduce((acc, item) => {
+      acc[item.name] = Number(item.value || 0)
+      return acc
+    }, {})
+
+    await updateCampaign(campaign.id, {
+      metricValues,
+      metrics: {
+        ...campaign.metrics,
+        ...mappedMetrics,
+        budgetSpentLKR: Number(mappedMetrics['Budget Spent'] || campaign.metrics?.budgetSpentLKR || 0),
+        revenue: Number(mappedMetrics['Revenue'] || campaign.metrics?.revenue || 0),
+      },
+    })
+  }
 
   return (
     <div className="dashboard-shell">
@@ -54,63 +81,70 @@ function CampaignDetails() {
               <p className="page-subtitle">Viewing mock analytics for campaign ID: {campaignId}</p>
             </div>
             <div className="inline-actions">
-              <Button variant="secondary" onClick={() => navigate(`/dashboard/campaigns/${campaign?.id ?? campaignId}/edit`)}>
+              <Button variant="secondary" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}>
                 Edit
               </Button>
-              <Button
-                onClick={() =>
-                  createCampaign({
-                    campaignName: `${campaign?.name ?? 'Campaign'} Copy`,
-                    description: campaign?.description ?? '',
-                    platform: campaign?.platform ?? 'Instagram',
-                    startDate: campaign?.startDate ?? '2026-04-01',
-                    endDate: campaign?.endDate ?? '2026-04-15',
-                    budget: campaign?.budget ?? '$1000',
-                    cta: campaign?.cta ?? 'Learn more',
-                    headline: campaign?.name ?? 'Campaign Copy',
-                    body: campaign?.description ?? '',
-                    interests: ['Startups'],
-                  })
-                }
-              >
-                Duplicate
-              </Button>
+              <Button onClick={() => navigate('/dashboard/analytics')}>View Analytics</Button>
             </div>
           </div>
 
-          <Card title={campaign?.name ?? 'Campaign'} subtitle={campaign?.description ?? 'Performance overview with mock placeholders.'}>
-            <span className={`status-badge status-${campaign?.status ?? 'active'}`}>{campaign?.status ?? 'active'}</span>
-          </Card>
-
-          <div className="page-grid">
-            {metrics.map((metric) => (
-              <StatsCard
-                key={metric.label}
-                label={metric.label}
-                value={metric.value}
-                helper={metric.helper}
-              />
+          <div className="filter-tabs">
+            {['overview', 'timeline', 'metrics'].map((tab) => (
+              <button key={tab} type="button" className={`filter-tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+                {tab}
+              </button>
             ))}
           </div>
 
-          <div className="chart-grid">
-            <Card title="Impressions Over Time" subtitle="Line chart placeholder">
-              <div className="chart-placeholder">Line chart placeholder</div>
-            </Card>
-            <Card title="Audience Breakdown" subtitle="Pie chart placeholder">
-              <div className="chart-placeholder">Pie chart placeholder</div>
-            </Card>
-          </div>
+          <Card title={campaign.name} subtitle="Live campaign data">
+            <span className={`status-badge status-${campaign.status}`}>{campaign.status}</span>
+          </Card>
 
-          <Card title="Activity Log" subtitle="Recent campaign events and changes.">
-            <div className="activity-log">
-              {activity.map((item) => (
-                <div key={item} className="activity-item">
-                  <p className="card-muted">{item}</p>
-                </div>
+          {activeTab === 'overview' ? (
+            <div className="page-grid">
+              {metrics.map((metric) => (
+                <StatsCard key={metric.label} label={metric.label} value={metric.value} helper={metric.helper} />
               ))}
             </div>
-          </Card>
+          ) : null}
+
+          {activeTab === 'timeline' ? (
+            <Card title="Timeline" subtitle="Mark tasks complete and auto-track progress.">
+              <div className="activity-log">
+                {(campaign.tasks || []).map((task, index) => (
+                  <div key={`${task.title}-${index}`} className="activity-item">
+                    <label className="checkbox-item">
+                      <input type="checkbox" checked={task.isDone} onChange={() => toggleTask(index)} />
+                      <span>{task.title}</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          ) : null}
+
+          {activeTab === 'metrics' ? (
+            <Card title="Dynamic Metrics" subtitle="Update campaign KPI values.">
+              <div className="section-stack">
+                {metricValues.map((metric, index) => (
+                  <label key={`${metric.name}-${index}`} className="form-label">
+                    {metric.name} ({metric.type})
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={metric.value}
+                      onChange={(event) => {
+                        const next = [...metricValues]
+                        next[index] = { ...metric, value: Number(event.target.value || 0) }
+                        setMetricValues(next)
+                      }}
+                    />
+                  </label>
+                ))}
+                <Button onClick={saveMetrics}>Save Metrics</Button>
+              </div>
+            </Card>
+          ) : null}
         </div>
       </div>
     </div>
@@ -118,4 +152,6 @@ function CampaignDetails() {
 }
 
 export default CampaignDetails
+
+
 

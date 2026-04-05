@@ -72,7 +72,8 @@ const createTemplateMarketing = async (req, res, next) => {
       tags,
       estimatedBudgetLKR,
       estimatedDurationDays,
-      steps
+      steps,
+      metricDefinitions
     } = req.body;
 
     const created = await TemplateMarketing.create({
@@ -84,6 +85,7 @@ const createTemplateMarketing = async (req, res, next) => {
       estimatedBudgetLKR: estimatedBudgetLKR ?? 0,
       estimatedDurationDays: estimatedDurationDays ?? 30,
       steps: Array.isArray(steps) ? steps : [],
+      metricDefinitions: Array.isArray(metricDefinitions) ? metricDefinitions : [],
       createdBy: req.user._id
     });
 
@@ -110,7 +112,8 @@ const updateTemplateMarketing = async (req, res, next) => {
       "tags",
       "estimatedBudgetLKR",
       "estimatedDurationDays",
-      "steps"
+      "steps",
+      "metricDefinitions"
     ];
 
     updatable.forEach((field) => {

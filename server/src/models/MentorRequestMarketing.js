@@ -21,6 +21,17 @@ const mentorRequestMarketingSchema = new mongoose.Schema(
       maxlength: 120
     },
 
+    domain: {
+      type: String,
+      enum: ["businessIdea", "marketingDevelopment", "law"],
+      default: "marketingDevelopment"
+    },
+
+    preferredDateTime: {
+      type: Date,
+      default: null
+    },
+
     message: {
       type: String,
       required: true
@@ -33,6 +44,16 @@ const mentorRequestMarketingSchema = new mongoose.Schema(
     },
 
     reply: {
+      type: String,
+      default: ""
+    },
+
+    scheduledDateTime: {
+      type: Date,
+      default: null
+    },
+
+    meetingUrl: {
       type: String,
       default: ""
     }

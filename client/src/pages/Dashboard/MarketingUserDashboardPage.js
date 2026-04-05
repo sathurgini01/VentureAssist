@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -8,6 +8,7 @@ import Sidebar from '../../components/MarketingSidebar'
 import StatsCard from '../../components/MarketingStatsCard'
 import Table from '../../components/Table'
 import { useAppContext } from '../../context/AppContext'
+import { useAuth } from '../../context/AuthContext.jsx'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -15,11 +16,11 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
 function UserDashboard() {
+  const { user } = useAuth()
   const { addToast, campaigns, mentorRequests, userInfo } = useAppContext()
   const [showActionModal, setShowActionModal] = useState(false)
   const focusItems = ['Launch Smarter', 'Track Progress', 'Book Mentors']
@@ -118,6 +119,11 @@ function UserDashboard() {
                     <NavLink to="/dashboard/become-mentor">
                       <Button variant="secondary">Become a Mentor</Button>
                     </NavLink>
+                    {String(user?.role || '').toLowerCase() === 'mentor' ? (
+                      <NavLink to="/mentor-hub/businessIdea">
+                        <Button variant="secondary">Mentor Hub</Button>
+                      </NavLink>
+                    ) : null}
                   </div>
                 </div>
               </Card>
@@ -291,4 +297,5 @@ function UserDashboard() {
 }
 
 export default UserDashboard
+
 
