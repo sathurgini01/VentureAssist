@@ -90,4 +90,11 @@ export const getLegalToolkits = async () => {
   return parseResponse(response)
 }
 
-
+export const askLegalCompliance = async (payload) => {
+  const response = await fetch(`${API_BASE}/ai/compliance`, {
+    method: 'POST',
+    headers: buildHeaders(true),
+    body: JSON.stringify(payload),
+  })
+  return parseResponse(response)
+}

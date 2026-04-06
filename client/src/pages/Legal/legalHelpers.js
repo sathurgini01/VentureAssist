@@ -1,5 +1,4 @@
 export const legalUserLinks = [
-  { to: '/dashboard', label: 'Marketing Dashboard' },
   { to: '/toolkits/legal', label: 'Legal Home' },
   { to: '/toolkits/legal/dashboard', label: 'Task Dashboard' },
   { to: '/toolkits/legal/progress', label: 'Progress' },

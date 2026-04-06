@@ -11,6 +11,7 @@ import './styles/Forms.css'
 import './styles/Tables.css'
 import './styles/Modals.css'
 import './styles/MarketingDashboard.css'
+import './styles/LegalToolkit.css'
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 import AdminMarketingDevelopmentArticlesPage from './pages/Admin/AdminMarketingDevelopmentArticlesPage'
 import AdminMarketingDevelopmentTemplatesPage from './pages/Admin/AdminMarketingDevelopmentTemplatesPage'
@@ -30,9 +31,11 @@ import About from './pages/About'
 import Home from './pages/Home'
 import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
 import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
+import LegalEvidenceUploadPage from './pages/Legal/LegalEvidenceUploadPage'
 import LegalHelpPage from './pages/Legal/LegalHelpPage'
-import LegalHomePage from './pages/legal/LegalHomePage'
+import LegalHomePage from './pages/Legal/LegalHomePage'
 import LegalProgressPage from './pages/Legal/LegalProgressPage'
+import LegalTaskDetailPage from './pages/Legal/LegalTaskDetailPage'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
@@ -175,6 +178,22 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <LegalDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId"
+            element={
+              <ProtectedRoute>
+                <LegalTaskDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId/evidence"
+            element={
+              <ProtectedRoute>
+                <LegalEvidenceUploadPage />
               </ProtectedRoute>
             }
           />

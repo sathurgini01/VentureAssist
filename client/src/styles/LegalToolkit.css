@@ -6,11 +6,13 @@
 
 .legal-dashboard-content {
   gap: 1.25rem;
+  align-content: start;
 }
 
 .legal-hero-grid,
 .legal-page-hero {
   grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.95fr);
+  align-items: stretch;
 }
 
 .legal-ribbon .dashboard-hero-tags span {
@@ -23,11 +25,19 @@
   max-width: 72ch;
 }
 
-.legal-secondary-panel .card,
-.legal-overview-grid .card,
-.legal-detail-grid .card,
-.legal-task-grid .card {
-  min-height: 100%;
+.legal-overview-grid,
+.legal-detail-grid,
+.legal-task-grid {
+  align-items: stretch;
+}
+
+.legal-secondary-panel > .card,
+.legal-overview-grid > .card,
+.legal-detail-grid > .card,
+.legal-task-grid > .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .legal-spotlight-list {
@@ -56,6 +66,7 @@
 
 .legal-task-preview {
   display: grid;
+  align-content: start;
   gap: 0.55rem;
   padding: 1rem;
   border-radius: 18px;
@@ -79,11 +90,21 @@
 .legal-card-body,
 .legal-page-intro {
   display: grid;
+  align-content: start;
   gap: 0.85rem;
+}
+
+.legal-card-body {
+  height: 100%;
+}
+
+.legal-card-body .inline-actions {
+  margin-top: auto;
 }
 
 .legal-filter-row {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 0.65rem;
 }
@@ -146,6 +167,10 @@
   flex-wrap: wrap;
 }
 
+.legal-progress-actions {
+  margin-left: auto;
+}
+
 .legal-list,
 .legal-link-list {
   margin: 0;
@@ -175,6 +200,11 @@
   padding: 1rem;
   border-radius: 18px;
   background: rgba(15, 118, 110, 0.05);
+}
+
+.legal-evidence-item > div,
+.legal-progress-item > div {
+  min-width: 0;
 }
 
 .legal-evidence-item a {
