@@ -45,6 +45,11 @@ function Modules() {
       return isAuthenticated ? '/dashboard' : '/login'
     }
 
+    if (card.title === 'Law & Order') {
+      return isAuthenticated ? '/toolkits/legal' : '/login'
+    }
+
+
     return '#cta'
   }
 

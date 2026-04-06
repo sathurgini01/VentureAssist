@@ -28,6 +28,11 @@ import Templates from './pages/Dashboard/MarketingTemplatesPage'
 import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
 import Home from './pages/Home'
+import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
+import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
+import LegalHelpPage from './pages/Legal/LegalHelpPage'
+import LegalHomePage from './pages/legal/LegalHomePage'
+import LegalProgressPage from './pages/Legal/LegalProgressPage'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
@@ -156,6 +161,48 @@ function AppShell() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/toolkits/legal"
+            element={
+              <ProtectedRoute>
+                <LegalHomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/dashboard"
+            element={
+              <ProtectedRoute>
+                <LegalDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId/help"
+            element={
+              <ProtectedRoute>
+                <LegalHelpPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/progress"
+            element={
+              <ProtectedRoute>
+                <LegalProgressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/ai"
+            element={
+              <ProtectedRoute>
+                <LegalAiAssistantPage />
+              </ProtectedRoute>
+            }
+          />
+          
           <Route
             path="/admin"
             element={<Navigate to="/admin/dashboard" replace />}
