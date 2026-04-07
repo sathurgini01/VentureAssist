@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -6,14 +6,21 @@ import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import StatsCard from '../../components/MarketingStatsCard'
 import { useAppContext } from '../../context/AppContext'
-import { getLegalProgress, getLegalTasks } from '../../services/legalSupportService'
 import { legalUserLinks } from './legalHelpers'
+import { getLegalProgress, getLegalTasks, getLegalToolkits } from '../../services/legalSupportService'
 
 function LegalHomePage() {
   const { addToast } = useAppContext()
+  const addToastRef = useRef(addToast)
   const [progress, setProgress] = useState(null)
+  const [toolkits, setToolkits] = useState([])
   const [summaryTasks, setSummaryTasks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [toolkit, setToolkit] = useState(null)
+
+  useEffect(() => {
+    addToastRef.current = addToast
+  }, [addToast])
 
   useEffect(() => {
     let active = true
@@ -21,16 +28,21 @@ function LegalHomePage() {
     const load = async () => {
       try {
         setLoading(true)
-        const [progressData, tasksData] = await Promise.all([
-          getLegalProgress(),
-          getLegalTasks('', true),
-        ])
+        const [progressData, tasksData, toolkitsData] = await Promise.all([
+         getLegalProgress(),
+         getLegalTasks('', true),
+         getLegalToolkits(),
+         ])
 
         if (!active) return
         setProgress(progressData)
         setSummaryTasks(tasksData.tasks || [])
+        const fetchedToolkits = toolkitsData.toolkits || []
+        setToolkits(fetchedToolkits)
+        setToolkit(fetchedToolkits[0] || null)
+
       } catch (error) {
-        if (active) addToast(error.message || 'Unable to load legal overview.', 'error')
+        if (active) addToastRef.current(error.message || 'Unable to load legal overview.', 'error')
       } finally {
         if (active) setLoading(false)
       }
@@ -40,7 +52,7 @@ function LegalHomePage() {
     return () => {
       active = false
     }
-  }, [addToast])
+  }, [])
 
   const stats = useMemo(() => {
     const p = progress || { totalTasks: 0, approved: 0, underReview: 0, changesRequested: 0, readiness: 0 }
@@ -60,7 +72,7 @@ function LegalHomePage() {
         <div className="dashboard-content legal-dashboard-content">
           <section className="dashboard-hero legal-hero-grid">
             <div className="hero-primary-panel">
-              <Card title="Legal Toolkit" subtitle="Complete your legal requirements with a guided, structured workflow.">
+              <Card title={toolkit?.title || toolkit?.name || 'Legal Toolkit'} subtitle="Complete your legal requirements with a guided, structured workflow.">
                 <div className="legal-hero-copy">
                   <div className="dashboard-hero-ribbon legal-ribbon">
                     <span className="dashboard-hero-kicker">Law &amp; Order</span>
@@ -118,6 +130,26 @@ function LegalHomePage() {
                 <StatsCard label={stat.label} value={stat.value} helper={stat.helper} />
               </div>
             ))}
+          </section>
+
+          <section className="dashboard-split legal-overview-grid">
+            <Card title="Legal Toolkits" subtitle="Toolkits added by admin and available for users.">
+              {loading ? (
+                <p className="card-muted">Loading toolkits…</p>
+              ) : toolkits.length === 0 ? (
+                <p className="card-muted">No legal toolkits available right now.</p>
+              ) : (
+                <div className="legal-chip-grid">
+                  {toolkits.map((item) => (
+                    <div key={item._id} className="legal-task-preview">
+                      <span className="badge">{item.category}</span>
+                      <strong>{item.title}</strong>
+                      <span className="card-muted">Type: {item.type}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
           </section>
 
           <section className="dashboard-split legal-overview-grid">

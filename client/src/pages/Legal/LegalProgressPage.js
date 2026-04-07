@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -11,9 +11,14 @@ import { formatDate, getStatusMeta, legalUserLinks } from './legalHelpers'
 
 function LegalProgressPage() {
   const { addToast } = useAppContext()
+  const addToastRef = useRef(addToast)
   const [progress, setProgress] = useState(null)
   const [tasks, setTasks] = useState([])
   const [submissions, setSubmissions] = useState([])
+
+  useEffect(() => {
+    addToastRef.current = addToast
+  }, [addToast])
 
   useEffect(() => {
     let active = true
@@ -29,14 +34,14 @@ function LegalProgressPage() {
         setTasks(tasksData.tasks || [])
         setSubmissions(submissionsData.submissions || [])
       } catch (error) {
-        if (active) addToast(error.message || 'Unable to load progress.', 'error')
+        if (active) addToastRef.current(error.message || 'Unable to load progress.', 'error')
       }
     }
     load()
     return () => {
       active = false
     }
-  }, [addToast])
+  }, [])
 
   const submissionMap = useMemo(
     () => new Map((submissions || []).map((item) => [String(item.taskId), item])),

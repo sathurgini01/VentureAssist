@@ -44,6 +44,13 @@ export const getLegalTasks = async (category = '', summary = false) => {
   return parseResponse(response)
 }
 
+export async function getLegalToolkit() {
+  const response = await fetch('/api/legal/toolkits', {
+    headers: buildHeaders(false),
+  })
+  return parseResponse(response)
+}
+
 export const getLegalTaskById = async (taskId) => {
   const response = await fetch(`${API_BASE}/tasks/${taskId}`, {
     headers: buildHeaders(false),

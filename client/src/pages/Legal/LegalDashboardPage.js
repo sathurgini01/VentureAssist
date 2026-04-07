@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -10,10 +10,15 @@ import { getStatusMeta, legalCategories, legalUserLinks } from './legalHelpers'
 
 function LegalDashboardPage() {
   const { addToast } = useAppContext()
+  const addToastRef = useRef(addToast)
   const [tasks, setTasks] = useState([])
   const [submissions, setSubmissions] = useState([])
   const [activeCategory, setActiveCategory] = useState('All')
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    addToastRef.current = addToast
+  }, [addToast])
 
   useEffect(() => {
     let active = true
@@ -28,7 +33,7 @@ function LegalDashboardPage() {
         setTasks(tasksData.tasks || [])
         setSubmissions(submissionsData.submissions || [])
       } catch (error) {
-        if (active) addToast(error.message || 'Unable to load legal dashboard.', 'error')
+        if (active) addToastRef.current(error.message || 'Unable to load legal dashboard.', 'error')
       } finally {
         if (active) setLoading(false)
       }
@@ -38,7 +43,7 @@ function LegalDashboardPage() {
     return () => {
       active = false
     }
-  }, [addToast])
+  }, [])
 
   const submissionMap = useMemo(
     () =>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, useParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -11,9 +11,14 @@ import { formatDate, getStatusMeta, legalUserLinks } from './legalHelpers'
 function LegalTaskDetailPage() {
   const { taskId } = useParams()
   const { addToast } = useAppContext()
+  const addToastRef = useRef(addToast)
   const [task, setTask] = useState(null)
   const [submission, setSubmission] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    addToastRef.current = addToast
+  }, [addToast])
 
   useEffect(() => {
     let active = true
@@ -30,7 +35,7 @@ function LegalTaskDetailPage() {
         setTask(taskData.task)
         setSubmission(submissionData.submission)
       } catch (error) {
-        if (active) addToast(error.message || 'Unable to load task details.', 'error')
+        if (active) addToastRef.current(error.message || 'Unable to load task details.', 'error')
       } finally {
         if (active) setLoading(false)
       }
@@ -40,7 +45,7 @@ function LegalTaskDetailPage() {
     return () => {
       active = false
     }
-  }, [addToast, taskId])
+  }, [taskId])
 
   const meta = getStatusMeta(submission?.status || 'PENDING')
 
