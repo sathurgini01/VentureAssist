@@ -9,7 +9,7 @@ import { useAppContext } from '../../context/AppContext'
 const mentorLinks = [
   { to: '/mentor-hub/businessIdea', label: 'Business Idea' },
   { to: '/mentor-hub/marketingDevelopment', label: 'Marketing and Development' },
-  { to: '/mentor-hub/law', label: 'Law' },
+  { to: '/mentor/LegalMentorDashboardPage', label: 'Law' },
 ]
 
 function MentorHub() {

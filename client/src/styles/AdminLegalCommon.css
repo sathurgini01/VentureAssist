@@ -26,3 +26,43 @@
 .admin-legal-back-btn:active {
   transform: translateY(0);
 }
+
+.admin-legal-page {
+  padding: 25px;
+}
+
+.admin-legal-page-title {
+  color: #1b4332;
+  margin-bottom: 6px;
+}
+
+.admin-legal-page-subtitle {
+  color: #64748b;
+  margin-bottom: 18px;
+}
+
+.admin-legal-alert {
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.admin-legal-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-legal-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.admin-legal-item p {
+  margin: 0 0 6px;
+  color: #334155;
+}

@@ -1,0 +1,136 @@
+.mentor-legal-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.mentor-legal-container h2 {
+  margin: 0 0 8px;
+}
+
+.mentor-legal-container > p {
+  margin: 0 0 20px;
+  color: #4b5563;
+}
+
+.mentor-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stat-card h3 {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+}
+
+.stat-card p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.mentor-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.action-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+}
+
+.action-card h3 {
+  margin: 0 0 8px;
+}
+
+.action-card p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.mentor-alert {
+  margin: 10px 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.mentor-muted {
+  color: #6b7280;
+}
+
+.mentor-list-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.mentor-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.mentor-card h3 {
+  margin: 0 0 8px;
+}
+
+.mentor-card p {
+  margin: 0 0 6px;
+  color: #4b5563;
+}
+
+.mentor-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.mentor-btn {
+  border: none;
+  background: #0f766e;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.mentor-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.mentor-btn.secondary {
+  background: #334155;
+}
+
+.mentor-textarea {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 140px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  resize: vertical;
+}

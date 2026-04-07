@@ -34,6 +34,10 @@ import AdminLegalDashboardPage from "./pages/Admin/AdminLegalDashboardPage";
 import AdminLegalToolkitsPage from "./pages/Admin/AdminLegalToolkitsPage";
 import AdminLegalReviewsPage from "./pages/Admin/AdminLegalReviewsPage";
 import AdminLegalHelpRequestsPage from "./pages/Admin/AdminLegalHelpRequestsPage";
+import LegalMentorDashboardPage from "./pages/Mentor/LegalMentorDashboardPage";
+import LegalMentorReviewsPage from "./pages/Mentor/LegalMentorReviewsPage";
+import LegalMentorReviewDetailPage from "./pages/Mentor/LegalMentorReviewDetailPage";
+import LegalMentorHelpRequestsPage from "./pages/Mentor/LegalMentorHelpRequestsPage";
 import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
 import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
 import LegalEvidenceUploadPage from './pages/Legal/LegalEvidenceUploadPage'
@@ -172,35 +176,83 @@ function AppShell() {
 
           <Route 
             path="/admin/legal/tasks" 
-            element={<AdminLegalTasksPage />
-            } 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalTasksPage />
+              </ProtectedRoute>
+            }
           />
           
           <Route 
            path="/admin/legal/dashboard" 
            element={
-              <AdminLegalDashboardPage />
-              } 
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalDashboardPage />
+              </ProtectedRoute>
+            }
           />
 
            <Route 
             path="/admin/legal/toolkits" 
-            element={<AdminLegalToolkitsPage />
-
-            } 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalToolkitsPage />
+              </ProtectedRoute>
+            }
             />
           <Route 
            path="/admin/legal/reviews" 
-           element={<AdminLegalReviewsPage />
-
-           } 
+           element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalReviewsPage />
+              </ProtectedRoute>
+            }
           />
 
           <Route 
            path="/admin/legal/help-requests" 
-           element={<AdminLegalHelpRequestsPage />
+           element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalHelpRequestsPage />
+              </ProtectedRoute>
+            }
+          />
 
-           } 
+          <Route 
+           path="/mentor/legal/dashboard" 
+           element={
+             <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+               <LegalMentorDashboardPage />
+             </ProtectedRoute>
+           }
+           />
+          <Route
+            path="/mentor/LegalMentorDashboardPage"
+            element={<Navigate to="/mentor/legal/dashboard" replace />}
+          />
+          <Route 
+           path="/mentor/legal/reviews" 
+           element={
+             <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+               <LegalMentorReviewsPage />
+             </ProtectedRoute>
+           }
+           />
+          <Route 
+           path="/mentor/legal/reviews/:id" 
+           element={
+             <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+               <LegalMentorReviewDetailPage />
+             </ProtectedRoute>
+           }
+           />
+          <Route 
+          path="/mentor/legal/help-requests" 
+          element={
+            <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+              <LegalMentorHelpRequestsPage />
+            </ProtectedRoute>
+          }
           />
 
 
