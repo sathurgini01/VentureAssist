@@ -29,6 +29,11 @@ import Templates from './pages/Dashboard/MarketingTemplatesPage'
 import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
 import Home from './pages/Home'
+import AdminLegalTasksPage from "./pages/Admin/AdminLegalTasksPage";
+import AdminLegalDashboardPage from "./pages/Admin/AdminLegalDashboardPage";
+import AdminLegalToolkitsPage from "./pages/Admin/AdminLegalToolkitsPage";
+import AdminLegalReviewsPage from "./pages/Admin/AdminLegalReviewsPage";
+import AdminLegalHelpRequestsPage from "./pages/Admin/AdminLegalHelpRequestsPage";
 import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
 import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
 import LegalEvidenceUploadPage from './pages/Legal/LegalEvidenceUploadPage'
@@ -164,6 +169,40 @@ function AppShell() {
               </ProtectedRoute>
             }
           />
+
+          <Route 
+            path="/admin/legal/tasks" 
+            element={<AdminLegalTasksPage />
+            } 
+          />
+          
+          <Route 
+           path="/admin/legal/dashboard" 
+           element={
+              <AdminLegalDashboardPage />
+              } 
+          />
+
+           <Route 
+            path="/admin/legal/toolkits" 
+            element={<AdminLegalToolkitsPage />
+
+            } 
+            />
+          <Route 
+           path="/admin/legal/reviews" 
+           element={<AdminLegalReviewsPage />
+
+           } 
+          />
+
+          <Route 
+           path="/admin/legal/help-requests" 
+           element={<AdminLegalHelpRequestsPage />
+
+           } 
+          />
+
 
           <Route
             path="/toolkits/legal"
