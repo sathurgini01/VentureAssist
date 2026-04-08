@@ -12,18 +12,16 @@ function CTASection() {
   const [formData, setFormData] = useState({
     qualification: '',
     yearsExperience: '',
-    expertiseAreas: [],
+    expertiseArea: '',
     bio: '',
     portfolioLink: '',
     availability: '',
   })
 
-  const toggleExpertise = (value) => {
+  const setExpertiseArea = (value) => {
     setFormData((current) => ({
       ...current,
-      expertiseAreas: current.expertiseAreas.includes(value)
-        ? current.expertiseAreas.filter((item) => item !== value)
-        : [...current.expertiseAreas, value],
+      expertiseArea: value,
     }))
   }
 
@@ -33,19 +31,21 @@ function CTASection() {
       addToast('Please login first to apply as a mentor.', 'warning')
       return
     }
-    if (!formData.qualification || formData.expertiseAreas.length === 0 || !formData.bio) {
+    if (!formData.qualification || !formData.expertiseArea || !formData.bio) {
       addToast('Please complete required mentor qualification fields.', 'warning')
       return
     }
-    await submitMentorApplication({
-      qualification: formData.qualification,
-      yearsExperience: Number(formData.yearsExperience || 0),
-      expertiseAreas: formData.expertiseAreas,
-      bio: formData.bio,
-      portfolioLink: formData.portfolioLink,
-      availability: formData.availability,
-    })
-    setShowMentorForm(false)
+    try {
+      await submitMentorApplication({
+        qualification: formData.qualification,
+        yearsExperience: Number(formData.yearsExperience || 0),
+        expertiseAreas: [formData.expertiseArea],
+        bio: formData.bio,
+        portfolioLink: formData.portfolioLink,
+        availability: formData.availability,
+      })
+      setShowMentorForm(false)
+    } catch {}
   }
 
   return (
@@ -91,12 +91,21 @@ function CTASection() {
             <input type="number" className="form-control" value={formData.yearsExperience} onChange={(event) => setFormData((current) => ({ ...current, yearsExperience: event.target.value }))} />
           </label>
           <label className="form-label">
-            Expertise Areas *
+            Expertise Area *
             <div className="checkbox-row">
-              {['Business Idea', 'Marketing & Development', 'Law'].map((item) => (
-                <label key={item} className="checkbox-item">
-                  <input type="checkbox" checked={formData.expertiseAreas.includes(item)} onChange={() => toggleExpertise(item)} />
-                  <span>{item}</span>
+              {[
+                { label: 'Business Idea', value: 'businessIdea' },
+                { label: 'Marketing & Development', value: 'marketingDevelopment' },
+                { label: 'Law', value: 'law' },
+              ].map((item) => (
+                <label key={item.value} className="checkbox-item">
+                  <input
+                    type="radio"
+                    name="cta-mentor-expertise"
+                    checked={formData.expertiseArea === item.value}
+                    onChange={() => setExpertiseArea(item.value)}
+                  />
+                  <span>{item.label}</span>
                 </label>
               ))}
             </div>

@@ -93,6 +93,12 @@ export function AppProvider({ children }) {
     return articleData
   }
 
+  const refreshMentors = async () => {
+    const data = await getMentors(token, { expertiseArea: 'marketingDevelopment' })
+    setMentors(data)
+    return data
+  }
+
   const refreshMentorRequests = async () => {
     const data = await getMentorRequests(token)
     setMentorRequests(data)
@@ -105,8 +111,16 @@ export function AppProvider({ children }) {
           if (localStorage.getItem(key) !== item.status) {
             if (item.status === 'accepted') {
               addNotification(
-                `${item.mentorName} approved your mentor session for ${item.topic}.`,
-                'success',
+                {
+                  message: `${item.mentorName} approved your mentor session for ${item.topic}.`,
+                  type: 'success',
+                  category: 'mentor_session_approved',
+                  details: {
+                    dateTime: item.confirmedDateTime || '',
+                    description: item.reply || '',
+                    meetingUrl: item.medium || '',
+                  },
+                },
               )
             } else if (item.status === 'rejected') {
               addNotification(
@@ -157,7 +171,7 @@ export function AppProvider({ children }) {
     Promise.all([
       refreshCampaigns(),
       refreshTemplates(),
-      getMentors(),
+      refreshMentors(),
       refreshArticles(),
       refreshMentorRequests(),
       refreshMentorApplications(),
@@ -184,8 +198,15 @@ export function AppProvider({ children }) {
     setToasts((current) => current.filter((toast) => toast.id !== id))
   }
 
-  const addNotification = (message, type = 'info') => {
-    const notification = { id: `n-${Date.now()}`, message, type }
+  const addNotification = (input, type = 'info') => {
+    const isObjectPayload = typeof input === 'object' && input !== null
+    const notification = {
+      id: `n-${Date.now()}`,
+      message: isObjectPayload ? input.message : input,
+      type: isObjectPayload ? (input.type || 'info') : type,
+      category: isObjectPayload ? (input.category || 'general') : 'general',
+      details: isObjectPayload ? (input.details || null) : null,
+    }
     setNotifications((current) => [notification, ...current])
     return notification
   }
@@ -292,10 +313,16 @@ export function AppProvider({ children }) {
   }
 
   const submitMentorApplication = async (application) => {
-    await submitMentorApplicationApi(application, token)
-    await refreshMentorApplications()
-    addNotification('Mentor application submitted.')
-    addToast('Mentor application submitted.', 'success')
+    try {
+      await submitMentorApplicationApi(application, token)
+      await refreshMentorApplications()
+      addNotification('Mentor application submitted.')
+      addToast('Mentor application submitted.', 'success')
+      return true
+    } catch (error) {
+      addToast(error?.message || 'Failed to submit mentor application.', 'warning')
+      throw error
+    }
   }
 
   const reviewMentorApplication = async (id, status, adminNote = '') => {
@@ -305,6 +332,7 @@ export function AppProvider({ children }) {
       await rejectMentorApplication(id, adminNote, token)
     }
     await refreshMentorApplications()
+    await refreshMentors()
     addToast(`Application ${String(status).toLowerCase()}.`, 'success')
   }
 

@@ -13,6 +13,7 @@ const adminLinks = [
 function AdminMentorApprovalPage() {
   const [notes, setNotes] = useState({})
   const { mentorApplications, reviewMentorApplication } = useAppContext()
+  const pendingApplications = mentorApplications.filter((item) => item.status === 'pending')
 
   return (
     <div className="dashboard-shell">
@@ -55,7 +56,7 @@ function AdminMentorApprovalPage() {
                 ),
               },
             ]}
-            rows={mentorApplications}
+            rows={pendingApplications}
           />
         </div>
       </div>

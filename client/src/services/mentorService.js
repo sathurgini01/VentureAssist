@@ -18,6 +18,15 @@ const parseError = async (response) => {
 
 const normalizeMentor = (item) => {
   const name = item?.name || 'Mentor'
+  const expertiseAreas = Array.isArray(item?.expertiseAreas) ? item.expertiseAreas : []
+  const expertise = expertiseAreas.length > 0
+    ? expertiseAreas.map((area) => {
+      if (area === 'marketingDevelopment') return 'Marketing & Development'
+      if (area === 'businessIdea') return 'Business Idea'
+      if (area === 'law') return 'Law'
+      return area
+    })
+    : []
   return {
     id: item?._id,
     photo: name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
@@ -25,8 +34,9 @@ const normalizeMentor = (item) => {
     title: 'Startup Mentor',
     rating: '4.8',
     reviews: 0,
-    expertise: ['Business Idea', 'Marketing & Development', 'Law'],
-    availability: 'Available by request',
+    expertise,
+    expertiseAreas,
+    availability: item?.availability || 'Available by request',
     rate: 'Negotiable',
     priceBand: '80',
   }
@@ -65,9 +75,14 @@ const normalizeMentorApplication = (item) => ({
   adminNote: item?.adminNote ?? '',
 })
 
-export async function getMentors(token = getToken()) {
+export async function getMentors(token = getToken(), options = {}) {
   try {
-    const response = await fetch(API_MENTORS, {
+    const query = new URLSearchParams()
+    if (options?.expertiseArea) {
+      query.set('expertiseArea', options.expertiseArea)
+    }
+
+    const response = await fetch(query.toString() ? `${API_MENTORS}?${query.toString()}` : API_MENTORS, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!response.ok) return []

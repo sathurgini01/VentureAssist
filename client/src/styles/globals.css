@@ -114,3 +114,25 @@ select {
   width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
 }
+
+.notification-copy {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.notification-copy p {
+  margin: 0;
+}
+
+.notification-details {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.notification-detail-url {
+  color: #0f766e;
+  text-decoration: underline;
+  font-weight: 600;
+}
