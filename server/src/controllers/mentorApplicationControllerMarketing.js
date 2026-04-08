@@ -4,7 +4,25 @@ import User from "../models/User.js";
 // POST /api/marketing/mentor-applications  (user)
 export const applyForMentorMarketing = async (req, res, next) => {
   try {
-    const { expertiseAreas, bio, portfolioLink, availability } = req.body;
+    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability } = req.body;
+    const normalizeExpertiseArea = (value) => {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return "";
+      if (raw === "businessidea" || raw === "business_idea" || raw === "business-idea" || raw === "business idea") {
+        return "businessIdea";
+      }
+      if (raw === "marketingdevelopment" || raw === "marketing_development" || raw === "marketing-development" || raw === "marketing and development" || raw === "marketing") {
+        return "marketingDevelopment";
+      }
+      if (raw === "law" || raw === "legal") {
+        return "law";
+      }
+      return "";
+    };
+    const singleExpertiseArea = normalizeExpertiseArea(
+      Array.isArray(expertiseAreas) ? expertiseAreas[0] : expertiseAreas
+    );
+    const normalizedExpertiseAreas = singleExpertiseArea ? [singleExpertiseArea] : [];
 
     // prevent duplicate pending application
     const existing = await MentorApplicationMarketing.findOne({
@@ -18,7 +36,9 @@ export const applyForMentorMarketing = async (req, res, next) => {
 
     const created = await MentorApplicationMarketing.create({
       userId: req.user._id,
-      expertiseAreas: Array.isArray(expertiseAreas) ? expertiseAreas : [],
+      expertiseAreas: normalizedExpertiseAreas,
+      qualification: qualification || "",
+      yearsExperience: Number(yearsExperience || 0),
       bio: bio || "",
       portfolioLink: portfolioLink || "",
       availability: availability || ""
@@ -51,12 +71,36 @@ export const approveMentorApplicationMarketing = async (req, res, next) => {
     const app = await MentorApplicationMarketing.findById(req.params.id);
     if (!app) return res.status(404).json({ message: "Application not found" });
 
+    const normalizeExpertiseArea = (value) => {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return "";
+      if (raw === "businessidea" || raw === "business_idea" || raw === "business-idea" || raw === "business idea") {
+        return "businessIdea";
+      }
+      if (raw === "marketingdevelopment" || raw === "marketing_development" || raw === "marketing-development" || raw === "marketing and development" || raw === "marketing") {
+        return "marketingDevelopment";
+      }
+      if (raw === "law" || raw === "legal") {
+        return "law";
+      }
+      return "";
+    };
+
+    const firstExpertiseArea = normalizeExpertiseArea(
+      Array.isArray(app.expertiseAreas) ? app.expertiseAreas[0] : app.expertiseAreas
+    );
+    const finalExpertiseAreas = firstExpertiseArea ? [firstExpertiseArea] : [];
+
     app.status = "approved";
+    app.expertiseAreas = finalExpertiseAreas;
     app.adminNote = req.body?.adminNote || "";
     await app.save();
 
     // ✅ Promote user to mentor
-    await User.findByIdAndUpdate(app.userId, { role: "mentor" });
+    await User.findByIdAndUpdate(app.userId, {
+      role: "mentor",
+      mentorExpertiseAreas: finalExpertiseAreas
+    });
 
     res.status(200).json({ message: "Application approved, user is now mentor", application: app });
   } catch (err) {

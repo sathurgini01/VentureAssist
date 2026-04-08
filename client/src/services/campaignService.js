@@ -1,64 +1,113 @@
-const mockCampaigns = [
-  {
-    id: 'cmp-101',
-    name: 'Launch Countdown',
-    title: 'Launch Countdown',
-    status: 'active',
-    platform: 'Instagram',
-    impressions: '42900',
-    owner: 'Ayesha Fernando',
-    description: 'Countdown campaign for the spring product launch.',
-    audience: 'Startup founders, product leads',
-    budget: '$1200',
-    cta: 'Join the waitlist',
-    startDate: '2026-04-01',
-    endDate: '2026-04-15',
-  },
-  {
-    id: 'cmp-102',
-    name: 'Mentor Match Outreach',
-    title: 'Mentor Match Outreach',
-    status: 'draft',
-    platform: 'Email',
-    impressions: '8120',
-    owner: 'Ayesha Fernando',
-    description: 'Email campaign to connect founders with mentors.',
-    audience: 'Early-stage founders',
-    budget: '$860',
-    cta: 'Book a mentor',
-    startDate: '2026-04-05',
-    endDate: '2026-04-19',
-  },
-  {
-    id: 'cmp-103',
-    name: 'Investor Awareness Push',
-    title: 'Investor Awareness Push',
-    status: 'paused',
-    platform: 'LinkedIn',
-    impressions: '19600',
-    owner: 'Dilan Silva',
-    description: 'Brand awareness campaign for investor visibility.',
-    audience: 'Angels and operators',
-    budget: '$1500',
-    cta: 'Read the founder brief',
-    startDate: '2026-04-08',
-    endDate: '2026-04-22',
-  },
-]
+const API_BASE = '/api/marketing/campaigns'
 
-export async function getCampaigns() {
-  return Promise.resolve(mockCampaigns)
+const getToken = () => localStorage.getItem('auth_token')
+
+const parseError = async (response) => {
+  try {
+    const data = await response.json()
+    return data?.message || 'Request failed'
+  } catch {
+    return 'Request failed'
+  }
 }
 
-export async function getCampaignById(campaignId) {
-  return Promise.resolve(
-    mockCampaigns.find((campaign) => campaign.id === campaignId) ?? mockCampaigns[0],
-  )
+const normalizeCampaign = (item) => ({
+  id: item?._id,
+  name: item?.title ?? 'Untitled campaign',
+  title: item?.title ?? 'Untitled campaign',
+  status: item?.status ?? 'planned',
+  progress: Number(item?.progress ?? 0),
+  templateId: item?.templateId?._id ?? item?.templateId ?? null,
+  template: item?.templateId ?? null,
+  owner: item?.owner?.name ?? 'Current user',
+  tasks: Array.isArray(item?.tasks) ? item.tasks : [],
+  metricDefinitions: Array.isArray(item?.metricDefinitions) ? item.metricDefinitions : [],
+  metricValues: Array.isArray(item?.metricValues) ? item.metricValues : [],
+  metrics: item?.metrics ?? {},
+  impressions: String(item?.metrics?.impressions ?? 0),
+  clicks: String(item?.metrics?.clicks ?? 0),
+  leads: String(item?.metrics?.leads ?? 0),
+  sales: String(item?.metrics?.sales ?? 0),
+  budgetSpentLKR: Number(item?.metrics?.budgetSpentLKR ?? 0),
+  revenue: Number(item?.metrics?.revenue ?? 0),
+  createdAt: item?.createdAt,
+  updatedAt: item?.updatedAt,
+})
+
+export async function getCampaigns() {
+  try {
+    const token = getToken()
+    if (!token) return []
+    const response = await fetch(API_BASE, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) return []
+    const data = await response.json()
+    return (data?.items ?? []).map(normalizeCampaign)
+  } catch {
+    return []
+  }
+}
+
+export async function getCampaignById(campaignId, token = getToken()) {
+  const response = await fetch(`${API_BASE}/${campaignId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+  return normalizeCampaign(await response.json())
+}
+
+export async function createCampaign(campaignInput, token = getToken()) {
+  const response = await fetch(API_BASE, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(campaignInput),
+  })
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+  const data = await response.json()
+  return normalizeCampaign(data.campaign)
+}
+
+export async function updateCampaign(campaignId, campaignInput, token = getToken()) {
+  const response = await fetch(`${API_BASE}/${campaignId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(campaignInput),
+  })
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+  const data = await response.json()
+  return normalizeCampaign(data.campaign)
+}
+
+export async function deleteCampaign(campaignId, token = getToken()) {
+  const response = await fetch(`${API_BASE}/${campaignId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+  return true
 }
 
 const campaignService = {
   getCampaigns,
   getCampaignById,
+  createCampaign,
+  updateCampaign,
+  deleteCampaign,
 }
 
 export default campaignService

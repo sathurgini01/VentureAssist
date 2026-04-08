@@ -11,20 +11,19 @@ import './styles/Forms.css'
 import './styles/Tables.css'
 import './styles/Modals.css'
 import './styles/MarketingDashboard.css'
-import ArticlesManage from './pages/Admin/MarketingAdminArticlesManagePage'
-import MentorApplications from './pages/Admin/MarketingAdminMentorApplicationsPage'
-import Settings from './pages/Admin/MarketingAdminSettingsPage'
-import UserManagement from './pages/Admin/MarketingAdminUserManagementPage'
+import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
+import AdminMarketingDevelopmentArticlesPage from './pages/Admin/AdminMarketingDevelopmentArticlesPage'
+import AdminMarketingDevelopmentTemplatesPage from './pages/Admin/AdminMarketingDevelopmentTemplatesPage'
+import AdminMentorApprovalPage from './pages/Admin/AdminMentorApprovalPage'
 import Analytics from './pages/Dashboard/MarketingAnalyticsPage'
 import Articles from './pages/Dashboard/MarketingArticlesPage'
 import BecomeMentor from './pages/Dashboard/MarketingBecomeMentorPage'
 import ArticleDetail from './pages/Dashboard/MarketingArticleDetailPage'
-import CampaignOverview from './pages/Dashboard/MarketingCampaignOverviewPage'
 import CampaignDetails from './pages/Dashboard/MarketingCampaignDetailsPage'
 import Campaigns from './pages/Dashboard/MarketingCampaignsPage'
 import CreateCampaign from './pages/Dashboard/MarketingCreateCampaignPage'
-import MentorRequests from './pages/Dashboard/MarketingMentorRequestsPage'
 import Mentors from './pages/Dashboard/MarketingMentorsPage'
+import MentorHub from './pages/Dashboard/MarketingMentorHubPage'
 import Templates from './pages/Dashboard/MarketingTemplatesPage'
 import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
@@ -132,10 +131,14 @@ function AppShell() {
             }
           />
           <Route
-            path="/dashboard/mentor-requests"
+            path="/mentor-hub"
+            element={<Navigate to="/mentor-hub/businessIdea" replace />}
+          />
+          <Route
+            path="/mentor-hub/:domain"
             element={
-              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
-                <MentorRequests />
+              <ProtectedRoute allowedRoles={['mentor']}>
+                <MentorHub />
               </ProtectedRoute>
             }
           />
@@ -156,42 +159,38 @@ function AppShell() {
             }
           />
           <Route
-            path="/admin/users"
+            path="/admin"
+            element={<Navigate to="/admin/dashboard" replace />}
+          />
+          <Route
+            path="/admin/dashboard"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <UserManagement />
+                <AdminDashboardPage />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/campaign-overview"
+            path="/admin/mentor-approvals"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <CampaignOverview />
+                <AdminMentorApprovalPage />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/mentor-applications"
+            path="/admin/marketing-development/articles"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <MentorApplications />
+                <AdminMarketingDevelopmentArticlesPage />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/admin/articles"
+            path="/admin/marketing-development/templates"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <ArticlesManage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/settings"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Settings />
+                <AdminMarketingDevelopmentTemplatesPage />
               </ProtectedRoute>
             }
           />
@@ -217,4 +216,10 @@ function App() {
 }
 
 export default App
+
+
+
+
+
+
 

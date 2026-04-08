@@ -4,7 +4,7 @@ import User from "../models/User.js";
 // Create mentor request (User)
 export const createMentorRequestMarketing = async (req, res, next) => {
   try {
-    const { mentorId, topic, message } = req.body;
+    const { mentorId, topic, message, domain, preferredDateTime } = req.body;
 
     const mentor = await User.findOne({ _id: mentorId, role: "mentor" });
     if (!mentor) {
@@ -15,7 +15,9 @@ export const createMentorRequestMarketing = async (req, res, next) => {
       userId: req.user._id,
       mentorId,
       topic,
-      message
+      message,
+      domain: domain || "marketingDevelopment",
+      preferredDateTime: preferredDateTime ? new Date(preferredDateTime) : null
     });
 
     res.status(201).json({ message: "Mentor request sent", request: created });
@@ -50,7 +52,7 @@ export const getMentorRequestsMarketing = async (req, res, next) => {
 // Mentor/Admin respond
 export const respondMentorRequestMarketing = async (req, res, next) => {
   try {
-    const { status, reply } = req.body;
+    const { status, reply, scheduledDateTime, meetingUrl } = req.body;
 
     const request = await MentorRequestMarketing.findById(req.params.id);
     if (!request) {
@@ -67,6 +69,10 @@ export const respondMentorRequestMarketing = async (req, res, next) => {
 
     if (status) request.status = status;
     if (reply !== undefined) request.reply = reply;
+    if (scheduledDateTime !== undefined) {
+      request.scheduledDateTime = scheduledDateTime ? new Date(scheduledDateTime) : null;
+    }
+    if (meetingUrl !== undefined) request.meetingUrl = meetingUrl;
 
     await request.save();
 

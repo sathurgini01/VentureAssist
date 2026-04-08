@@ -50,7 +50,11 @@ router.post(
     body("steps").optional().isArray().withMessage("Steps must be an array"),
     body("steps.*.title").optional().isString().withMessage("Step title must be a string"),
     body("steps.*.description").optional().isString(),
-    body("steps.*.order").optional().isInt()
+    body("steps.*.order").optional().isInt(),
+    body("metricDefinitions").optional().isArray().withMessage("metricDefinitions must be an array"),
+    body("metricDefinitions.*.name").optional().isString().withMessage("Metric name is required"),
+    body("metricDefinitions.*.type").optional().isIn(["number", "percentage", "currency"]),
+    body("metricDefinitions.*.required").optional().isBoolean()
   ],
   validate,
   createTemplateMarketing
@@ -69,7 +73,9 @@ router.put(
     body("tags").optional().isArray(),
     body("steps").optional().isArray(),
     body("estimatedBudgetLKR").optional().isNumeric(),
-    body("estimatedDurationDays").optional().isInt({ min: 1 })
+    body("estimatedDurationDays").optional().isInt({ min: 1 }),
+    body("metricDefinitions").optional().isArray(),
+    body("metricDefinitions.*.type").optional().isIn(["number", "percentage", "currency"])
   ],
   validate,
   updateTemplateMarketing

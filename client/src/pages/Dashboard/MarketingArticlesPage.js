@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
+import { useAppContext } from '../../context/AppContext'
 import '../../styles/MarketingDashboard.css'
 import '../../styles/Cards.css'
 import '../../styles/Buttons.css'
@@ -15,61 +16,21 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const mockArticles = [
-  {
-    id: 'article-1',
-    title: 'How to Build a Founder-Friendly Campaign Funnel',
-    excerpt:
-      'A practical guide to structuring awareness, nurture, and conversion content for startup campaigns.',
-    author: 'Ayesha Fernando',
-    date: 'March 27, 2026',
-    category: 'Marketing',
-    thumbnail: 'Campaign Funnel',
-  },
-  {
-    id: 'article-2',
-    title: 'Mentor Sessions That Actually Create Momentum',
-    excerpt:
-      'Learn how to prepare for mentorship calls so each session turns into clear next steps.',
-    author: 'Nadia Perera',
-    date: 'March 21, 2026',
-    category: 'Mentorship',
-    thumbnail: 'Mentor Playbook',
-  },
-  {
-    id: 'article-3',
-    title: 'Campaign Metrics Founders Should Track Weekly',
-    excerpt:
-      'Focus on the metrics that show whether your campaign is generating interest, trust, and action.',
-    author: 'Liam Santos',
-    date: 'March 18, 2026',
-    category: 'Campaigns',
-    thumbnail: 'Weekly Metrics',
-  },
-  {
-    id: 'article-4',
-    title: 'Writing Content That Sounds Human, Not Corporate',
-    excerpt:
-      'Use a simple messaging framework to make startup content clearer, warmer, and easier to act on.',
-    author: 'Amina Rahman',
-    date: 'March 14, 2026',
-    category: 'Marketing',
-    thumbnail: 'Content Voice',
-  },
-]
-
 function Articles() {
+  const { articles } = useAppContext()
   const [activeCategory, setActiveCategory] = useState('All')
   const [searchTerm, setSearchTerm] = useState('')
 
-  const categories = ['All', 'Marketing', 'Campaigns', 'Mentorship']
+  const categories = useMemo(
+    () => ['All', ...new Set(articles.map((article) => article.category).filter(Boolean))],
+    [articles],
+  )
 
   const filteredArticles = useMemo(() => {
-    return mockArticles.filter((article) => {
+    return articles.filter((article) => {
       const matchesCategory =
         activeCategory === 'All' || article.category === activeCategory
       const matchesSearch =
@@ -79,7 +40,7 @@ function Articles() {
 
       return matchesCategory && matchesSearch
     })
-  }, [activeCategory, searchTerm])
+  }, [articles, activeCategory, searchTerm])
 
   return (
     <div className="dashboard-shell">
@@ -98,7 +59,7 @@ function Articles() {
             </p>
           </div>
 
-          <Card title="Browse Articles" subtitle="Mock content ready for API integration later.">
+          <Card title="Browse Articles" subtitle="Articles from MongoDB via marketing API.">
             <div className="toolbar-row">
               <input
                 className="search-input"
@@ -125,8 +86,6 @@ function Articles() {
           <div className="article-grid">
             {filteredArticles.map((article) => (
               <Card key={article.id}>
-                <div className="article-thumb">{article.thumbnail}</div>
-
                 <div className="inline-actions">
                   <span className="badge">{article.category}</span>
                 </div>
@@ -142,6 +101,9 @@ function Articles() {
                 </NavLink>
               </Card>
             ))}
+            {filteredArticles.length === 0 ? (
+              <Card title="No articles found" subtitle="Try another search or category." />
+            ) : null}
           </div>
         </div>
       </div>
@@ -150,4 +112,6 @@ function Articles() {
 }
 
 export default Articles
+
+
 

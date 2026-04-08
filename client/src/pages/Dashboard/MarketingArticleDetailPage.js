@@ -1,9 +1,11 @@
-import { useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+﻿import { useEffect, useMemo, useState } from 'react'
+import { NavLink, useParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
+import { useAppContext } from '../../context/AppContext'
+import { getArticleById } from '../../services/articleService'
 import '../../styles/MarketingDashboard.css'
 import '../../styles/Cards.css'
 import '../../styles/Buttons.css'
@@ -14,51 +16,84 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const mockArticles = [
-  {
-    id: 'article-1',
-    title: 'How to Build a Founder-Friendly Campaign Funnel',
-    author: 'Ayesha Fernando',
-    date: 'March 27, 2026',
-    readTime: '6 min read',
-    category: 'Marketing',
-    featuredImage: 'Featured Image Placeholder',
-    content: [
-      'A founder-friendly campaign funnel should help people move from curiosity to confidence. Instead of overcomplicating the journey, focus on a few clear messages that repeat with purpose across channels.',
-      'Start with awareness content that introduces the problem, the founder, and the value proposition. Follow with nurturing content that builds trust through stories, proof, and simple examples.',
-      'Conversion content should reduce friction. Give people one clear next action, explain why it matters, and make the outcome feel immediate and useful.',
-    ],
-  },
-  {
-    id: 'article-2',
-    title: 'Mentor Sessions That Actually Create Momentum',
-    author: 'Nadia Perera',
-    date: 'March 21, 2026',
-    readTime: '5 min read',
-    category: 'Mentorship',
-    featuredImage: 'Mentor Session Cover',
-    content: [
-      'The best mentor sessions start before the call. Arrive with context, a clear goal, and a short list of decisions you need help with.',
-      'During the session, focus on specifics. General advice feels safe, but real progress comes from discussing concrete obstacles and next actions.',
-      'End every session by writing down what changed, what you will do next, and what you want to follow up on later.',
-    ],
-  },
-]
-
 function ArticleDetail() {
+  const { articles } = useAppContext()
   const { id } = useParams()
+  const [article, setArticle] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const article =
-    mockArticles.find((item) => item.id === id) ?? mockArticles[0]
+  useEffect(() => {
+    let mounted = true
 
-  const relatedArticles = useMemo(
-    () => mockArticles.filter((item) => item.id !== article.id),
-    [article.id],
-  )
+    const selectedFromContext = articles.find((item) => item.id === id)
+    if (selectedFromContext) {
+      setArticle(selectedFromContext)
+      setLoading(false)
+      return () => {
+        mounted = false
+      }
+    }
+
+    const loadArticle = async () => {
+      setLoading(true)
+      const result = await getArticleById(id)
+      if (mounted) {
+        setArticle(result)
+        setLoading(false)
+      }
+    }
+
+    loadArticle()
+
+    return () => {
+      mounted = false
+    }
+  }, [id, articles])
+
+  const relatedArticles = useMemo(() => {
+    if (!article) return []
+    return articles.filter((item) => item.id !== article.id).slice(0, 4)
+  }, [articles, article])
+
+  if (loading) {
+    return (
+      <div className="dashboard-shell">
+        <Sidebar links={dashboardLinks} />
+        <div className="dashboard-main">
+          <Navbar />
+          <div className="dashboard-content">
+            <Card title="Loading article" subtitle="Fetching article details from database." />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!article) {
+    return (
+      <div className="dashboard-shell">
+        <Sidebar links={dashboardLinks} />
+        <div className="dashboard-main">
+          <Navbar />
+          <div className="dashboard-content">
+            <Card title="Article not found" subtitle="This article may have been removed.">
+              <NavLink to="/dashboard/articles">
+                <Button>Back to Articles</Button>
+              </NavLink>
+            </Card>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const contentParagraphs = article.content
+    .split(/\n+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
 
   return (
     <div className="dashboard-shell">
@@ -70,8 +105,6 @@ function ArticleDetail() {
         <div className="dashboard-content">
           <div className="article-layout">
             <div className="section-stack">
-              <div className="featured-image">{article.featuredImage}</div>
-
               <Card>
                 <span className="badge">{article.category}</span>
                 <h1 className="page-title">{article.title}</h1>
@@ -100,7 +133,7 @@ function ArticleDetail() {
                 </div>
 
                 <div className="rich-text">
-                  {article.content.map((paragraph) => (
+                  {contentParagraphs.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
                 </div>
@@ -127,6 +160,9 @@ function ArticleDetail() {
                       <p className="card-muted">
                         {item.author} | {item.date}
                       </p>
+                      <NavLink to={`/dashboard/articles/${item.id}`}>
+                        <Button variant="secondary">Read</Button>
+                      </NavLink>
                     </div>
                   ))}
                 </div>
@@ -140,4 +176,6 @@ function ArticleDetail() {
 }
 
 export default ArticleDetail
+
+
 

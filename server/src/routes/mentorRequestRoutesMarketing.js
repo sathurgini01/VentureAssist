@@ -23,7 +23,9 @@ router.post(
   [
     body("mentorId").notEmpty().withMessage("mentorId required"),
     body("topic").notEmpty().withMessage("topic required"),
-    body("message").notEmpty().withMessage("message required")
+    body("message").notEmpty().withMessage("message required"),
+    body("domain").optional().isIn(["businessIdea", "marketingDevelopment", "law"]),
+    body("preferredDateTime").optional().isISO8601()
   ],
   validate,
   createMentorRequestMarketing
@@ -40,6 +42,13 @@ router.get(
 router.put(
   "/:id/respond",
   allowMarketingRoles("mentor", "admin"),
+  [
+    body("status").optional().isIn(["pending", "accepted", "rejected", "completed"]),
+    body("scheduledDateTime").optional().isISO8601(),
+    body("meetingUrl").optional().isString(),
+    body("reply").optional().isString()
+  ],
+  validate,
   respondMentorRequestMarketing
 );
 

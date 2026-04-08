@@ -1,4 +1,4 @@
-import Button from '../../components/Button'
+﻿import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
@@ -11,7 +11,6 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
@@ -20,19 +19,14 @@ function BecomeMentor() {
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   const [formData, setFormData] = useState({
     background: '',
-    expertise: [],
+    expertise: '',
     experience: '',
     pricing: '',
     bio: '',
   })
 
-  const toggleExpertise = (item) => {
-    setFormData((current) => ({
-      ...current,
-      expertise: current.expertise.includes(item)
-        ? current.expertise.filter((value) => value !== item)
-        : [...current.expertise, item],
-    }))
+  const setExpertise = (value) => {
+    setFormData((current) => ({ ...current, expertise: value }))
   }
 
   return (
@@ -61,16 +55,21 @@ function BecomeMentor() {
                 />
               </div>
               <div className="form-group">
-                <label>Expertise</label>
+                <label>Expertise (Select one)</label>
                 <div className="checkbox-row">
-                  {['Fundraising', 'Growth', 'Product', 'Branding'].map((item) => (
-                    <label key={item} className="checkbox-item">
+                  {[
+                    { label: 'Business Idea', value: 'businessIdea' },
+                    { label: 'Marketing and Development', value: 'marketingDevelopment' },
+                    { label: 'Law', value: 'law' },
+                  ].map((item) => (
+                    <label key={item.value} className="checkbox-item">
                       <input
-                        type="checkbox"
-                        checked={formData.expertise.includes(item)}
-                        onChange={() => toggleExpertise(item)}
+                        type="radio"
+                        name="mentor-expertise"
+                        checked={formData.expertise === item.value}
+                        onChange={() => setExpertise(item.value)}
                       />
-                      <span>{item}</span>
+                      <span>{item.label}</span>
                     </label>
                   ))}
                 </div>
@@ -124,12 +123,20 @@ function BecomeMentor() {
             </div>
             <Button
               onClick={() => {
-                if (!formData.background || formData.expertise.length === 0 || !formData.experience) {
+                if (!formData.background || !formData.expertise || !formData.experience) {
                   addToast('Complete the required mentor application fields.', 'warning')
                   return
                 }
 
-                submitMentorApplication(formData)
+                const payload = {
+                  expertiseAreas: [formData.expertise],
+                  qualification: formData.background,
+                  yearsExperience: Number.parseInt(formData.experience, 10) || 0,
+                  availability: formData.pricing,
+                  bio: formData.bio,
+                }
+
+                submitMentorApplication(payload).catch(() => {})
               }}
             >
               Submit Application
@@ -142,4 +149,9 @@ function BecomeMentor() {
 }
 
 export default BecomeMentor
+
+
+
+
+
 

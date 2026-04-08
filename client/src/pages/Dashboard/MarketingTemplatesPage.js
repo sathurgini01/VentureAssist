@@ -1,4 +1,7 @@
-import { useMemo } from 'react'
+﻿import { useMemo, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import Button from '../../components/Button'
+import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import TemplateCard from '../../components/MarketingTemplateCard'
@@ -10,28 +13,36 @@ const dashboardLinks = [
   { to: '/dashboard/campaigns', label: 'Campaigns' },
   { to: '/dashboard/analytics', label: 'Analytics' },
   { to: '/dashboard/mentors', label: 'Mentors' },
-  { to: '/dashboard/mentor-requests', label: 'Mentor Requests', roles: ['mentor', 'admin'] },
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
 function Templates() {
-  const { filters, setFilters, templates, searchQuery } = useAppContext()
-  const tabs = ['All', 'Social Media', 'Email', 'Content']
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const previewId = searchParams.get('preview')
+  const { templates, applyTemplateToCampaign } = useAppContext()
+  const [searchTerm, setSearchTerm] = useState('')
+  const [stageFilter, setStageFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
 
-  const activeTab = filters.category === 'all' ? 'All' : filters.category
-  const filteredTemplates =
-    activeTab === 'All'
-      ? templates
-      : templates.filter((template) => template.category === activeTab)
-  const searchedTemplates = useMemo(
-    () =>
-      filteredTemplates.filter((template) =>
-        `${template.name} ${template.category} ${template.format}`
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()),
-      ),
-    [filteredTemplates, searchQuery],
+  const categories = useMemo(
+    () => ['all', ...new Set(templates.map((item) => item.category).filter(Boolean))],
+    [templates],
   )
+
+  const previewTemplate = templates.find((item) => item.id === previewId)
+
+  const filteredTemplates = useMemo(() => {
+    return templates.filter((template) => {
+      const matchesStage = stageFilter === 'all' || template.stage === stageFilter
+      const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter
+      const matchesSearch = `${template.title} ${template.description} ${template.category}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+
+      return matchesStage && matchesCategory && matchesSearch
+    })
+  }, [templates, stageFilter, categoryFilter, searchTerm])
 
   return (
     <div className="dashboard-shell">
@@ -41,29 +52,69 @@ function Templates() {
         <div className="dashboard-content">
           <div>
             <h1 className="page-title">Templates</h1>
-            <p className="page-subtitle">Browse mock content templates by category.</p>
+            <p className="page-subtitle">Browse and apply reusable template strategies.</p>
           </div>
 
-          <div className="filter-tabs">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                className={`filter-tab ${activeTab === tab ? 'active' : ''}`.trim()}
-                onClick={() =>
-                  setFilters((current) => ({
-                    ...current,
-                    category: tab === 'All' ? 'all' : tab,
-                  }))
-                }
-              >
-                {tab}
-              </button>
-            ))}
+          <div className="toolbar-row">
+            <input
+              className="search-input"
+              placeholder="Search templates"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            <select className="form-control" value={stageFilter} onChange={(event) => setStageFilter(event.target.value)}>
+              <option value="all">All stages</option>
+              <option value="earlyStartup">Early Startup</option>
+              <option value="growing">Growing</option>
+              <option value="established">Established</option>
+            </select>
+            <select className="form-control" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}>
+              {categories.map((category) => (
+                <option key={category} value={category}>
+                  {category === 'all' ? 'All categories' : category}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {previewTemplate ? (
+            <Card title={`${previewTemplate.title} Preview`} subtitle={previewTemplate.description}>
+              <p className="card-muted">Stage: {previewTemplate.stage}</p>
+              <p className="card-muted">Category: {previewTemplate.category}</p>
+              <p className="card-muted">Duration: {previewTemplate.estimatedDurationDays} days</p>
+              <p className="card-muted">Budget: LKR {previewTemplate.estimatedBudgetLKR.toLocaleString()}</p>
+
+              <strong>Timeline Steps</strong>
+              <ul>
+                {previewTemplate.steps.map((step) => (
+                  <li key={`${step.order}-${step.title}`}>{step.title}</li>
+                ))}
+              </ul>
+
+              <strong>Defined Metrics</strong>
+              <ul>
+                {previewTemplate.metricDefinitions?.map((metric) => (
+                  <li key={`${metric.name}-${metric.type}`}>
+                    {metric.name} ({metric.type}) {metric.required ? '- required' : ''}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="inline-actions">
+                <Button
+                  onClick={() => {
+                    applyTemplateToCampaign(previewTemplate)
+                    navigate('/dashboard/campaigns/new')
+                  }}
+                >
+                  Use Template
+                </Button>
+              </div>
+            </Card>
+          ) : null}
 
           <div className="template-grid">
-            {searchedTemplates.map((template) => (
+            {filteredTemplates.map((template) => (
               <TemplateCard key={template.id} template={template} />
             ))}
           </div>
@@ -74,4 +125,5 @@ function Templates() {
 }
 
 export default Templates
+
 
