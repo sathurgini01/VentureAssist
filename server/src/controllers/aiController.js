@@ -60,6 +60,10 @@ export const analyzeCampaignMarketing = async (req, res) => {
       missingData
     };
 
+    if (req.body?.context && typeof req.body.context === "object") {
+      snapshot.context = req.body.context;
+    }
+
     const report = await analyzeCampaignWithGemini(snapshot);
 
     // Optional: store

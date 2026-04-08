@@ -5,7 +5,7 @@ import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import { useAppContext } from '../../context/AppContext'
-import { CAMPAIGN_METRIC_FIELDS, INSTAGRAM_TWO_WEEK_PLAN } from '../../data/instagramCampaignPlan'
+import { FINAL_EXPECTED_OUTCOME, INSTAGRAM_PACKAGE, WEEKLY_PLAN } from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -16,31 +16,15 @@ const dashboardLinks = [
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const steps = ['Basic Info', 'Audience & Budget', 'Content Strategy', 'Review']
-
-const initialForm = {
-  campaignName: 'Instagram Lead Generation Campaign',
-  description: '',
-  startDate: '',
-  targetAudience: '',
-  weeklyBudgetLKR: '',
-  targetReach: '',
-  contentGoal: '',
-  coreHook: '',
-  captionTone: '',
-  hashtagStyle: '',
-  cta: '',
-}
-
-const buildTasks = () => {
+const createTaskPayload = () => {
   const tasks = []
-  INSTAGRAM_TWO_WEEK_PLAN.forEach((weekData) => {
-    weekData.days.forEach((dayData) => {
-      dayData.tasks.forEach((taskText, idx) => {
+  WEEKLY_PLAN.forEach((week) => {
+    week.dayTasks.forEach((dayData) => {
+      dayData.tasks.forEach((task, idx) => {
         tasks.push({
-          title: `W${weekData.week}-D${dayData.day} | ${taskText}`,
+          title: `W${week.week}-D${dayData.day} | ${task}`,
           description: dayData.title,
-          order: weekData.week * 1000 + dayData.day * 10 + idx,
+          order: week.week * 1000 + dayData.day * 10 + idx,
           isDone: false,
           completedAt: null,
         })
@@ -50,100 +34,60 @@ const buildTasks = () => {
   return tasks
 }
 
-const buildMetricValues = () => CAMPAIGN_METRIC_FIELDS.map((field) => ({
-  name: field.label,
-  type: field.key === 'ctr' ? 'percentage' : field.key === 'budgetSpentLKR' || field.key === 'cpc' || field.key === 'cpm' ? 'currency' : 'number',
-  value: 0,
-}))
+const createMetricValuePayload = () => {
+  const metricEntries = []
+  WEEKLY_PLAN.forEach((week) => {
+    week.requiredMetrics.forEach((metric) => {
+      metricEntries.push({
+        name: metric.key,
+        type: metric.label.includes('CTR') ? 'percentage' : metric.label.includes('Spend') || metric.label.includes('CPL') ? 'currency' : 'number',
+        value: 0,
+      })
+    })
+  })
+
+  metricEntries.push({ name: '__week1_saved__', type: 'number', value: 0 })
+  metricEntries.push({ name: '__week2_saved__', type: 'number', value: 0 })
+  metricEntries.push({ name: '__campaign_ended__', type: 'number', value: 0 })
+  return metricEntries
+}
 
 function CreateCampaign() {
   const navigate = useNavigate()
   const { campaignId } = useParams()
-  const { campaigns, createCampaign, updateCampaign, selectedTemplate, setSelectedTemplate, addToast } = useAppContext()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [error, setError] = useState('')
-  const [formData, setFormData] = useState(initialForm)
+  const { campaigns, selectedTemplate, createCampaign, updateCampaign, setSelectedTemplate, addToast } = useAppContext()
+  const [startDate, setStartDate] = useState('')
 
-  const editingCampaign = campaigns.find((campaign) => campaign.id === campaignId)
-
-  useEffect(() => {
-    if (!selectedTemplate || campaignId) return
-    setFormData((current) => ({
-      ...current,
-      campaignName: selectedTemplate.title || selectedTemplate.name || current.campaignName,
-      description: selectedTemplate.description || current.description,
-    }))
-  }, [selectedTemplate, campaignId])
+  const editingCampaign = campaigns.find((item) => item.id === campaignId)
+  const packageTitle = useMemo(() => INSTAGRAM_PACKAGE.title, [])
 
   useEffect(() => {
-    if (!editingCampaign) return
-    setFormData((current) => ({
-      ...current,
-      campaignName: editingCampaign.name || current.campaignName,
-      description: editingCampaign.metrics?.notes || current.description,
-      weeklyBudgetLKR: String(editingCampaign.metrics?.budgetSpentLKR || ''),
-      targetReach: String(editingCampaign.metrics?.impressions || ''),
-    }))
+    if (editingCampaign?.metrics?.notes) {
+      const match = String(editingCampaign.metrics.notes).match(/Start Date:\s*(\d{4}-\d{2}-\d{2})/)
+      if (match) setStartDate(match[1])
+    }
   }, [editingCampaign])
 
-  const aiGuide = useMemo(() => ([
-    'Hook: Stop wasting ad money until you see this…',
-    'Caption style: Problem → Solution → CTA',
-    'Hashtags: #StartupGrowth #DigitalMarketingTips #EntrepreneurLife',
-    'Thumbnail idea: bold text overlay + contrast background',
-  ]), [])
-
-  const updateField = (event) => {
-    const { name, value } = event.target
-    setFormData((current) => ({ ...current, [name]: value }))
-  }
-
-  const validateCurrentStep = () => {
-    if (currentStep === 0) {
-      if (!formData.campaignName || !formData.description || !formData.startDate) {
-        return 'Please complete campaign name, description, and start date.'
-      }
-    }
-    if (currentStep === 1) {
-      if (!formData.targetAudience || !formData.weeklyBudgetLKR || !formData.targetReach) {
-        return 'Please provide audience, weekly budget, and target reach.'
-      }
-    }
-    if (currentStep === 2) {
-      if (!formData.contentGoal || !formData.coreHook || !formData.cta) {
-        return 'Please complete content goal, hook, and CTA.'
-      }
-    }
-    return ''
-  }
-
-  const handleNext = () => {
-    const stepError = validateCurrentStep()
-    if (stepError) {
-      setError(stepError)
-      addToast(stepError, 'warning')
+  const launchCampaign = async () => {
+    if (!startDate) {
+      addToast('Please select a start date before launching campaign.', 'warning')
       return
     }
-    setError('')
-    setCurrentStep((step) => Math.min(step + 1, steps.length - 1))
-  }
 
-  const handleSave = async () => {
     try {
-      const tasks = buildTasks()
-      const metricValues = buildMetricValues()
+      const tasks = createTaskPayload()
+      const metricValues = createMetricValuePayload()
 
       if (editingCampaign) {
         await updateCampaign(editingCampaign.id, {
-          title: formData.campaignName,
+          title: packageTitle,
+          status: 'running',
           tasks,
           metricValues,
-          status: 'running',
+          progress: 0,
           metrics: {
             ...editingCampaign.metrics,
-            impressions: Number(formData.targetReach || 0),
-            budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
-            notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+            notes: `Package: ${packageTitle}\nStart Date: ${startDate}`,
           },
         })
         navigate(`/dashboard/campaigns/${editingCampaign.id}`)
@@ -151,7 +95,7 @@ function CreateCampaign() {
       }
 
       const created = await createCampaign({
-        title: formData.campaignName,
+        title: packageTitle,
         templateId: selectedTemplate?.id,
       })
 
@@ -159,19 +103,23 @@ function CreateCampaign() {
         status: 'running',
         tasks,
         metricValues,
+        progress: 0,
         metrics: {
-          impressions: Number(formData.targetReach || 0),
-          budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
-          leads: 0,
+          impressions: 0,
           clicks: 0,
-          notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+          leads: 0,
+          engagement: 0,
+          sales: 0,
+          budgetSpentLKR: 0,
+          revenue: 0,
+          notes: `Package: ${packageTitle}\nStart Date: ${startDate}`,
         },
       })
 
       setSelectedTemplate(null)
       navigate(`/dashboard/campaigns/${created.id}`)
-    } catch (saveError) {
-      addToast(saveError?.message || 'Failed to create campaign.', 'warning')
+    } catch (error) {
+      addToast(error?.message || 'Failed to launch campaign.', 'warning')
     }
   }
 
@@ -182,126 +130,65 @@ function CreateCampaign() {
         <Navbar />
         <div className="dashboard-content">
           <div>
-            <h1 className="page-title">{editingCampaign ? 'Edit Instagram Campaign' : 'Create Instagram Campaign'}</h1>
-            <p className="page-subtitle">Professional 2-week execution flow (manual execution + weekly optimization).</p>
+            <h1 className="page-title">{packageTitle}</h1>
+            <p className="page-subtitle">Final preview page with complete 2-week execution details before launch.</p>
           </div>
 
-          <div className="wizard-steps">
-            {steps.map((step, index) => (
-              <div key={step} className={`wizard-step ${index === currentStep ? 'active' : ''}`.trim()}>
-                <strong>Step {index + 1}</strong>
-                <p className="card-muted">{step}</p>
-              </div>
+          <Card title="Package Overview" subtitle="Professional Instagram startup launch package.">
+            <div className="template-preview-summary">
+              <div className="template-preview-pill"><strong>Duration</strong><span>{INSTAGRAM_PACKAGE.duration}</span></div>
+              <div className="template-preview-pill"><strong>Budget</strong><span>LKR {INSTAGRAM_PACKAGE.budget.toLocaleString()}</span></div>
+              <div className="template-preview-pill"><strong>Goal</strong><span>{INSTAGRAM_PACKAGE.goal}</span></div>
+            </div>
+          </Card>
+
+          <div className="template-week-grid">
+            {WEEKLY_PLAN.map((week) => (
+              <Card key={week.week} title={`Week ${week.week} – ${week.title}`} subtitle={week.objective}>
+                <p className="card-muted"><strong>Allocated Budget:</strong> LKR {week.budget.toLocaleString()}</p>
+                <ul>
+                  {week.budgetItems.map((item) => (<li key={item}>{item}</li>))}
+                </ul>
+
+                <strong>Detailed Tasks</strong>
+                <div className="activity-log">
+                  {week.dayTasks.map((dayData) => (
+                    <div key={`${week.week}-${dayData.day}`} className="activity-item">
+                      <strong>Day {dayData.day} – {dayData.title}</strong>
+                      <ul>
+                        {dayData.tasks.map((task) => <li key={task}>{task}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                <strong>Required Metrics</strong>
+                <ul>
+                  {week.requiredMetrics.map((metric) => (
+                    <li key={metric.key}><strong>{metric.label}:</strong> {metric.description}</li>
+                  ))}
+                </ul>
+
+                <strong>Expected Output</strong>
+                <ul>
+                  {week.expectedOutput.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </Card>
             ))}
           </div>
 
-          <div className="wizard-shell">
-            {error ? <p className="error-text">{error}</p> : null}
+          <Card title="Overall 2-Week Expected Outcome">
+            <ul>
+              {FINAL_EXPECTED_OUTCOME.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </Card>
 
-            {currentStep === 0 ? (
-              <Card title="Campaign Foundation" subtitle="Define campaign context and launch schedule.">
-                <div className="form-grid">
-                  <label className="form-label">
-                    Campaign Name
-                    <input name="campaignName" className="form-control" value={formData.campaignName} onChange={updateField} />
-                  </label>
-                  <label className="form-label">
-                    Start Date
-                    <input type="date" name="startDate" className="form-control" value={formData.startDate} onChange={updateField} />
-                  </label>
-                  <label className="form-label" style={{ gridColumn: '1 / -1' }}>
-                    Description
-                    <textarea name="description" rows="5" className="form-control" value={formData.description} onChange={updateField} />
-                  </label>
-                </div>
-              </Card>
-            ) : null}
-
-            {currentStep === 1 ? (
-              <Card title="Audience + Budget" subtitle="Plan targeting and expected top-of-funnel outcomes.">
-                <div className="form-grid">
-                  <label className="form-label">
-                    Target Audience
-                    <textarea name="targetAudience" rows="4" className="form-control" value={formData.targetAudience} onChange={updateField} placeholder="Example: Founders (22-40), Sri Lanka, startup + marketing interests" />
-                  </label>
-                  <label className="form-label">
-                    Weekly Budget (LKR)
-                    <input type="number" name="weeklyBudgetLKR" className="form-control" value={formData.weeklyBudgetLKR} onChange={updateField} />
-                  </label>
-                  <label className="form-label">
-                    Target Reach
-                    <input type="number" name="targetReach" className="form-control" value={formData.targetReach} onChange={updateField} />
-                  </label>
-                </div>
-              </Card>
-            ) : null}
-
-            {currentStep === 2 ? (
-              <div className="mentor-layout">
-                <Card title="Content Execution Strategy" subtitle="No uploads. Platform provides strategy, captions, hashtags, and tasks.">
-                  <div className="form-grid">
-                    <label className="form-label">
-                      Content Goal
-                      <input name="contentGoal" className="form-control" value={formData.contentGoal} onChange={updateField} placeholder="Awareness, engagement, or lead generation" />
-                    </label>
-                    <label className="form-label">
-                      Core Hook
-                      <input name="coreHook" className="form-control" value={formData.coreHook} onChange={updateField} />
-                    </label>
-                    <label className="form-label">
-                      Caption Tone
-                      <input name="captionTone" className="form-control" value={formData.captionTone} onChange={updateField} placeholder="Professional, bold, educational..." />
-                    </label>
-                    <label className="form-label">
-                      Hashtag Strategy
-                      <input name="hashtagStyle" className="form-control" value={formData.hashtagStyle} onChange={updateField} placeholder="Niche tags + broad discovery tags" />
-                    </label>
-                    <label className="form-label" style={{ gridColumn: '1 / -1' }}>
-                      Primary CTA
-                      <input name="cta" className="form-control" value={formData.cta} onChange={updateField} placeholder="DM for guide / click link / book call" />
-                    </label>
-                  </div>
-                </Card>
-
-                <Card title="AI Suggestion Box" subtitle="Smart starting point for this campaign.">
-                  <div className="activity-log">
-                    {aiGuide.map((item) => (
-                      <div key={item} className="activity-item">
-                        <p className="card-muted">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-            ) : null}
-
-            {currentStep === 3 ? (
-              <Card title="Review + Launch" subtitle="Launch a structured 2-week campaign board with weekly metric tracking.">
-                <div className="review-list">
-                  <div className="review-item">
-                    <strong>{formData.campaignName}</strong>
-                    <p className="card-muted">Starts: {formData.startDate || 'Not set'} · Budget: LKR {Number(formData.weeklyBudgetLKR || 0).toLocaleString()} / week</p>
-                    <p className="card-muted">Goal: {formData.contentGoal || 'Not set'} · CTA: {formData.cta || 'Not set'}</p>
-                  </div>
-                  <div className="review-item">
-                    <strong>Execution Plan</strong>
-                    <p className="card-muted">2 weeks · 14 days · {buildTasks().length} detailed tasks</p>
-                    <p className="card-muted">Week 1: Awareness + Engagement · Week 2: Lead Generation + Conversion</p>
-                  </div>
-                </div>
-              </Card>
-            ) : null}
-
-            <div className="toolbar-row">
-              <Button variant="secondary" onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))} disabled={currentStep === 0}>
-                Previous
-              </Button>
-              {currentStep < steps.length - 1 ? (
-                <Button onClick={handleNext}>Next</Button>
-              ) : (
-                <Button onClick={handleSave}>{editingCampaign ? 'Save Campaign' : 'Launch Campaign Plan'}</Button>
-              )}
-            </div>
+          <div className="toolbar-row">
+            <label className="form-label" style={{ maxWidth: '320px' }}>
+              Start Date
+              <input type="date" className="form-control" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </label>
+            <Button onClick={launchCampaign}>Launch Campaign</Button>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import TemplateCard from '../../components/MarketingTemplateCard'
 import { useAppContext } from '../../context/AppContext'
+import { INSTAGRAM_PACKAGE } from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -25,15 +26,31 @@ function Templates() {
   const [stageFilter, setStageFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
 
+  const instagramOnlyTemplates = useMemo(() => {
+    return templates
+      .filter((template) => String(template.title || template.name || '').toLowerCase().includes('instagram'))
+      .map((template) => ({
+        ...template,
+        title: INSTAGRAM_PACKAGE.title,
+        name: INSTAGRAM_PACKAGE.title,
+        description: '14-day structured Instagram growth plan',
+        stage: 'earlyStartup',
+        category: 'Social Media',
+        estimatedDurationDays: 14,
+        estimatedBudgetLKR: 25000,
+      }))
+      .slice(0, 1)
+  }, [templates])
+
   const categories = useMemo(
-    () => ['all', ...new Set(templates.map((item) => item.category).filter(Boolean))],
-    [templates],
+    () => ['all', ...new Set(instagramOnlyTemplates.map((item) => item.category).filter(Boolean))],
+    [instagramOnlyTemplates],
   )
 
-  const previewTemplate = templates.find((item) => item.id === previewId)
+  const previewTemplate = instagramOnlyTemplates.find((item) => item.id === previewId)
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
+    return instagramOnlyTemplates.filter((template) => {
       const matchesStage = stageFilter === 'all' || template.stage === stageFilter
       const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter
       const matchesSearch = `${template.title} ${template.description} ${template.category}`
@@ -42,7 +59,7 @@ function Templates() {
 
       return matchesStage && matchesCategory && matchesSearch
     })
-  }, [templates, stageFilter, categoryFilter, searchTerm])
+  }, [instagramOnlyTemplates, stageFilter, categoryFilter, searchTerm])
 
   return (
     <div className="dashboard-shell">
@@ -125,5 +142,6 @@ function Templates() {
 }
 
 export default Templates
+
 
 

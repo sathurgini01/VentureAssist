@@ -42,7 +42,7 @@ function Campaigns() {
           <div className="toolbar-row">
             <div>
               <h1 className="page-title">Campaigns</h1>
-              <p className="page-subtitle">Track campaigns created from templates.</p>
+              <p className="page-subtitle">View campaign progress and update execution progress.</p>
             </div>
             <NavLink to="/dashboard/campaigns/new">
               <Button>New Campaign</Button>
@@ -76,18 +76,22 @@ function Campaigns() {
                   <span className={`status-badge status-${value}`}>{value}</span>
                 ),
               },
-              { key: 'progress', label: 'Progress' },
+              {
+                key: 'progress',
+                label: 'Progress',
+                render: (value) => `${Number(value || 0)}%`,
+              },
               { key: 'clicks', label: 'Clicks' },
               {
                 key: 'actions',
                 label: 'Actions',
                 render: (_, row) => (
                   <div className="inline-actions">
-                    <Button variant="secondary" onClick={() => navigate(`/dashboard/campaigns/${row.id}`)}>
+                    <Button variant="secondary" onClick={() => navigate(`/dashboard/campaigns/${row.id}?mode=view`)}>
                       View
                     </Button>
-                    <Button variant="ghost" onClick={() => navigate(`/dashboard/campaigns/${row.id}/edit`)}>
-                      Edit
+                    <Button variant="ghost" onClick={() => navigate(`/dashboard/campaigns/${row.id}`)}>
+                      Update 
                     </Button>
                     <Button variant="secondary" onClick={() => deleteCampaign(row.id)}>
                       Delete
@@ -105,5 +109,8 @@ function Campaigns() {
 }
 
 export default Campaigns
+
+
+
 
 

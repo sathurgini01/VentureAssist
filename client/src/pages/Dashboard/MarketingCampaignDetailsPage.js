@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import StatsCard from '../../components/MarketingStatsCard'
 import { useAppContext } from '../../context/AppContext'
-import { CAMPAIGN_METRIC_FIELDS, INSTAGRAM_TWO_WEEK_PLAN } from '../../data/instagramCampaignPlan'
+import { FINAL_EXPECTED_OUTCOME, INSTAGRAM_PACKAGE, WEEKLY_PLAN } from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -17,67 +17,81 @@ const dashboardLinks = [
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const getTaskWeek = (task) => {
-  const match = String(task?.title || '').match(/W(\d+)-D(\d+)/i)
-  return match ? Number(match[1]) : 1
+const parseWeekDay = (taskTitle = '') => {
+  const match = String(taskTitle).match(/W(\d+)-D(\d+)/i)
+  return {
+    week: match ? Number(match[1]) : 1,
+    day: match ? Number(match[2]) : 1,
+  }
 }
 
-const getTaskDay = (task) => {
-  const match = String(task?.title || '').match(/W(\d+)-D(\d+)/i)
-  return match ? Number(match[2]) : 1
+const getMarkerValue = (metricValues, name) => {
+  return Number(metricValues.find((item) => item.name === name)?.value || 0)
 }
 
 function CampaignDetails() {
   const navigate = useNavigate()
   const { campaignId } = useParams()
+  const [searchParams] = useSearchParams()
   const { campaigns, updateCampaign, addToast } = useAppContext()
   const campaign = campaigns.find((item) => item.id === campaignId) ?? campaigns[0]
   const [activeWeek, setActiveWeek] = useState(1)
-
-  const metricMap = useMemo(() => {
-    const fromMetricValues = (campaign?.metricValues || []).reduce((acc, item) => {
-      acc[item.name] = Number(item.value || 0)
-      return acc
-    }, {})
-    return fromMetricValues
-  }, [campaign])
-
-  const [metricValues, setMetricValues] = useState(
-    CAMPAIGN_METRIC_FIELDS.reduce((acc, field) => {
-      acc[field.key] = Number(metricMap[field.label] || 0)
-      return acc
-    }, {}),
-  )
+  const isReadOnly = searchParams.get('mode') === 'view'
 
   if (!campaign) return null
 
   const tasks = Array.isArray(campaign.tasks) ? campaign.tasks : []
-  const weekTasks = tasks.filter((task) => getTaskWeek(task) === activeWeek)
-  const groupedByDay = weekTasks.reduce((acc, task) => {
-    const day = getTaskDay(task)
+  const metricValues = Array.isArray(campaign.metricValues) ? campaign.metricValues : []
+
+  const week1Saved = getMarkerValue(metricValues, '__week1_saved__') === 1
+  const week2Saved = getMarkerValue(metricValues, '__week2_saved__') === 1
+  const campaignEnded = getMarkerValue(metricValues, '__campaign_ended__') === 1
+
+  const doneCount = tasks.filter((item) => item.isDone).length
+  const progress = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0
+
+  const activeWeekData = WEEKLY_PLAN.find((item) => item.week === activeWeek) || WEEKLY_PLAN[0]
+  const activeWeekTasks = tasks.filter((task) => parseWeekDay(task.title).week === activeWeek)
+
+  const taskMapByDay = activeWeekTasks.reduce((acc, task) => {
+    const { day } = parseWeekDay(task.title)
     if (!acc[day]) acc[day] = []
     acc[day].push(task)
     return acc
   }, {})
 
-  const doneCount = tasks.filter((task) => task.isDone).length
-  const progress = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0
-  const weekData = INSTAGRAM_TWO_WEEK_PLAN.find((item) => item.week === activeWeek)
+  const dayDoneMap = activeWeekData.dayTasks.reduce((acc, dayData) => {
+    const dayTasks = taskMapByDay[dayData.day] || []
+    acc[dayData.day] = dayTasks.length > 0 && dayTasks.every((task) => task.isDone)
+    return acc
+  }, {})
 
-  const summaryStats = [
-    { title: 'Campaign Progress', value: `${progress}%`, trend: progress > 60 ? 'good' : progress > 30 ? 'average' : 'poor' },
-    { title: 'Tasks Completed', value: `${doneCount}/${tasks.length || 0}`, trend: 'average' },
-    { title: 'Leads', value: String(Number(campaign.metrics?.leads || 0)), trend: 'average' },
-    { title: 'Budget Spent', value: `LKR ${Number(campaign.metrics?.budgetSpentLKR || 0).toLocaleString()}`, trend: 'average' },
-  ]
-
-  const saveTasks = async (nextTasks) => {
-    const nextDone = nextTasks.filter((task) => task.isDone).length
-    const nextProgress = nextTasks.length > 0 ? Math.round((nextDone / nextTasks.length) * 100) : 0
-    await updateCampaign(campaign.id, { tasks: nextTasks, progress: nextProgress })
+  const isDayEnabled = (day) => {
+    if (campaignEnded) return false
+    const dayIndex = activeWeekData.dayTasks.findIndex((item) => item.day === day)
+    if (dayIndex <= 0) return true
+    const previousDay = activeWeekData.dayTasks[dayIndex - 1].day
+    return Boolean(dayDoneMap[previousDay])
   }
 
-  const toggleTask = (targetTask) => {
+  const [weekMetricInput, setWeekMetricInput] = useState(() => {
+    const next = {}
+    WEEKLY_PLAN.forEach((week) => {
+      week.requiredMetrics.forEach((metric) => {
+        const existing =
+          metricValues.find((item) => item.name === metric.key) ||
+          metricValues.find((item) => item.name === metric.label)
+        next[metric.key] = Number(existing?.value || 0)
+      })
+    })
+    return next
+  })
+
+  const toggleTask = async (targetTask) => {
+    if (campaignEnded || isReadOnly) return
+    const { day } = parseWeekDay(targetTask.title)
+    if (!isDayEnabled(day)) return
+
     const nextTasks = tasks.map((task) => {
       if (task.title !== targetTask.title) return task
       const nextDone = !task.isDone
@@ -87,32 +101,77 @@ function CampaignDetails() {
         completedAt: nextDone ? new Date().toISOString() : null,
       }
     })
-    saveTasks(nextTasks)
+
+    const nextDone = nextTasks.filter((item) => item.isDone).length
+    const nextProgress = nextTasks.length ? Math.round((nextDone / nextTasks.length) * 100) : 0
+    await updateCampaign(campaign.id, { tasks: nextTasks, progress: nextProgress })
   }
 
   const saveWeekMetrics = async () => {
     try {
-      const metricValuesPayload = CAMPAIGN_METRIC_FIELDS.map((field) => ({
-        name: field.label,
-        type: field.key === 'ctr' ? 'percentage' : field.key === 'budgetSpentLKR' || field.key === 'cpc' || field.key === 'cpm' ? 'currency' : 'number',
-        value: Number(metricValues[field.key] || 0),
-      }))
+      const nextMetricValues = [...metricValues]
+      activeWeekData.requiredMetrics.forEach((metric) => {
+        const idx = nextMetricValues.findIndex(
+          (item) => item.name === metric.key || item.name === metric.label,
+        )
+        if (idx >= 0) {
+          nextMetricValues[idx] = { ...nextMetricValues[idx], value: Number(weekMetricInput[metric.key] || 0) }
+        }
+      })
+
+      const markerName = activeWeek === 1 ? '__week1_saved__' : '__week2_saved__'
+      const markerIdx = nextMetricValues.findIndex((item) => item.name === markerName)
+      if (markerIdx >= 0) {
+        nextMetricValues[markerIdx] = { ...nextMetricValues[markerIdx], value: 1 }
+      }
 
       await updateCampaign(campaign.id, {
-        metricValues: metricValuesPayload,
+        metricValues: nextMetricValues,
         metrics: {
           ...campaign.metrics,
-          impressions: Number(metricValues.impressions || 0),
-          leads: Number(metricValues.leads || 0),
-          budgetSpentLKR: Number(metricValues.budgetSpentLKR || 0),
-          clicks: Number(campaign.metrics?.clicks || 0),
+          impressions: Number(weekMetricInput.week1Reach || weekMetricInput.week2Reach || 0),
+          leads: Number(weekMetricInput.week2LeadsGenerated || 0),
+          budgetSpentLKR: Number(weekMetricInput.week1AdSpend || 0) + Number(weekMetricInput.week2AdSpend || 0),
+          engagement: Number(weekMetricInput.week1Engagement || 0),
         },
       })
+
       addToast(`Week ${activeWeek} metrics saved.`, 'success')
     } catch (error) {
-      addToast(error?.message || 'Failed to save metrics.', 'warning')
+      addToast(error?.message || 'Failed to save weekly metrics.', 'warning')
     }
   }
+
+  const endCampaign = async () => {
+    if (!week1Saved || !week2Saved) {
+      addToast('Please save Week 1 and Week 2 metrics first.', 'warning')
+      return
+    }
+
+    const nextMetricValues = [...metricValues]
+    const idx = nextMetricValues.findIndex((item) => item.name === '__campaign_ended__')
+    if (idx >= 0) nextMetricValues[idx] = { ...nextMetricValues[idx], value: 1 }
+
+    await updateCampaign(campaign.id, {
+      status: 'completed',
+      progress: 100,
+      metricValues: nextMetricValues,
+      metrics: {
+        ...campaign.metrics,
+        notes: `${campaign.metrics?.notes || ''}\nCampaign Ended: Yes`,
+      },
+    })
+    addToast('Campaign ended successfully.', 'success')
+  }
+
+  const summaryStats = [
+    { title: 'Package', value: INSTAGRAM_PACKAGE.title, trend: 'average' },
+    { title: 'Progress', value: `${campaignEnded ? 100 : progress}%`, trend: campaignEnded ? 'good' : 'average' },
+    { title: 'Tasks Done', value: `${doneCount}/${tasks.length}`, trend: doneCount === tasks.length ? 'good' : 'average' },
+    { title: 'Status', value: campaignEnded ? 'Completed' : campaign.status, trend: campaignEnded ? 'good' : 'average' },
+  ]
+
+  const week2Unlocked = week1Saved || campaignEnded
 
   return (
     <div className="dashboard-shell">
@@ -120,89 +179,114 @@ function CampaignDetails() {
       <div className="dashboard-main">
         <Navbar />
         <div className="dashboard-content">
-          <div className="toolbar-row">
-            <div>
-              <h1 className="page-title">{campaign.name}</h1>
-              <p className="page-subtitle">2-week Instagram execution board with daily tasks and weekly metrics.</p>
-            </div>
-            <div className="inline-actions">
-              <Button variant="secondary" onClick={() => navigate(`/dashboard/campaigns/${campaign.id}/edit`)}>Edit Plan</Button>
-              <Button onClick={() => navigate(`/dashboard/analytics?campaign=${campaign.id}`)}>View Analytics</Button>
-            </div>
+          <div>
+            <h1 className="page-title">{INSTAGRAM_PACKAGE.title}</h1>
+            <p className="page-subtitle">Ongoing execution workspace with day-by-day task unlocking.</p>
           </div>
 
           <div className="stats-grid">
-            {summaryStats.map((stat) => (
-              <StatsCard key={stat.title} title={stat.title} value={stat.value} trend={stat.trend} />
+            {summaryStats.map((item) => (
+              <StatsCard key={item.title} title={item.title} value={item.value} trend={item.trend} />
             ))}
           </div>
 
-          <Card title="Campaign Header" subtitle="Professional execution overview.">
-            <div className="mentor-highlight-metrics">
-              <div className="mentor-highlight-stat"><strong>{campaign.status}</strong><span>Status</span></div>
-              <div className="mentor-highlight-stat"><strong>{progress}%</strong><span>Completion</span></div>
-              <div className="mentor-highlight-stat"><strong>2 Weeks</strong><span>Execution Window</span></div>
-            </div>
-          </Card>
-
           <div className="filter-tabs">
-            <button type="button" className={`filter-tab ${activeWeek === 1 ? 'active' : ''}`} onClick={() => setActiveWeek(1)}>Week 1</button>
-            <button type="button" className={`filter-tab ${activeWeek === 2 ? 'active' : ''}`} onClick={() => setActiveWeek(2)}>Week 2</button>
+            <button type="button" className={`filter-tab ${activeWeek === 1 ? 'active' : ''}`} onClick={() => setActiveWeek(1)}>
+              Week 1
+            </button>
+            <button
+              type="button"
+              className={`filter-tab ${activeWeek === 2 ? 'active' : ''}`}
+              onClick={() => week2Unlocked && setActiveWeek(2)}
+              disabled={!week2Unlocked}
+            >
+              Week 2
+            </button>
           </div>
 
-          <div className="mentor-layout">
-            <Card title={`Week ${activeWeek}: ${weekData?.title || ''}`} subtitle="Daily professional tasks. Multiple tasks allowed per day.">
-              <div className="section-stack">
-                {Object.keys(groupedByDay).sort((a, b) => Number(a) - Number(b)).map((day) => (
-                  <div key={day} className="review-item">
-                    <strong>Day {day}</strong>
+          <Card title={`Week ${activeWeek} Progress`} subtitle={activeWeekData.objective}>
+            <div className="section-stack">
+              {activeWeekData.dayTasks.map((dayData) => {
+                const dayTasks = taskMapByDay[dayData.day] || []
+                const enabled = isDayEnabled(dayData.day)
+                return (
+                  <div key={dayData.day} className="review-item">
+                    <div className="toolbar-row">
+                      <strong>Day {dayData.day} – {dayData.title}</strong>
+                      <span className="card-muted">{enabled ? 'Enabled' : 'Locked until previous day completes'}</span>
+                    </div>
                     <div className="activity-log">
-                      {groupedByDay[day].map((task) => (
+                      {dayTasks.map((task) => (
                         <label key={task.title} className="checkbox-item activity-item">
-                          <input type="checkbox" checked={Boolean(task.isDone)} onChange={() => toggleTask(task)} />
+                          <input
+                            type="checkbox"
+                            checked={Boolean(task.isDone)}
+                            onChange={() => toggleTask(task)}
+                            disabled={!enabled || campaignEnded || isReadOnly}
+                          />
                           <span>{task.title.split('| ')[1] || task.title}</span>
                         </label>
                       ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </Card>
+                )
+              })}
+            </div>
+          </Card>
 
-            <Card title="AI Suggested Content Box" subtitle="Guidance only (manual execution outside platform).">
-              <div className="activity-log">
-                <div className="activity-item"><p className="card-muted">Suggested Hook: Stop wasting money on ads until you see this…</p></div>
-                <div className="activity-item"><p className="card-muted">Suggested hashtags: #StartupGrowth #DigitalMarketingTips #EntrepreneurLife</p></div>
-                <div className="activity-item"><p className="card-muted">Caption style: Problem → Solution → CTA</p></div>
-                <div className="activity-item"><p className="card-muted">Thumbnail: Bold text overlay + high contrast background.</p></div>
-              </div>
-            </Card>
-          </div>
-
-          <Card title={`Week ${activeWeek} Metrics Input`} subtitle="Save real-world Instagram results weekly.">
+          <Card title={`Week ${activeWeek} Metrics`} subtitle="Enter and save required metrics for this week.">
             <div className="form-grid">
-              {CAMPAIGN_METRIC_FIELDS.map((field) => (
-                <label key={field.key} className="form-label">
-                  {field.label}
+              {activeWeekData.requiredMetrics.map((metric) => (
+                <label key={metric.key} className="form-label">
+                  {metric.label}
                   <input
                     type="number"
                     className="form-control"
-                    value={metricValues[field.key]}
-                    onChange={(event) => setMetricValues((current) => ({ ...current, [field.key]: Number(event.target.value || 0) }))}
+                    value={weekMetricInput[metric.key] || 0}
+                    onChange={(event) => setWeekMetricInput((current) => ({ ...current, [metric.key]: Number(event.target.value || 0) }))}
+                    disabled={campaignEnded || isReadOnly}
                   />
-                  <small className="card-muted">{field.description}</small>
+                  <small className="card-muted">{metric.description}</small>
                 </label>
               ))}
             </div>
             <div className="inline-actions">
-              <Button onClick={saveWeekMetrics}>{activeWeek === 1 ? 'Save Week 1 Data' : 'Save Week 2 Data'}</Button>
+              <Button onClick={saveWeekMetrics} disabled={campaignEnded || isReadOnly}>Save Week {activeWeek} Metrics</Button>
               {activeWeek === 1 ? (
-                <Button variant="secondary" onClick={() => setActiveWeek(2)}>Proceed to Week 2</Button>
-              ) : (
-                <Button onClick={() => navigate(`/dashboard/analytics?campaign=${campaign.id}`)}>View Analysis</Button>
-              )}
+                <Button variant="secondary" disabled={!week1Saved} onClick={() => setActiveWeek(2)}>
+                  Go to Week 2
+                </Button>
+              ) : null}
             </div>
           </Card>
+
+          {!campaignEnded && !isReadOnly ? (
+            <Card title="End Campaign" subtitle="Available after saving both week metric sections.">
+              <div className="inline-actions">
+                <Button onClick={endCampaign} disabled={!week1Saved || !week2Saved}>End Campaign</Button>
+              </div>
+            </Card>
+          ) : null}
+
+          {campaignEnded ? (
+            <Card title="Final Campaign Summary" subtitle="Complete report after 2-week completion.">
+              <div className="section-stack">
+                <p className="card-muted"><strong>Tasks Completed:</strong> {doneCount}/{tasks.length}</p>
+                <p className="card-muted"><strong>Week 1 Reach:</strong> {Number(weekMetricInput.week1Reach || 0).toLocaleString()}</p>
+                <p className="card-muted"><strong>Week 2 Leads Generated:</strong> {Number(weekMetricInput.week2LeadsGenerated || 0).toLocaleString()}</p>
+                <p className="card-muted"><strong>Total Ad Spend:</strong> LKR {(Number(weekMetricInput.week1AdSpend || 0) + Number(weekMetricInput.week2AdSpend || 0)).toLocaleString()}</p>
+
+                <strong>Expected Outcomes Recap</strong>
+                <ul>
+                  {FINAL_EXPECTED_OUTCOME.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+
+                <div className="inline-actions">
+                  <Button onClick={() => navigate(`/dashboard/analytics?campaign=${campaign.id}`)}>Analysis</Button>
+                </div>
+              </div>
+            </Card>
+          ) : null}
         </div>
       </div>
     </div>
