@@ -22,7 +22,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["user", "admin", "mentor"],
       default: "user"
-    }
+    },
+    mentorExpertiseAreas: [{
+      type: String,
+      enum: ["businessIdea", "marketingDevelopment", "law"],
+      trim: true
+    }]
   },
   { timestamps: true }
 );

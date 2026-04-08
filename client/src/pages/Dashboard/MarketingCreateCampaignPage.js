@@ -1,10 +1,11 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import { useAppContext } from '../../context/AppContext'
+import { CAMPAIGN_METRIC_FIELDS, INSTAGRAM_TWO_WEEK_PLAN } from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -15,107 +16,163 @@ const dashboardLinks = [
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const steps = ['Basic Info', 'Audience', 'Content', 'Review']
+const steps = ['Basic Info', 'Audience & Budget', 'Content Strategy', 'Review']
+
+const initialForm = {
+  campaignName: 'Instagram Lead Generation Campaign',
+  description: '',
+  startDate: '',
+  targetAudience: '',
+  weeklyBudgetLKR: '',
+  targetReach: '',
+  contentGoal: '',
+  coreHook: '',
+  captionTone: '',
+  hashtagStyle: '',
+  cta: '',
+}
+
+const buildTasks = () => {
+  const tasks = []
+  INSTAGRAM_TWO_WEEK_PLAN.forEach((weekData) => {
+    weekData.days.forEach((dayData) => {
+      dayData.tasks.forEach((taskText, idx) => {
+        tasks.push({
+          title: `W${weekData.week}-D${dayData.day} | ${taskText}`,
+          description: dayData.title,
+          order: weekData.week * 1000 + dayData.day * 10 + idx,
+          isDone: false,
+          completedAt: null,
+        })
+      })
+    })
+  })
+  return tasks
+}
+
+const buildMetricValues = () => CAMPAIGN_METRIC_FIELDS.map((field) => ({
+  name: field.label,
+  type: field.key === 'ctr' ? 'percentage' : field.key === 'budgetSpentLKR' || field.key === 'cpc' || field.key === 'cpm' ? 'currency' : 'number',
+  value: 0,
+}))
 
 function CreateCampaign() {
   const navigate = useNavigate()
   const { campaignId } = useParams()
   const { campaigns, createCampaign, updateCampaign, selectedTemplate, setSelectedTemplate, addToast } = useAppContext()
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] = useState({
-    campaignName: '',
-    description: '',
-    platform: 'Instagram',
-    startDate: '',
-    endDate: '',
-    ageRange: 28,
-    genders: ['Women', 'Men'],
-    locations: ['Colombo', 'Kandy', 'Remote Founders'],
-    interests: ['Startups', 'Marketing', 'Investor Relations'],
-    budget: '$1,200',
-    contentType: 'Video',
-    headline: '',
-    body: '',
-    cta: '',
-  })
   const [error, setError] = useState('')
+  const [formData, setFormData] = useState(initialForm)
+
   const editingCampaign = campaigns.find((campaign) => campaign.id === campaignId)
 
   useEffect(() => {
-    if (!selectedTemplate || campaignId) {
-      return
-    }
-
+    if (!selectedTemplate || campaignId) return
     setFormData((current) => ({
       ...current,
-      campaignName: selectedTemplate.name,
-      platform: selectedTemplate.platform,
-      headline: selectedTemplate.headline,
-      body: selectedTemplate.body,
-      cta: selectedTemplate.cta,
+      campaignName: selectedTemplate.title || selectedTemplate.name || current.campaignName,
+      description: selectedTemplate.description || current.description,
     }))
-  }, [campaignId, selectedTemplate])
+  }, [selectedTemplate, campaignId])
 
   useEffect(() => {
-    if (!editingCampaign) {
-      return
-    }
-
+    if (!editingCampaign) return
     setFormData((current) => ({
       ...current,
-      campaignName: editingCampaign.name ?? '',
-      description: editingCampaign.description ?? '',
-      platform: editingCampaign.platform ?? 'Instagram',
-      startDate: editingCampaign.startDate ?? '',
-      endDate: editingCampaign.endDate ?? '',
-      budget: editingCampaign.budget ?? '$1,200',
-      headline: editingCampaign.title ?? editingCampaign.name ?? '',
-      body: editingCampaign.description ?? '',
-      cta: editingCampaign.cta ?? '',
+      campaignName: editingCampaign.name || current.campaignName,
+      description: editingCampaign.metrics?.notes || current.description,
+      weeklyBudgetLKR: String(editingCampaign.metrics?.budgetSpentLKR || ''),
+      targetReach: String(editingCampaign.metrics?.impressions || ''),
     }))
   }, [editingCampaign])
+
+  const aiGuide = useMemo(() => ([
+    'Hook: Stop wasting ad money until you see this…',
+    'Caption style: Problem → Solution → CTA',
+    'Hashtags: #StartupGrowth #DigitalMarketingTips #EntrepreneurLife',
+    'Thumbnail idea: bold text overlay + contrast background',
+  ]), [])
 
   const updateField = (event) => {
     const { name, value } = event.target
     setFormData((current) => ({ ...current, [name]: value }))
   }
 
+  const validateCurrentStep = () => {
+    if (currentStep === 0) {
+      if (!formData.campaignName || !formData.description || !formData.startDate) {
+        return 'Please complete campaign name, description, and start date.'
+      }
+    }
+    if (currentStep === 1) {
+      if (!formData.targetAudience || !formData.weeklyBudgetLKR || !formData.targetReach) {
+        return 'Please provide audience, weekly budget, and target reach.'
+      }
+    }
+    if (currentStep === 2) {
+      if (!formData.contentGoal || !formData.coreHook || !formData.cta) {
+        return 'Please complete content goal, hook, and CTA.'
+      }
+    }
+    return ''
+  }
+
   const handleNext = () => {
-    if (
-      currentStep === 0 &&
-      (!formData.campaignName || !formData.description || !formData.startDate || !formData.endDate)
-    ) {
-      setError('Complete the required fields before continuing.')
-      addToast('Please complete the required campaign details.', 'warning')
+    const stepError = validateCurrentStep()
+    if (stepError) {
+      setError(stepError)
+      addToast(stepError, 'warning')
       return
     }
-
     setError('')
     setCurrentStep((step) => Math.min(step + 1, steps.length - 1))
   }
 
-  const handleCreate = () => {
-    if (!formData.headline || !formData.cta) {
-      setError('Headline and CTA are required before creating a campaign.')
-      addToast('Please complete the content step.', 'warning')
-      return
-    }
+  const handleSave = async () => {
+    try {
+      const tasks = buildTasks()
+      const metricValues = buildMetricValues()
 
-    if (editingCampaign) {
-      updateCampaign(editingCampaign.id, {
+      if (editingCampaign) {
+        await updateCampaign(editingCampaign.id, {
+          title: formData.campaignName,
+          tasks,
+          metricValues,
+          status: 'running',
+          metrics: {
+            ...editingCampaign.metrics,
+            impressions: Number(formData.targetReach || 0),
+            budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
+            notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+          },
+        })
+        navigate(`/dashboard/campaigns/${editingCampaign.id}`)
+        return
+      }
+
+      const created = await createCampaign({
         title: formData.campaignName,
-      }).then(() => navigate(`/dashboard/campaigns/${editingCampaign.id}`))
-      return
-    }
+        templateId: selectedTemplate?.id,
+      })
 
-    const payload = selectedTemplate?.id
-      ? { templateId: selectedTemplate.id, title: formData.campaignName }
-      : { title: formData.campaignName }
+      await updateCampaign(created.id, {
+        status: 'running',
+        tasks,
+        metricValues,
+        metrics: {
+          impressions: Number(formData.targetReach || 0),
+          budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
+          leads: 0,
+          clicks: 0,
+          notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+        },
+      })
 
-    createCampaign(payload).then((created) => {
       setSelectedTemplate(null)
       navigate(`/dashboard/campaigns/${created.id}`)
-    })
+    } catch (saveError) {
+      addToast(saveError?.message || 'Failed to create campaign.', 'warning')
+    }
   }
 
   return (
@@ -125,20 +182,13 @@ function CreateCampaign() {
         <Navbar />
         <div className="dashboard-content">
           <div>
-            <h1 className="page-title">{editingCampaign ? 'Edit Campaign' : 'Create Campaign'}</h1>
-            <p className="page-subtitle">
-              {editingCampaign
-                ? 'Update your campaign details with the same 4-step wizard.'
-                : 'A 4-step mock wizard ready for future API wiring.'}
-            </p>
+            <h1 className="page-title">{editingCampaign ? 'Edit Instagram Campaign' : 'Create Instagram Campaign'}</h1>
+            <p className="page-subtitle">Professional 2-week execution flow (manual execution + weekly optimization).</p>
           </div>
 
           <div className="wizard-steps">
             {steps.map((step, index) => (
-              <div
-                key={step}
-                className={`wizard-step ${index === currentStep ? 'active' : ''}`.trim()}
-              >
+              <div key={step} className={`wizard-step ${index === currentStep ? 'active' : ''}`.trim()}>
                 <strong>Step {index + 1}</strong>
                 <p className="card-muted">{step}</p>
               </div>
@@ -146,159 +196,110 @@ function CreateCampaign() {
           </div>
 
           <div className="wizard-shell">
-            {error ? <p className="page-subtitle">{error}</p> : null}
+            {error ? <p className="error-text">{error}</p> : null}
+
             {currentStep === 0 ? (
-              <Card title="Basic Info" subtitle="Core campaign details and schedule.">
+              <Card title="Campaign Foundation" subtitle="Define campaign context and launch schedule.">
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="campaign-name">Campaign name</label>
-                    <input id="campaign-name" name="campaignName" className="form-control" value={formData.campaignName} onChange={updateField} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-platform">Platform</label>
-                    <select id="campaign-platform" name="platform" className="form-control" value={formData.platform} onChange={updateField}>
-                      <option>Instagram</option>
-                      <option>LinkedIn</option>
-                      <option>Email</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-description">Description</label>
-                    <textarea id="campaign-description" name="description" className="form-control" rows="5" value={formData.description} onChange={updateField} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-start">Start date</label>
-                    <input id="campaign-start" name="startDate" type="date" className="form-control" value={formData.startDate} onChange={updateField} />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-end">End date</label>
-                    <input id="campaign-end" name="endDate" type="date" className="form-control" value={formData.endDate} onChange={updateField} />
-                  </div>
+                  <label className="form-label">
+                    Campaign Name
+                    <input name="campaignName" className="form-control" value={formData.campaignName} onChange={updateField} />
+                  </label>
+                  <label className="form-label">
+                    Start Date
+                    <input type="date" name="startDate" className="form-control" value={formData.startDate} onChange={updateField} />
+                  </label>
+                  <label className="form-label" style={{ gridColumn: '1 / -1' }}>
+                    Description
+                    <textarea name="description" rows="5" className="form-control" value={formData.description} onChange={updateField} />
+                  </label>
                 </div>
               </Card>
             ) : null}
 
             {currentStep === 1 ? (
-              <Card title="Audience" subtitle="Targeting placeholders for audience setup.">
+              <Card title="Audience + Budget" subtitle="Plan targeting and expected top-of-funnel outcomes.">
                 <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="audience-age">Age range</label>
-                    <input id="audience-age" type="range" min="18" max="65" defaultValue={formData.ageRange} />
-                    <span className="card-muted">18 - {formData.ageRange + 18}</span>
-                  </div>
-                  <div className="form-group">
-                    <label>Gender</label>
-                    <div className="checkbox-row">
-                      {['Women', 'Men', 'Non-binary'].map((gender) => (
-                        <label key={gender} className="checkbox-item">
-                          <input type="checkbox" defaultChecked={formData.genders.includes(gender)} />
-                          <span>{gender}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Locations</label>
-                    <div className="tag-row">
-                      {formData.locations.map((location) => (
-                        <span key={location} className="tag-chip">{location}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Interests</label>
-                    <div className="tag-row">
-                      {formData.interests.map((interest) => (
-                        <span key={interest} className="tag-chip">{interest}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-budget">Budget</label>
-                    <input id="campaign-budget" name="budget" className="form-control" value={formData.budget} onChange={updateField} />
-                  </div>
+                  <label className="form-label">
+                    Target Audience
+                    <textarea name="targetAudience" rows="4" className="form-control" value={formData.targetAudience} onChange={updateField} placeholder="Example: Founders (22-40), Sri Lanka, startup + marketing interests" />
+                  </label>
+                  <label className="form-label">
+                    Weekly Budget (LKR)
+                    <input type="number" name="weeklyBudgetLKR" className="form-control" value={formData.weeklyBudgetLKR} onChange={updateField} />
+                  </label>
+                  <label className="form-label">
+                    Target Reach
+                    <input type="number" name="targetReach" className="form-control" value={formData.targetReach} onChange={updateField} />
+                  </label>
                 </div>
               </Card>
             ) : null}
 
             {currentStep === 2 ? (
-              <Card title="Content" subtitle="Ad copy and media placeholders.">
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="content-type">Content type</label>
-                    <select id="content-type" name="contentType" className="form-control" value={formData.contentType} onChange={updateField}>
-                      <option>Video</option>
-                      <option>Carousel</option>
-                      <option>Static Image</option>
-                      <option>Email</option>
-                    </select>
+              <div className="mentor-layout">
+                <Card title="Content Execution Strategy" subtitle="No uploads. Platform provides strategy, captions, hashtags, and tasks.">
+                  <div className="form-grid">
+                    <label className="form-label">
+                      Content Goal
+                      <input name="contentGoal" className="form-control" value={formData.contentGoal} onChange={updateField} placeholder="Awareness, engagement, or lead generation" />
+                    </label>
+                    <label className="form-label">
+                      Core Hook
+                      <input name="coreHook" className="form-control" value={formData.coreHook} onChange={updateField} />
+                    </label>
+                    <label className="form-label">
+                      Caption Tone
+                      <input name="captionTone" className="form-control" value={formData.captionTone} onChange={updateField} placeholder="Professional, bold, educational..." />
+                    </label>
+                    <label className="form-label">
+                      Hashtag Strategy
+                      <input name="hashtagStyle" className="form-control" value={formData.hashtagStyle} onChange={updateField} placeholder="Niche tags + broad discovery tags" />
+                    </label>
+                    <label className="form-label" style={{ gridColumn: '1 / -1' }}>
+                      Primary CTA
+                      <input name="cta" className="form-control" value={formData.cta} onChange={updateField} placeholder="DM for guide / click link / book call" />
+                    </label>
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-headline">Headline</label>
-                    <input id="campaign-headline" name="headline" className="form-control" value={formData.headline} onChange={updateField} />
+                </Card>
+
+                <Card title="AI Suggestion Box" subtitle="Smart starting point for this campaign.">
+                  <div className="activity-log">
+                    {aiGuide.map((item) => (
+                      <div key={item} className="activity-item">
+                        <p className="card-muted">{item}</p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-body">Body</label>
-                    <textarea id="campaign-body" name="body" className="form-control" rows="5" value={formData.body} onChange={updateField} />
-                  </div>
-                  <div className="form-group">
-                    <label>Media upload</label>
-                    <div className="upload-dropzone">
-                      Drag and drop media here
-                      <br />
-                      Upload placeholder only
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="campaign-cta">CTA</label>
-                    <input id="campaign-cta" name="cta" className="form-control" value={formData.cta} onChange={updateField} />
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              </div>
             ) : null}
 
             {currentStep === 3 ? (
-              <Card title="Review" subtitle="Review summary before mock creation.">
+              <Card title="Review + Launch" subtitle="Launch a structured 2-week campaign board with weekly metric tracking.">
                 <div className="review-list">
                   <div className="review-item">
-                    <div className="toolbar-row">
-                      <strong>Basic Info</strong>
-                      <Button variant="ghost" onClick={() => setCurrentStep(0)}>Edit</Button>
-                    </div>
-                    <p className="card-muted">{formData.campaignName} on {formData.platform}</p>
+                    <strong>{formData.campaignName}</strong>
+                    <p className="card-muted">Starts: {formData.startDate || 'Not set'} · Budget: LKR {Number(formData.weeklyBudgetLKR || 0).toLocaleString()} / week</p>
+                    <p className="card-muted">Goal: {formData.contentGoal || 'Not set'} · CTA: {formData.cta || 'Not set'}</p>
                   </div>
                   <div className="review-item">
-                    <div className="toolbar-row">
-                      <strong>Audience</strong>
-                      <Button variant="ghost" onClick={() => setCurrentStep(1)}>Edit</Button>
-                    </div>
-                    <p className="card-muted">{formData.locations.join(', ')} | {formData.interests.join(', ')}</p>
-                  </div>
-                  <div className="review-item">
-                    <div className="toolbar-row">
-                      <strong>Content</strong>
-                      <Button variant="ghost" onClick={() => setCurrentStep(2)}>Edit</Button>
-                    </div>
-                    <p className="card-muted">{formData.headline}</p>
+                    <strong>Execution Plan</strong>
+                    <p className="card-muted">2 weeks · 14 days · {buildTasks().length} detailed tasks</p>
+                    <p className="card-muted">Week 1: Awareness + Engagement · Week 2: Lead Generation + Conversion</p>
                   </div>
                 </div>
               </Card>
             ) : null}
 
             <div className="toolbar-row">
-              <Button
-                variant="secondary"
-                onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))}
-                disabled={currentStep === 0}
-              >
+              <Button variant="secondary" onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))} disabled={currentStep === 0}>
                 Previous
               </Button>
               {currentStep < steps.length - 1 ? (
-                <Button onClick={handleNext}>
-                  Next
-                </Button>
+                <Button onClick={handleNext}>Next</Button>
               ) : (
-                <Button onClick={handleCreate}>{editingCampaign ? 'Save Changes' : 'Create'}</Button>
+                <Button onClick={handleSave}>{editingCampaign ? 'Save Campaign' : 'Launch Campaign Plan'}</Button>
               )}
             </div>
           </div>
@@ -309,5 +310,3 @@ function CreateCampaign() {
 }
 
 export default CreateCampaign
-
-

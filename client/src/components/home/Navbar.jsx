@@ -19,6 +19,39 @@ function Navbar() {
 
   const closeMenu = () => setIsOpen(false)
 
+  const renderNotificationContent = (notification) => {
+    const details = notification?.details || {}
+    const hasDetailedSessionInfo = notification?.category === 'mentor_session_approved'
+
+    return (
+      <div className="notification-copy">
+        <p>{notification.message}</p>
+        {hasDetailedSessionInfo ? (
+          <div className="notification-details">
+            {details.dateTime ? (
+              <p>
+                <strong>Date & Time:</strong> {details.dateTime}
+              </p>
+            ) : null}
+            {details.description ? (
+              <p>
+                <strong>Description:</strong> {details.description}
+              </p>
+            ) : null}
+            {details.meetingUrl ? (
+              <p>
+                <strong>Meeting URL:</strong>{' '}
+                <a className="notification-detail-url" href={details.meetingUrl} target="_blank" rel="noreferrer">
+                  Open Link
+                </a>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
   return (
     <header className="home-navbar">
       <div className="home-container home-navbar-inner">
@@ -79,7 +112,7 @@ function Navbar() {
                       <div className="notification-list">
                         {notifications.length > 0 ? notifications.map((notification) => (
                           <div key={notification.id} className="notification-item">
-                            <p>{notification.message}</p>
+                            {renderNotificationContent(notification)}
                             <button type="button" className="notification-link" onClick={() => dismissNotification(notification.id)}>
                               Dismiss
                             </button>
