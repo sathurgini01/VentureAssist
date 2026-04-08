@@ -68,6 +68,7 @@ router.put("/mentor-requests/:id", updateMentorRequestStatus);
 
 // ✅ Tracker (B9)
 router.post("/trackers/init/:ideaId", initTrackerForIdea);
+router.get("/tracker/:ideaId", getTrackerByIdea);
 router.get("/trackers", getTrackerByIdea);
 router.put("/trackers/:trackerId/items/:itemId", updateTrackerItem);
 

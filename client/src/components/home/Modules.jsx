@@ -9,6 +9,7 @@ const moduleCards = [
     tags: ['Idea Submission', 'Feasibility', 'Business Model'],
     description:
       'Validate and refine startup ideas with structured support for market problems, target audience definition, and early business model planning.',
+    slug: 'business',
   },
   {
     icon: '⚖️',
@@ -43,6 +44,10 @@ function Modules() {
   const getModuleLink = (card) => {
     if (card.slug === 'marketing') {
       return isAuthenticated ? '/dashboard' : '/login'
+    }
+
+    if (card.slug === 'business') {
+      return '/business'
     }
 
     return '#cta'

@@ -32,6 +32,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
+import businessRoutes from './routes/businessRoutes'
 
 function AppShell() {
   const { toasts } = useAppContext()
@@ -49,6 +50,7 @@ function AppShell() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {businessRoutes}
           <Route
             path="/profile"
             element={
