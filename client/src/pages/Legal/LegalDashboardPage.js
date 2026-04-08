@@ -6,7 +6,7 @@ import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import { useAppContext } from '../../context/AppContext'
 import { getLegalTasks, getMyLegalSubmissions } from '../../services/legalSupportService'
-import { getStatusMeta, legalCategories, legalUserLinks } from './legalHelpers'
+import { getLegalCategories, getStatusMeta, legalUserLinks, normalizeLegalCategory } from './legalHelpers'
 
 function LegalDashboardPage() {
   const { addToast } = useAppContext()
@@ -30,7 +30,11 @@ function LegalDashboardPage() {
           getMyLegalSubmissions(),
         ])
         if (!active) return
-        setTasks(tasksData.tasks || [])
+        const normalizedTasks = (tasksData.tasks || []).map((task) => ({
+          ...task,
+          category: normalizeLegalCategory(task.category),
+        }))
+        setTasks(normalizedTasks)
         setSubmissions(submissionsData.submissions || [])
       } catch (error) {
         if (active) addToastRef.current(error.message || 'Unable to load legal dashboard.', 'error')
@@ -78,7 +82,7 @@ function LegalDashboardPage() {
                     >
                       All
                     </button>
-                    {legalCategories.map((category) => (
+                    {getLegalCategories().map((category) => (
                       <button
                         key={category}
                         type="button"

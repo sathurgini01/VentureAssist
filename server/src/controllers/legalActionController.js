@@ -17,7 +17,7 @@ export const submitEvidence = async (req, res, next) => {
         $set: { status: "UNDER_REVIEW" },
         $push: { evidence: { fileUrl, note } }
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: "after" }
     );
 
     res.status(201).json({ submission });

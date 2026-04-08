@@ -47,6 +47,7 @@ const AdminLegalToolkitsPage = () => {
       category: form.category.trim(),
       description: form.description.trim(),
       url: form.url.trim(),
+      type: "LINK",
       tags: form.tags
         .split(",")
         .map((item) => item.trim())
@@ -155,9 +156,15 @@ const AdminLegalToolkitsPage = () => {
           <div key={tk._id} className="toolkit-card">
             <h3>{tk.title}</h3>
             <p><strong>Category:</strong> {tk.category}</p>
-            <p>{tk.description}</p>
-            <p><strong>URL:</strong> {tk.url}</p>
-            <p><strong>Tags:</strong> {Array.isArray(tk.tags) ? tk.tags.join(", ") : "-"}</p>
+            {tk.description ? <p><strong>Description:</strong> {tk.description}</p> : null}
+            <p><strong>URL:</strong> <a href={tk.url} target="_blank" rel="noreferrer">{tk.url}</a></p>
+            <p><strong>Tags:</strong> {
+              Array.isArray(tk.tags) && tk.tags.length > 0
+                ? tk.tags.join(", ")
+                : typeof tk.tags === 'string' && tk.tags.trim()
+                ? tk.tags
+                : "-"
+            }</p>
             <p><strong>Status:</strong> {tk.active === false ? "Inactive" : "Active"}</p>
 
             <button onClick={() => handleEdit(tk)}>Edit</button>

@@ -141,10 +141,24 @@ function LegalHomePage() {
               ) : (
                 <div className="legal-chip-grid">
                   {toolkits.map((item) => (
-                    <div key={item._id} className="legal-task-preview">
+                    <div key={item._id} className="legal-task-preview toolkit-preview">
                       <span className="badge">{item.category}</span>
                       <strong>{item.title}</strong>
-                      <span className="card-muted">Type: {item.type}</span>
+                      {item.description ? <p className="card-muted toolkit-description">{item.description}</p> : null}
+                      <p className="card-muted toolkit-link">
+                        {item.type === 'LINK' && item.url ? (
+                          <a href={item.url} target="_blank" rel="noreferrer">
+                            Open link
+                          </a>
+                        ) : item.url ? (
+                          <span>{item.url}</span>
+                        ) : (
+                          <span>{item.type}</span>
+                        )}
+                      </p>
+                      {Array.isArray(item.tags) && item.tags.length > 0 ? (
+                        <p className="card-muted toolkit-tags">Tags: {item.tags.join(', ')}</p>
+                      ) : null}
                     </div>
                   ))}
                 </div>

@@ -5,13 +5,30 @@ export const legalUserLinks = [
   { to: '/toolkits/legal/ai', label: 'AI Assistant' },
 ]
 
-export const legalCategories = [
-  'Registration',
-  'Licenses',
+export const defaultLegalCategories = [
+  'Registration & Structure',
+  'Licensing & Permits',
   'Tax & Compliance',
-  'Contracts',
-  'Policies',
+  'Contracts & Agreements',
+  'Policies & Legal Protection',
 ]
+
+const legalCategoryMap = {
+  Registration: 'Registration & Structure',
+  Licenses: 'Licensing & Permits',
+  Contracts: 'Contracts & Agreements',
+  Policies: 'Policies & Legal Protection',
+}
+
+export const normalizeLegalCategory = (value) => {
+  if (!value || typeof value !== 'string') return value
+  const trimmed = value.trim()
+  return legalCategoryMap[trimmed] || trimmed
+}
+
+export const getLegalCategories = () => {
+  return [...defaultLegalCategories]
+}
 
 export const statusMeta = {
   PENDING: { label: 'Pending', tone: 'neutral' },

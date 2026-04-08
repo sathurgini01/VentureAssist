@@ -6,12 +6,13 @@ import {
   updateAdminLegalTask,
   deleteAdminLegalTask,
 } from "../../services/legalAdminService";
+import { defaultLegalCategories, normalizeLegalCategory } from "../Legal/legalHelpers";
 import "../../styles/AdminLegalTasks.css";
 import "../../styles/AdminLegalCommon.css";
 
 const initialForm = {
   title: "",
-  category: "Registration",
+  category: defaultLegalCategories[0],
   description: "",
   steps: "",
   requiredDocuments: "",
@@ -22,6 +23,9 @@ const initialForm = {
 const AdminLegalTasksPage = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
+  const [categories, setCategories] = useState(defaultLegalCategories);
+  const [newCategory, setNewCategory] = useState("");
+  const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,7 +36,22 @@ const AdminLegalTasksPage = () => {
     try {
       setPageLoading(true);
       const data = await getAdminLegalTasks();
-      setTasks(Array.isArray(data) ? data : data.tasks || data.data || []);
+      const loadedTasks = Array.isArray(data) ? data : data.tasks || data.data || [];
+      const normalizedTasks = loadedTasks.map((task) => ({
+        ...task,
+        category: normalizeLegalCategory(task.category),
+      }));
+      setTasks(normalizedTasks);
+      const taskCategories = Array.from(
+        new Set(normalizedTasks.map((task) => task.category).filter(Boolean)),
+      );
+      setCategories((current) => {
+        const merged = [...defaultLegalCategories];
+        taskCategories.forEach((category) => {
+          if (!merged.includes(category)) merged.push(category);
+        });
+        return merged;
+      });
     } catch (error) {
       setMessage("Failed to load legal tasks");
     } finally {
@@ -97,7 +116,7 @@ const AdminLegalTasksPage = () => {
     setEditingId(task._id || task.id);
     setForm({
       title: task.title || "",
-      category: task.category || "Registration",
+      category: normalizeLegalCategory(task.category) || defaultLegalCategories[0],
       description: task.description || "",
       steps: Array.isArray(task.steps) ? task.steps.join(", ") : "",
       requiredDocuments: Array.isArray(task.requiredDocuments)
@@ -162,13 +181,53 @@ const AdminLegalTasksPage = () => {
                 value={form.category}
                 onChange={handleChange}
               >
-                <option value="Registration">Registration</option>
-                <option value="Registration & Structure">Registration & Structure</option>
-                <option value="Licenses">Licenses</option>
-                <option value="Tax & Compliance">Tax & Compliance</option>
-                <option value="Contracts">Contracts</option>
-                <option value="Policies">Policies</option>
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
               </select>
+              <div className="category-add-row">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => setShowCategoryInput((prev) => !prev)}
+                >
+                  + Add category
+                </button>
+              </div>
+              {showCategoryInput ? (
+                <div className="category-add-field">
+                  <input
+                    type="text"
+                    placeholder="New category name"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="secondary-btn"
+                    onClick={() => {
+                      const trimmed = newCategory.trim()
+                      if (!trimmed) {
+                        setMessage("Category name cannot be empty")
+                        return
+                      }
+                      if (categories.includes(trimmed)) {
+                        setMessage("Category already exists")
+                        return
+                      }
+                      setCategories((prev) => [...prev, trimmed])
+                      setForm((prev) => ({ ...prev, category: trimmed }))
+                      setNewCategory("")
+                      setShowCategoryInput(false)
+                      setMessage(`Category "${trimmed}" added`)
+                    }}
+                  >
+                    Save category
+                  </button>
+                </div>
+              ) : null}
             </div>
 
             <div>
@@ -178,7 +237,8 @@ const AdminLegalTasksPage = () => {
                 name="order"
                 value={form.order}
                 onChange={handleChange}
-                min="1"
+                min="0.1"
+                step="0.1"
               />
             </div>
 

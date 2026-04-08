@@ -6,6 +6,8 @@ const legalToolkitSchema = new mongoose.Schema(
     category: { type: String, required: true },
     type: { type: String, enum: ["LINK", "PDF", "TEMPLATE"], default: "LINK" },
     url: { type: String, required: true },
+    description: { type: String, default: '' },
+    tags: { type: [String], default: [] },
     active: { type: Boolean, default: true }
   },
   { timestamps: true }

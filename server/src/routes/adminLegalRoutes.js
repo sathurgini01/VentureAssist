@@ -35,7 +35,7 @@ router.get("/admin/tasks/:taskId", protectMarketing, allowMarketingRoles("admin"
 // UPDATE
 router.put("/admin/tasks/:taskId", protectMarketing, allowMarketingRoles("admin"), async (req, res, next) => {
   try {
-    const task = await LegalTask.findByIdAndUpdate(req.params.taskId, req.body, { new: true });
+    const task = await LegalTask.findByIdAndUpdate(req.params.taskId, req.body, { returnDocument: "after" });
     res.json({ task });
   } catch (e) { next(e); }
 });

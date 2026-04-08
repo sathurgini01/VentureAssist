@@ -25,7 +25,7 @@ router.patch("/mentor/submissions/:id", protectMarketing, allowMarketingRoles("m
     const updated = await LegalSubmission.findByIdAndUpdate(
       req.params.id,
       { $set: { status, mentorFeedback } },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     res.json({ submission: updated });

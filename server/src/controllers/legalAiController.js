@@ -25,10 +25,14 @@ export const askGeminiCompliance = async (req, res) => {
 
     const genAI = new GoogleGenerativeAI(apiKey);
 
-    const modelName =
-      process.env.GEMINI_MODEL?.trim() || "gemini-1.5-flash";
-
-    const model = genAI.getGenerativeModel({ model: modelName });
+    const requestedModel = process.env.GEMINI_MODEL?.trim();
+    const candidateModels = [
+      requestedModel,
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro-latest",
+      "gemini-1.5-pro",
+    ].filter(Boolean);
 
     const prompt = `
 You are a legal and startup compliance assistant for Sri Lanka.
@@ -39,13 +43,40 @@ User question:
 ${question}
 `;
 
-    // Add timeout protection (prevents hanging forever)
-    const result = await Promise.race([
-      model.generateContent(prompt),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 12000)
-      )
-    ]);
+    let result = null;
+    let lastError = null;
+
+    for (const modelName of candidateModels) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+
+        // Add timeout protection (prevents hanging forever)
+        result = await Promise.race([
+          model.generateContent(prompt),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 12000)
+          ),
+        ]);
+        break;
+      } catch (modelError) {
+        lastError = modelError;
+        const modelMessage = String(modelError?.message || "");
+
+        // Try next candidate only for model-availability errors
+        if (
+          modelMessage.includes("is not found for API version") ||
+          modelMessage.includes("404")
+        ) {
+          continue;
+        }
+
+        throw modelError;
+      }
+    }
+
+    if (!result && lastError) {
+      throw lastError;
+    }
 
     const answer =
       result?.response?.text?.() ||
@@ -68,14 +99,15 @@ ${question}
       message.includes("fetch failed") ||
       message.includes("UND_ERR_CONNECT_TIMEOUT") ||
       message.includes("GEMINI_TIMEOUT") ||
-      message.includes("network")
+      message.includes("network") ||
+      message.includes("is not found for API version") ||
+      message.includes("404")
     ) {
       return res.status(200).json({
         answer:
-          "The AI service is temporarily unreachable (network timeout). " +
-          "Please check your internet connection or try again later. " +
-          "Meanwhile, ensure your business registration, tax registration, " +
-          "and required permits are properly completed according to Sri Lankan regulations.",
+          "The AI service is temporarily unavailable due to a model configuration issue or network timeout. " +
+          "Please check GEMINI_MODEL in your server environment and try again. " +
+          "Meanwhile, ensure your business registration, tax registration, and required permits are up to date according to Sri Lankan regulations.",
         disclaimer:
           "General guidance only. Not official legal advice.",
         source: "fallback"
