@@ -105,14 +105,14 @@ function BusinessHomePage() {
         />
         <SummaryCard
           title="Toolkit library"
-          value={homeData?.topToolkits?.length ?? 0}
+          value={homeData?.toolkitCount ?? 0}
           caption="Jump into planning tools that help you pressure-test your approach."
           to="/business/toolkits"
           tone="amber"
         />
         <SummaryCard
           title="Mentor directory"
-          value={homeData?.topMentors?.length ?? 0}
+          value={homeData?.mentorCount ?? 0}
           caption="Browse experts who can challenge assumptions and sharpen execution."
           to="/business/mentors"
           tone="rose"
@@ -134,8 +134,8 @@ function BusinessHomePage() {
               {homeData.topToolkits.map((toolkit) => (
                 <PreviewCard
                   key={toolkit._id}
-                  title={toolkit.title}
-                  subtitle={toolkit.category}
+                  title={toolkit.name || toolkit.title}
+                  subtitle={toolkit.relatedBusinessIdeaTitle || toolkit.category}
                   description={toolkit.description}
                   meta="Toolkit"
                   to={`/business/toolkits/${toolkit._id}`}
@@ -219,7 +219,11 @@ function BusinessHomePage() {
                   key={mentor._id}
                   title={mentor.name}
                   subtitle={mentor.expertise}
-                  description={mentor.bio}
+                  description={
+                    mentor.assignedBusinessIdeaTitles?.length
+                      ? `Assigned ideas: ${mentor.assignedBusinessIdeaTitles.join(', ')}`
+                      : mentor.bio
+                  }
                   meta="Mentor"
                   to="/business/mentors"
                   icon={<MentorIcon />}

@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAppContext } from '../../../context/AppContext'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/common/AsyncState'
-import { ActionLink, BusinessPageHeader, DetailItem, MentorIcon, PreviewCard, SectionCard, SwotQuadrant } from '../components/BusinessComponents'
-import { decorateIdea, getIdeaById, getIdeaSwot, getMentorRequests } from '../services/businessService'
+import { ActionLink, BusinessPageHeader, DetailItem, MentorIcon, PreviewCard, ProgressBar, SectionCard, SwotQuadrant } from '../components/BusinessComponents'
+import { decorateIdea, getIdeaById, getIdeaSwot, getIdeaTracker, getMentorRequests } from '../services/businessService'
 
 function BusinessIdeaDetailPage() {
   const navigate = useNavigate()
@@ -12,6 +12,7 @@ function BusinessIdeaDetailPage() {
   const [idea, setIdea] = useState(null)
   const [swot, setSwot] = useState(null)
   const [requests, setRequests] = useState([])
+  const [trackerState, setTrackerState] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -22,16 +23,18 @@ function BusinessIdeaDetailPage() {
       try {
         setLoading(true)
         setError('')
-        const [ideaData, swotData, requestData] = await Promise.all([
+        const [ideaData, swotData, requestData, trackerData] = await Promise.all([
           getIdeaById(id),
           getIdeaSwot(id).catch(() => null),
           getMentorRequests({ ideaId: id }).catch(() => []),
+          getIdeaTracker(id).catch(() => null),
         ])
 
         if (isMounted) {
           setIdea(decorateIdea(ideaData, swotData))
           setSwot(swotData)
           setRequests(requestData)
+          setTrackerState(trackerData)
         }
       } catch (loadError) {
         if (isMounted) {
@@ -59,6 +62,8 @@ function BusinessIdeaDetailPage() {
     return <ErrorState title="Idea not available" message={error || 'This idea could not be found.'} actionLabel="Back to ideas" onAction={() => navigate('/business/ideas')} />
   }
 
+  const trackerProgress = trackerState?.progressPercent ?? idea.progress
+
   return (
     <div className="space-y-6">
       <BusinessPageHeader
@@ -85,6 +90,10 @@ function BusinessIdeaDetailPage() {
       />
 
       <SectionCard title="Idea overview" subtitle="Every field saved for this business concept.">
+        <div className="mb-6 rounded-[24px] border border-slate-200 bg-slate-50/80 p-5">
+          <p className="mb-3 text-sm font-semibold text-slate-700">Tracker progress</p>
+          <ProgressBar value={trackerProgress} />
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <DetailItem label="Summary" value={idea.summary} />
           <DetailItem label="Problem" value={idea.problem} />
@@ -97,7 +106,7 @@ function BusinessIdeaDetailPage() {
           <DetailItem label="Opportunities" value={idea.opportunities} />
           <DetailItem label="Revenue model" value={idea.revenueModel} />
           <DetailItem label="Next month goal" value={idea.nextMonthGoal} />
-          <DetailItem label="Current stage" value={`${idea.stage} (${idea.progress}% complete)`} />
+          <DetailItem label="Current stage" value={`${idea.stage} (${trackerProgress}% complete)`} />
         </div>
       </SectionCard>
 

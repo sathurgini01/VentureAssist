@@ -1,14 +1,19 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAppContext } from '../../../context/AppContext'
+import { useAuth } from '../../../context/AuthContext.jsx'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/common/AsyncState'
 import { ActionButton, ActionLink, BusinessPageHeader, MentorProfileCard, SectionCard } from '../components/BusinessComponents'
 import { createMentorRequest, getIdeas, getMentors } from '../services/businessService'
+import { isFutureDateTime } from '../services/validation'
 
 function BusinessMentorsPage() {
+  const navigate = useNavigate()
   const { addToast } = useAppContext()
+  const { user } = useAuth()
   const [searchParams] = useSearchParams()
   const preselectedIdeaId = searchParams.get('ideaId') || ''
+  const preselectedMentorId = searchParams.get('mentorId') || ''
   const [mentors, setMentors] = useState([])
   const [ideas, setIdeas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,7 +21,7 @@ function BusinessMentorsPage() {
   const [query, setQuery] = useState('')
   const [expertiseFilter, setExpertiseFilter] = useState('All')
   const [requestForm, setRequestForm] = useState({
-    mentorId: '',
+    mentorId: preselectedMentorId,
     ideaId: preselectedIdeaId,
     preferredTime: '',
     message: '',
@@ -63,7 +68,8 @@ function BusinessMentorsPage() {
         !normalizedQuery ||
         mentor.name.toLowerCase().includes(normalizedQuery) ||
         mentor.bio.toLowerCase().includes(normalizedQuery) ||
-        mentor.expertise.toLowerCase().includes(normalizedQuery)
+        mentor.expertise.toLowerCase().includes(normalizedQuery) ||
+        (mentor.assignedBusinessIdeaTitles || []).some((title) => title.toLowerCase().includes(normalizedQuery))
 
       const matchesExpertise = expertiseFilter === 'All' || mentor.expertise === expertiseFilter
 
@@ -87,11 +93,18 @@ function BusinessMentorsPage() {
       return
     }
 
+    if (!isFutureDateTime(requestForm.preferredTime)) {
+      addToast('Choose a valid future date and time.', 'error')
+      return
+    }
+
     try {
       setSending(true)
       await createMentorRequest({
         ...requestForm,
         ideaId: requestForm.ideaId || undefined,
+        userName: user?.name || '',
+        userEmail: user?.email || '',
       })
       addToast('Mentor request sent successfully.', 'success')
       setRequestForm((current) => ({
@@ -126,6 +139,9 @@ function BusinessMentorsPage() {
         variant="mentors"
         actions={
           <>
+            <ActionLink to="/business/become-mentor" variant="bannerSecondary">
+              Become mentor
+            </ActionLink>
             <ActionLink to="/business/mentor-requests" variant="bannerSecondary">
               Open requests
             </ActionLink>
@@ -171,6 +187,7 @@ function BusinessMentorsPage() {
               mentor={mentor}
               isSelected={requestForm.mentorId === mentor._id}
               onSelect={selectMentor}
+              onExplore={() => navigate(`/business/mentors/${mentor._id}`)}
             />
           ))}
         </div>
@@ -223,10 +240,10 @@ function BusinessMentorsPage() {
           <label>
             <span className="mb-2 block text-sm font-semibold text-slate-700">Preferred time</span>
             <input
-              type="text"
+              type="datetime-local"
               value={requestForm.preferredTime}
               onChange={(event) => updateRequestField('preferredTime', event.target.value)}
-              placeholder="Example: Tue 3 PM or next available morning"
+              min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
               className="w-full rounded-[20px] border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
             />
           </label>

@@ -350,11 +350,11 @@ export function IdeaCard({ idea, onEdit, onDelete, onGenerateSwot }) {
   )
 }
 
-export function MentorProfileCard({ mentor, isSelected, onSelect }) {
+export function MentorProfileCard({ mentor, isSelected, onSelect, onExplore }) {
+  const assignedIdeas = mentor.assignedBusinessIdeaTitles || []
+
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(mentor._id)}
+    <article
       className={cx(
         'w-full rounded-[24px] border p-5 text-left shadow-sm transition duration-200 hover:scale-[1.01] hover:shadow-[0_24px_45px_rgba(26,74,69,0.12)]',
         isSelected
@@ -373,13 +373,22 @@ export function MentorProfileCard({ mentor, isSelected, onSelect }) {
         <IconWrapper tone="emerald">
           <UsersIcon />
         </IconWrapper>
-        <p className="text-sm leading-6 text-slate-600">{mentor.bio}</p>
+        <div className="space-y-2">
+          <p className="text-sm leading-6 text-slate-600">{mentor.bio}</p>
+          <p className="text-sm text-slate-500">
+            Assigned business ideas: {assignedIdeas.length ? assignedIdeas.join(', ') : 'General support'}
+          </p>
+        </div>
       </div>
-      <div className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--teal-deep)]">
-        <span>{isSelected ? 'Selected for request' : 'Request mentor'}</span>
-        <ArrowUpRightIcon />
+      <div className="mt-4 flex flex-wrap gap-3">
+        <ActionButton onClick={() => onSelect(mentor._id)}>
+          {isSelected ? 'Selected for request' : 'Request mentor'}
+        </ActionButton>
+        <ActionButton onClick={() => onExplore?.(mentor)} variant="secondary">
+          Explore mentor
+        </ActionButton>
       </div>
-    </button>
+    </article>
   )
 }
 
@@ -424,16 +433,17 @@ export function MentorRequestCard({ request, actions }) {
     <article className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-base font-bold text-[var(--teal-deep)]">
-            {request.ideaId?.title || 'General business support'}
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            Mentor: {request.mentorId?.name || 'Mentor not available'}
-          </p>
-          <p className="mt-4 text-sm leading-6 text-slate-600">{request.message}</p>
-          <p className="mt-3 text-sm text-slate-500">Preferred time: {request.preferredTime}</p>
+          <p className="text-base font-bold text-[var(--teal-deep)]">{request.ideaId?.title || 'General business support'}</p>
+          <p className="mt-1 text-sm text-slate-500">Mentor: {request.mentorId?.name || 'Mentor not available'}</p>
+          <p className="mt-3 text-sm font-semibold text-slate-700">Request message</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{request.message}</p>
+          <p className="mt-3 text-sm font-semibold text-slate-700">Preferred time</p>
+          <p className="mt-1 text-sm text-slate-500">{request.preferredTime}</p>
           {request.mentorNote ? (
-            <p className="mt-2 text-sm text-slate-500">Mentor note: {request.mentorNote}</p>
+            <>
+              <p className="mt-3 text-sm font-semibold text-slate-700">Mentor response</p>
+              <p className="mt-1 text-sm text-slate-500">{request.mentorNote}</p>
+            </>
           ) : null}
         </div>
         <div className="flex flex-col gap-3">

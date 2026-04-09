@@ -48,11 +48,14 @@ function BusinessToolkitsPage() {
     const search = deferredQuery.trim().toLowerCase()
 
     return toolkits.filter((toolkit) => {
+      const relatedIdea = (toolkit.relatedBusinessIdeaTitle || '').toLowerCase()
+
       return (
         !search ||
         toolkit.title.toLowerCase().includes(search) ||
         toolkit.category.toLowerCase().includes(search) ||
-        toolkit.description.toLowerCase().includes(search)
+        toolkit.description.toLowerCase().includes(search) ||
+        relatedIdea.includes(search)
       )
     })
   }, [deferredQuery, toolkits])
@@ -99,8 +102,8 @@ function BusinessToolkitsPage() {
           {visibleToolkits.map((toolkit) => (
             <PreviewCard
               key={toolkit._id}
-              title={toolkit.title}
-              subtitle={toolkit.category}
+              title={toolkit.name || toolkit.title}
+              subtitle={toolkit.relatedBusinessIdeaTitle || toolkit.category}
               description={toolkit.description}
               meta="Toolkit"
               to={`/business/toolkits/${toolkit._id}`}

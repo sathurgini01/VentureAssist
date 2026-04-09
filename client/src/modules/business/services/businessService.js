@@ -98,7 +98,10 @@ export function validateIdeaValues(values, { isDraft = false } = {}) {
 }
 
 export function getIdeaCompletion(idea) {
-  const filledFields = ideaFields.filter((field) => Boolean(idea?.[field]?.toString().trim()))
+  const filledFields = ideaFields.filter((field) => {
+    const value = idea?.[field]
+    return typeof value === 'string' ? Boolean(value.trim()) : Boolean(value)
+  })
   return Math.round((filledFields.length / ideaFields.length) * 100)
 }
 
@@ -201,6 +204,21 @@ export async function getToolkits() {
   return request({ method: 'get', url: '/toolkits' }, 'Unable to load toolkits right now.')
 }
 
+export async function createToolkit(payload) {
+  return request({ method: 'post', url: '/toolkits', data: payload }, 'Unable to create the toolkit.')
+}
+
+export async function updateToolkit(toolkitId, payload) {
+  return request(
+    { method: 'put', url: `/toolkits/${toolkitId}`, data: payload },
+    'Unable to update the toolkit.',
+  )
+}
+
+export async function deleteToolkit(toolkitId) {
+  return request({ method: 'delete', url: `/toolkits/${toolkitId}` }, 'Unable to delete the toolkit.')
+}
+
 export async function getToolkitById(toolkitId) {
   return request(
     { method: 'get', url: `/toolkits/${toolkitId}` },
@@ -210,6 +228,28 @@ export async function getToolkitById(toolkitId) {
 
 export async function getMentors() {
   return request({ method: 'get', url: '/mentors' }, 'Unable to load mentors right now.')
+}
+
+export async function getMentorById(mentorId) {
+  return request(
+    { method: 'get', url: `/mentors/${mentorId}` },
+    'Unable to load the mentor details.',
+  )
+}
+
+export async function createMentor(payload) {
+  return request({ method: 'post', url: '/mentors', data: payload }, 'Unable to create the mentor.')
+}
+
+export async function updateMentor(mentorId, payload) {
+  return request(
+    { method: 'put', url: `/mentors/${mentorId}`, data: payload },
+    'Unable to update the mentor.',
+  )
+}
+
+export async function deleteMentor(mentorId) {
+  return request({ method: 'delete', url: `/mentors/${mentorId}` }, 'Unable to delete the mentor.')
 }
 
 export async function createMentorRequest(payload) {
@@ -230,6 +270,13 @@ export async function updateMentorRequestStatus(id, payload) {
   return request(
     { method: 'put', url: `/mentor-requests/${id}`, data: payload },
     'Unable to update the mentor request.',
+  )
+}
+
+export async function deleteMentorRequest(id) {
+  return request(
+    { method: 'delete', url: `/mentor-requests/${id}` },
+    'Unable to delete the mentor request.',
   )
 }
 

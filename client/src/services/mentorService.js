@@ -64,12 +64,13 @@ const normalizeMentorRequest = (item) => ({
 const normalizeMentorApplication = (item) => ({
   id: item?._id,
   userId: item?.userId?._id ?? item?.userId,
-  name: item?.userId?.name ?? 'Applicant',
-  email: item?.userId?.email ?? '',
-  expertise: Array.isArray(item?.expertiseAreas) ? item.expertiseAreas.join(', ') : '',
+  name: item?.mentorName || item?.userId?.name || 'Applicant',
+  email: item?.mentorEmail || item?.userId?.email || '',
+  phoneNumber: item?.phoneNumber ?? '',
+  expertise: item?.expertiseSkills || (Array.isArray(item?.expertiseAreas) ? item.expertiseAreas.join(', ') : ''),
   experience: item?.yearsExperience ? `${item.yearsExperience} years` : 'N/A',
   qualification: item?.qualification ?? '',
-  bio: item?.bio ?? '',
+  bio: item?.shortBio || item?.bio || '',
   appliedDate: item?.createdAt ? new Date(item.createdAt).toISOString().slice(0, 10) : 'N/A',
   status: item?.status ?? 'pending',
   adminNote: item?.adminNote ?? '',
@@ -185,6 +186,17 @@ export async function rejectMentorApplication(applicationId, adminNote = '', tok
   return true
 }
 
+export async function deleteMentorApplication(applicationId, token = getToken()) {
+  const response = await fetch(`${API_MENTOR_APPLICATIONS}/${applicationId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+  if (!response.ok) throw new Error(await parseError(response))
+  return true
+}
+
 const mentorService = {
   getMentors,
   getMentorRequests,
@@ -194,6 +206,7 @@ const mentorService = {
   getMentorApplications,
   approveMentorApplication,
   rejectMentorApplication,
+  deleteMentorApplication,
 }
 
 export default mentorService

@@ -15,6 +15,7 @@ import {
 import {
   approveMentorApplication,
   createMentorRequest,
+  deleteMentorApplication,
   getMentorApplications,
   getMentorRequests,
   getMentors,
@@ -336,6 +337,12 @@ export function AppProvider({ children }) {
     addToast(`Application ${String(status).toLowerCase()}.`, 'success')
   }
 
+  const removeMentorApplication = async (id) => {
+    await deleteMentorApplication(id, token)
+    await refreshMentorApplications()
+    addToast('Application deleted.', 'success')
+  }
+
   const updateArticleStatus = (id, status) => {
     setArticles((current) =>
       current.map((article) =>
@@ -390,6 +397,7 @@ export function AppProvider({ children }) {
       updateMentorRequest,
       submitMentorApplication,
       reviewMentorApplication,
+      removeMentorApplication,
       refreshMentorApplications,
       refreshMentorRequests,
       updateArticleStatus,

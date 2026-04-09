@@ -2,16 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppContext } from '../../../context/AppContext'
 import { EmptyState, ErrorState, LoadingState } from '../../../components/common/AsyncState'
-import { ActionButton, ActionLink, BusinessPageHeader, MentorRequestCard, SectionCard } from '../components/BusinessComponents'
-import { getMentorRequests, getMentors, updateMentorRequestStatus } from '../services/businessService'
+import { ActionLink, BusinessPageHeader, MentorRequestCard, SectionCard } from '../components/BusinessComponents'
+import { getMentorRequests } from '../services/businessService'
 
 function BusinessMentorRequestsPage() {
   const navigate = useNavigate()
-  const { addToast } = useAppContext()
+  const { mentorApplications } = useAppContext()
   const [activeTab, setActiveTab] = useState('mine')
   const [requests, setRequests] = useState([])
-  const [mentors, setMentors] = useState([])
-  const [mentorFilter, setMentorFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -22,11 +20,10 @@ function BusinessMentorRequestsPage() {
       try {
         setLoading(true)
         setError('')
-        const [requestData, mentorData] = await Promise.all([getMentorRequests(), getMentors().catch(() => [])])
+        const requestData = await getMentorRequests()
 
         if (isMounted) {
           setRequests(requestData)
-          setMentors(mentorData)
         }
       } catch (loadError) {
         if (isMounted) {
@@ -46,21 +43,6 @@ function BusinessMentorRequestsPage() {
     }
   }, [])
 
-  async function refreshRequests() {
-    const requestData = await getMentorRequests()
-    setRequests(requestData)
-  }
-
-  async function handleStatusUpdate(requestId, status) {
-    try {
-      await updateMentorRequestStatus(requestId, { status })
-      await refreshRequests()
-      addToast(`Request marked as ${status.toLowerCase()}.`, 'success')
-    } catch (updateError) {
-      addToast(updateError.message, 'error')
-    }
-  }
-
   if (loading) {
     return <LoadingState title="Loading mentor requests" description="Collecting both outgoing requests and mentor-facing inbox items." />
   }
@@ -70,15 +52,14 @@ function BusinessMentorRequestsPage() {
   }
 
   const myRequests = requests
-  const requestsToMe = mentorFilter ? requests.filter((request) => request.mentorId?._id === mentorFilter) : requests
-  const activeRequests = activeTab === 'mine' ? myRequests : requestsToMe
+  const activeRequests = activeTab === 'mine' ? myRequests : mentorApplications
 
   return (
     <div className="space-y-6">
       <BusinessPageHeader
         eyebrow="Mentor requests"
         title="Track outgoing requests and mentor-side decisions"
-        description="Switch between the founder view of sent requests and the mentor-facing view for triage and status updates."
+        description="Track your mentor requests and the admin approval status of your become mentor application in one place."
         variant="requests"
         actions={
           <>
@@ -114,52 +95,64 @@ function BusinessMentorRequestsPage() {
                 : 'border border-[rgba(45,107,100,0.14)] bg-white/80 text-[var(--teal-deep)] hover:bg-white'
             }`}
           >
-            Requests to Me
+            Admin Approval Status
           </button>
-          {activeTab === 'toMe' ? (
-            <select
-              value={mentorFilter}
-              onChange={(event) => setMentorFilter(event.target.value)}
-              className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
-            >
-              <option value="">All mentors</option>
-              {mentors.map((mentor) => (
-                <option key={mentor._id} value={mentor._id}>
-                  {mentor.name}
-                </option>
-              ))}
-            </select>
-          ) : null}
         </div>
       </SectionCard>
 
       {activeRequests.length ? (
         <div className="space-y-4">
-          {activeRequests.map((request) => (
-            <MentorRequestCard
-              key={request._id}
-              request={request}
-              actions={
-                activeTab === 'toMe' ? (
-                  <div className="flex gap-2">
-                    <ActionButton onClick={() => handleStatusUpdate(request._id, 'Accepted')}>
-                      Accept
-                    </ActionButton>
-                    <ActionButton onClick={() => handleStatusUpdate(request._id, 'Rejected')} variant="danger">
-                      Reject
-                    </ActionButton>
+          {activeTab === 'mine'
+            ? activeRequests.map((request) => (
+                <MentorRequestCard
+                  key={request._id}
+                  request={request}
+                  actions={null}
+                />
+              ))
+            : activeRequests.map((application) => (
+                <article key={application.id} className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-base font-bold text-[var(--teal-deep)]">{application.name}</p>
+                      <p className="mt-1 text-sm text-slate-500">{application.email}</p>
+                      <p className="mt-1 text-sm text-slate-500">Phone: {application.phoneNumber || 'Not provided'}</p>
+                      <p className="mt-3 text-sm font-semibold text-slate-700">Application Status</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {application.status === 'approved'
+                          ? 'Admin accepted your mentor request.'
+                          : application.status === 'rejected'
+                            ? 'Admin rejected your mentor request.'
+                            : 'Your mentor request is still pending admin review.'}
+                      </p>
+                      <p className="mt-3 text-sm font-semibold text-slate-700">Expertise / Skills</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{application.expertise || 'Not provided'}</p>
+                      <p className="mt-3 text-sm font-semibold text-slate-700">Short Bio / About</p>
+                      <p className="mt-1 text-sm leading-6 text-slate-600">{application.bio || 'Not provided'}</p>
+                      <p className="mt-3 text-sm text-slate-500">Applied Date: {application.appliedDate}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Admin message: {application.adminNote || 'Waiting for admin response.'}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold uppercase text-slate-700">
+                        {application.status}
+                      </span>
+                    </div>
                   </div>
-                ) : null
-              }
-            />
-          ))}
+                </article>
+              ))}
         </div>
       ) : (
         <EmptyState
           title="No requests in this tab yet"
-          message="Send a mentor request or adjust the mentor filter to populate this view."
-          actionLabel="Request a mentor"
-          onAction={() => navigate('/business/mentors')}
+          message={
+            activeTab === 'mine'
+              ? 'Send a mentor request to populate this view.'
+              : 'Submit the become mentor form to track admin approval status here.'
+          }
+          actionLabel={activeTab === 'mine' ? 'Request a mentor' : 'Become mentor'}
+          onAction={() => navigate(activeTab === 'mine' ? '/business/mentors' : '/business/become-mentor')}
         />
       )}
     </div>
