@@ -22,6 +22,24 @@ const templateMetricSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const templateBudgetItemSchema = new mongoose.Schema(
+  {
+    label: { type: String, required: true, trim: true, maxlength: 120 },
+    amountLKR: { type: Number, default: 0, min: 0 }
+  },
+  { _id: false }
+);
+
+const templateExecutionDaySchema = new mongoose.Schema(
+  {
+    day: { type: Number, required: true, min: 1 },
+    title: { type: String, required: true, trim: true, maxlength: 140 },
+    focus: { type: String, default: "", trim: true, maxlength: 220 },
+    tasks: [{ type: String, trim: true, maxlength: 200 }]
+  },
+  { _id: false }
+);
+
 const templateMarketingSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, maxlength: 140 },
@@ -36,8 +54,19 @@ const templateMarketingSchema = new mongoose.Schema(
     category: { type: String, required: true, trim: true, maxlength: 50 },
     tags: [{ type: String, trim: true }],
 
+    durationLabel: { type: String, default: "", trim: true, maxlength: 60 },
+    objective: { type: String, default: "", trim: true, maxlength: 220 },
+    campaignOverview: { type: String, default: "" },
+    targetAudience: { type: String, default: "" },
+    idealFor: [{ type: String, trim: true }],
+
     estimatedBudgetLKR: { type: Number, default: 0, min: 0 },
     estimatedDurationDays: { type: Number, default: 30, min: 1 },
+
+    budgetBreakdown: { type: [templateBudgetItemSchema], default: [] },
+    executionPlan: { type: [templateExecutionDaySchema], default: [] },
+    expectedResults: [{ type: String, trim: true }],
+    finalOutputItems: [{ type: String, trim: true }],
 
     steps: { type: [templateStepSchema], default: [] },
     metricDefinitions: { type: [templateMetricSchema], default: [] },

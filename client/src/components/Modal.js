@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom'
 import '../styles/Modals.css'
 
 function Modal({ children, isOpen, title, onClose, size = 'default' }) {
@@ -5,7 +6,7 @@ function Modal({ children, isOpen, title, onClose, size = 'default' }) {
     return null
   }
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div className={`modal-panel modal-panel-${size}`} onClick={(event) => event.stopPropagation()}>
         {title ? (
@@ -20,7 +21,8 @@ function Modal({ children, isOpen, title, onClose, size = 'default' }) {
         ) : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

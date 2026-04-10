@@ -70,7 +70,6 @@ function UserDashboard() {
       { label: 'Active Campaigns', value: String(campaigns.length).padStart(2, '0'), helper: 'Current mock workspace' },
       { label: 'Total Impressions', value: '148K', helper: 'Across all platforms' },
       { label: 'Mentor Sessions', value: String(confirmedSessions.length).padStart(2, '0'), helper: 'Confirmed sessions' },
-      { label: 'AI Credits', value: '320', helper: 'Mock balance' },
     ],
     [campaigns.length, confirmedSessions.length],
   )

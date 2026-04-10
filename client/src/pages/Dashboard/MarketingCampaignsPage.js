@@ -44,7 +44,7 @@ function Campaigns() {
               <h1 className="page-title">Campaigns</h1>
               <p className="page-subtitle">View campaign progress and update execution progress.</p>
             </div>
-            <NavLink to="/dashboard/campaigns/new">
+            <NavLink to="/dashboard/templates">
               <Button>New Campaign</Button>
             </NavLink>
           </div>

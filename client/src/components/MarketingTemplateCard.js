@@ -5,6 +5,7 @@ import '../styles/Cards.css'
 import Card from './Card'
 import Modal from './Modal'
 import { useAppContext } from '../context/AppContext'
+import { getCampaignPlanByKey, inferPlanKeyFromTemplateTitle } from '../data/instagramCampaignPlan'
 
 function TemplateCard({ template }) {
   const navigate = useNavigate()
@@ -12,13 +13,10 @@ function TemplateCard({ template }) {
   const [previewOpen, setPreviewOpen] = useState(false)
 
   const rawTitle = template?.name || template?.title || 'Template'
-  const displayTitle = String(rawTitle).toLowerCase().includes('start up instagram launch plan')
-    ? 'Instagram Growth Sprint - 14 Days Edition'
-    : rawTitle
-
-  const isInstagramGrowthSprint = String(template?.name || template?.title || '')
-    .toLowerCase()
-    .includes('instagram')
+  const planKey = template?.planKey || inferPlanKeyFromTemplateTitle(rawTitle)
+  const plan = getCampaignPlanByKey(planKey)
+  const displayTitle = rawTitle
+  const shortPreviewItems = (template.executionPlan || []).slice(0, 4)
 
   const launchFromPreview = () => {
     applyTemplateToCampaign(template)
@@ -31,17 +29,12 @@ function TemplateCard({ template }) {
       <Card title={displayTitle} subtitle={template.description || template.category}>
         <p className="card-muted">Stage: {template.stage}</p>
         <p className="card-muted">Category: {template.category}</p>
-        <p className="card-muted">Duration: {template.estimatedDurationDays} days</p>
+        <p className="card-muted">Duration: {template.durationLabel || `${template.estimatedDurationDays} days`}</p>
         <p className="card-muted">Estimated Budget: LKR {template.estimatedBudgetLKR.toLocaleString()}</p>
         <div className="inline-actions">
           <Button
             onClick={() => {
-              if (isInstagramGrowthSprint) {
-                setPreviewOpen(true)
-                return
-              }
-              applyTemplateToCampaign(template)
-              navigate('/dashboard/campaigns/new')
+              setPreviewOpen(true)
             }}
           >
             Use Template
@@ -52,72 +45,130 @@ function TemplateCard({ template }) {
         </div>
       </Card>
 
-      {isInstagramGrowthSprint ? (
-        <Modal
-          isOpen={previewOpen}
-          onClose={() => setPreviewOpen(false)}
-          size="large"
-          title="Instagram Growth Sprint - 14 Days Edition"
-        >
-          <div className="template-preview-shell">
-            <div className="template-preview-summary">
-              <div className="template-preview-pill"><strong>Duration</strong><span>14 Days</span></div>
-              <div className="template-preview-pill"><strong>Budget</strong><span>LKR 25,000</span></div>
-              <div className="template-preview-pill"><strong>Goal</strong><span>Generate 80–150 Leads</span></div>
-            </div>
-
-            <div className="template-week-grid">
-              <div className="template-week-card">
-                <h4>Week 1 – Awareness & Engagement</h4>
-                <p className="card-muted"><strong>Budget:</strong> LKR 12,000</p>
-                <p className="card-muted"><strong>Focus:</strong> Build reach & warm audience</p>
-                <strong>Main Activities</strong>
-                <ul>
-                  <li>3 reels (educational/problem-based)</li>
-                  <li>2 carousel posts</li>
-                  <li>Daily story engagement</li>
-                  <li>1 awareness ad campaign</li>
-                  <li>Community interaction</li>
-                  <li>Weekly performance review</li>
-                </ul>
-                <p className="card-muted"><strong>Expected Outcome:</strong> 15K–25K Reach, 4–6% Engagement Rate, warmed audience for retargeting.</p>
-              </div>
-
-              <div className="template-week-card">
-                <h4>Week 2 – Lead Generation & Conversion</h4>
-                <p className="card-muted"><strong>Budget:</strong> LKR 13,000</p>
-                <p className="card-muted"><strong>Focus:</strong> Convert engaged users into leads</p>
-                <strong>Main Activities</strong>
-                <ul>
-                  <li>Lead magnet post</li>
-                  <li>2 conversion reels</li>
-                  <li>Retargeting ads</li>
-                  <li>Instagram live session</li>
-                  <li>FAQ/objection carousel</li>
-                  <li>Final conversion push</li>
-                </ul>
-                <p className="card-muted"><strong>Expected Outcome:</strong> 80–150 leads, CPL under LKR 150, increased DM conversations.</p>
-              </div>
-            </div>
-
-            <div className="template-budget-card">
-              <strong>Budget Allocation</strong>
-              <ul>
-                <li>Awareness Ads – LKR 7,000</li>
-                <li>Engagement Boost – LKR 5,000</li>
-                <li>Lead Ads – LKR 9,000</li>
-                <li>Retargeting – LKR 4,000</li>
-              </ul>
-              <p><strong>Total – LKR 25,000</strong></p>
-            </div>
-
-            <div className="inline-actions">
-              <Button onClick={launchFromPreview}>Start Campaign</Button>
-              <Button variant="secondary" onClick={() => setPreviewOpen(false)}>Close</Button>
-            </div>
+      <Modal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        size="large"
+        title={displayTitle}
+      >
+        <div className="template-preview-shell">
+          <div className="template-preview-summary">
+            <div className="template-preview-pill"><strong>Stage</strong><span>{template.stage}</span></div>
+            <div className="template-preview-pill"><strong>Duration</strong><span>{template.durationLabel || `${template.estimatedDurationDays} days`}</span></div>
+            <div className="template-preview-pill"><strong>Budget</strong><span>LKR {Number(template.estimatedBudgetLKR || 0).toLocaleString()}</span></div>
           </div>
-        </Modal>
-      ) : null}
+
+          <div className="template-budget-card">
+            <strong>Description</strong>
+            <p className="card-muted">{template.description || 'No description added.'}</p>
+          </div>
+
+          {template.campaignOverview ? (
+            <div className="template-budget-card">
+              <strong>Campaign Overview</strong>
+              <p className="card-muted">{template.campaignOverview}</p>
+            </div>
+          ) : null}
+
+          {template.objective ? (
+            <div className="template-budget-card">
+              <strong>Objective</strong>
+              <p className="card-muted">{template.objective}</p>
+            </div>
+          ) : null}
+
+          {template.targetAudience ? (
+            <div className="template-budget-card">
+              <strong>Target Audience</strong>
+              <p className="card-muted">{template.targetAudience}</p>
+            </div>
+          ) : null}
+
+          {(template.idealFor || []).length ? (
+            <div className="template-budget-card">
+              <strong>Ideal For</strong>
+              <ul>
+                {(template.idealFor || []).map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ) : null}
+
+          {(template.budgetBreakdown || []).length ? (
+            <div className="template-budget-card">
+              <strong>Budget Breakdown</strong>
+              <ul>
+                {(template.budgetBreakdown || []).map((item, index) => (
+                  <li key={`${item.label}-${index}`}>
+                    {item.label}: LKR {Number(item.amountLKR || 0).toLocaleString()}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {shortPreviewItems.length ? (
+            <div className="template-budget-card">
+              <strong>Execution Flow (Short Preview)</strong>
+              <ul>
+                {shortPreviewItems.map((item, index) => (
+                  <li key={`${item.day}-${index}`}>
+                    Day {item.day}: {item.title}{item.focus ? ` - ${item.focus}` : ''}
+                  </li>
+                ))}
+              </ul>
+              {(template.executionPlan || []).length > shortPreviewItems.length ? (
+                <p className="card-muted">More days continue in the launch preview.</p>
+              ) : null}
+              <p className="card-muted">Detailed task checklist appears in the final campaign preview page.</p>
+            </div>
+          ) : null}
+
+          {(template.metricDefinitions || []).length ? (
+            <div className="template-budget-card">
+              <strong>Required Metrics</strong>
+              <ul>
+                {(template.metricDefinitions || []).map((item, index) => (
+                  <li key={`${item.name}-${index}`}>
+                    {item.name} ({item.type}) {item.required ? '- required' : '- optional'}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {(template.expectedResults || []).length ? (
+            <div className="template-budget-card">
+              <strong>Expected Results</strong>
+              <ul>
+                {(template.expectedResults || []).map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ) : null}
+
+          {(template.finalOutputItems || []).length ? (
+            <div className="template-budget-card">
+              <strong>Final Output Required</strong>
+              <ul>
+                {(template.finalOutputItems || []).map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ) : null}
+
+          {plan && !(template.executionPlan || []).length ? (
+            <div className="template-budget-card">
+              <strong>Full Execution Preview</strong>
+              <ul>
+                {plan.shortPreview.flow.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          ) : null}
+
+          <div className="inline-actions">
+            <Button onClick={launchFromPreview}>Start Campaign</Button>
+            <Button variant="secondary" onClick={() => setPreviewOpen(false)}>Close</Button>
+          </div>
+        </div>
+      </Modal>
     </>
   )
 }

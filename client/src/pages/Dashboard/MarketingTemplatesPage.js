@@ -6,7 +6,6 @@ import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import TemplateCard from '../../components/MarketingTemplateCard'
 import { useAppContext } from '../../context/AppContext'
-import { INSTAGRAM_PACKAGE } from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -26,31 +25,17 @@ function Templates() {
   const [stageFilter, setStageFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
 
-  const instagramOnlyTemplates = useMemo(() => {
-    return templates
-      .filter((template) => String(template.title || template.name || '').toLowerCase().includes('instagram'))
-      .map((template) => ({
-        ...template,
-        title: INSTAGRAM_PACKAGE.title,
-        name: INSTAGRAM_PACKAGE.title,
-        description: '14-day structured Instagram growth plan',
-        stage: 'earlyStartup',
-        category: 'Social Media',
-        estimatedDurationDays: 14,
-        estimatedBudgetLKR: 25000,
-      }))
-      .slice(0, 1)
-  }, [templates])
+  const availableTemplates = useMemo(() => templates, [templates])
 
   const categories = useMemo(
-    () => ['all', ...new Set(instagramOnlyTemplates.map((item) => item.category).filter(Boolean))],
-    [instagramOnlyTemplates],
+    () => ['all', ...new Set(availableTemplates.map((item) => item.category).filter(Boolean))],
+    [availableTemplates],
   )
 
-  const previewTemplate = instagramOnlyTemplates.find((item) => item.id === previewId)
+  const previewTemplate = availableTemplates.find((item) => item.id === previewId)
 
   const filteredTemplates = useMemo(() => {
-    return instagramOnlyTemplates.filter((template) => {
+    return availableTemplates.filter((template) => {
       const matchesStage = stageFilter === 'all' || template.stage === stageFilter
       const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter
       const matchesSearch = `${template.title} ${template.description} ${template.category}`
@@ -59,14 +44,14 @@ function Templates() {
 
       return matchesStage && matchesCategory && matchesSearch
     })
-  }, [instagramOnlyTemplates, stageFilter, categoryFilter, searchTerm])
+  }, [availableTemplates, stageFilter, categoryFilter, searchTerm])
 
   return (
     <div className="dashboard-shell">
       <Sidebar links={dashboardLinks} />
       <div className="dashboard-main">
         <Navbar />
-        <div className="dashboard-content">
+        <div className="dashboard-content templates-page">
           <div>
             <h1 className="page-title">Templates</h1>
             <p className="page-subtitle">Browse and apply reusable template strategies.</p>
@@ -98,24 +83,84 @@ function Templates() {
             <Card title={`${previewTemplate.title} Preview`} subtitle={previewTemplate.description}>
               <p className="card-muted">Stage: {previewTemplate.stage}</p>
               <p className="card-muted">Category: {previewTemplate.category}</p>
-              <p className="card-muted">Duration: {previewTemplate.estimatedDurationDays} days</p>
+              <p className="card-muted">Duration: {previewTemplate.durationLabel || `${previewTemplate.estimatedDurationDays} days`}</p>
               <p className="card-muted">Budget: LKR {previewTemplate.estimatedBudgetLKR.toLocaleString()}</p>
+              <p className="card-muted">Objective: {previewTemplate.objective || '-'}</p>
+              <p className="card-muted">Overview: {previewTemplate.campaignOverview || previewTemplate.description}</p>
+              <p className="card-muted">Target Audience: {previewTemplate.targetAudience || '-'}</p>
 
-              <strong>Timeline Steps</strong>
-              <ul>
-                {previewTemplate.steps.map((step) => (
-                  <li key={`${step.order}-${step.title}`}>{step.title}</li>
-                ))}
-              </ul>
+              {(previewTemplate.idealFor || []).length ? (
+                <>
+                  <strong>Ideal For</strong>
+                  <ul>
+                    {(previewTemplate.idealFor || []).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
 
-              <strong>Defined Metrics</strong>
-              <ul>
-                {previewTemplate.metricDefinitions?.map((metric) => (
-                  <li key={`${metric.name}-${metric.type}`}>
-                    {metric.name} ({metric.type}) {metric.required ? '- required' : ''}
-                  </li>
-                ))}
-              </ul>
+              {(previewTemplate.budgetBreakdown || []).length ? (
+                <>
+                  <strong>Budget Breakdown</strong>
+                  <ul>
+                    {(previewTemplate.budgetBreakdown || []).map((item, index) => (
+                      <li key={`${item.label}-${index}`}>
+                        {item.label}: LKR {Number(item.amountLKR || 0).toLocaleString()}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
+              {(previewTemplate.executionPlan || []).length ? (
+                <>
+                  <strong>Execution Flow (Short Preview)</strong>
+                  <ul>
+                    {(previewTemplate.executionPlan || []).map((item, index) => (
+                      <li key={`${item.day}-${index}`}>
+                        Day {item.day}: {item.title}{item.focus ? ` - ${item.focus}` : ''}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="card-muted">Full task checklist appears only after you continue to the launch page.</p>
+                </>
+              ) : null}
+
+              {(previewTemplate.expectedResults || []).length ? (
+                <>
+                  <strong>Expected Results</strong>
+                  <ul>
+                    {(previewTemplate.expectedResults || []).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
+              {(previewTemplate.finalOutputItems || []).length ? (
+                <>
+                  <strong>Final Output Required</strong>
+                  <ul>
+                    {(previewTemplate.finalOutputItems || []).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+
+              {(previewTemplate.metricDefinitions || []).length ? (
+                <>
+                  <strong>Metrics to Track</strong>
+                  <ul>
+                    {(previewTemplate.metricDefinitions || []).slice(0, 5).map((metric, index) => (
+                      <li key={`${metric.name}-${index}`}>
+                        {metric.name} ({metric.type}) {metric.required ? '- required' : '- optional'}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
 
               <div className="inline-actions">
                 <Button
@@ -135,6 +180,10 @@ function Templates() {
               <TemplateCard key={template.id} template={template} />
             ))}
           </div>
+
+          {filteredTemplates.length === 0 ? (
+            <Card title="No templates found" subtitle="Try changing filters or add templates from the template submission flow." />
+          ) : null}
         </div>
       </div>
     </div>
@@ -142,6 +191,9 @@ function Templates() {
 }
 
 export default Templates
+
+
+
 
 
 

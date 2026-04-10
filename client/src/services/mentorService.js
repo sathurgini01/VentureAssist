@@ -2,7 +2,7 @@ const API_MENTORS = '/api/marketing/mentors'
 const API_MENTOR_REQUESTS = '/api/marketing/mentor-requests'
 const API_MENTOR_APPLICATIONS = '/api/marketing/mentor-applications'
 
-const getToken = () => localStorage.getItem('auth_token')
+const getToken = () => sessionStorage.getItem('auth_token')
 
 const parseError = async (response) => {
   try {

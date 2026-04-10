@@ -78,7 +78,7 @@ function Mentors() {
       <Sidebar links={dashboardLinks} />
       <div className="dashboard-main">
         <Navbar />
-        <div className="dashboard-content">
+        <div className="dashboard-content mentors-page">
           <section className="mentor-showcase">
             <div className="mentor-showcase-copy card">
               <p className="page-kicker">Mentor Network</p>

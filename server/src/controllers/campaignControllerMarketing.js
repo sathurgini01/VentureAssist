@@ -1,6 +1,69 @@
 import CampaignMarketing from "../models/CampaignMarketing.js";
 import TemplateMarketing from "../models/TemplateMarketing.js";
 
+const getMetricValueByNames = (items = [], names = []) => {
+  for (const name of names) {
+    const found = items.find(
+      (item) => String(item?.name || "").toLowerCase() === String(name || "").toLowerCase()
+    );
+    if (found) return Number(found.value || 0);
+  }
+  return null;
+};
+
+const deriveMetricsFromMetricValues = (metricValues = [], currentMetrics = {}) => {
+  const impressions = getMetricValueByNames(metricValues, [
+    "Impressions",
+    "Reach",
+    "Total Reach"
+  ]);
+  const clicks = getMetricValueByNames(metricValues, [
+    "Clicks",
+    "Total Clicks"
+  ]);
+  const leads = getMetricValueByNames(metricValues, [
+    "Total Leads",
+    "Leads",
+    "WhatsApp Conversations",
+    "Total WhatsApp Conversations",
+    "Conversations",
+    "Total Conversations"
+  ]);
+  const engagement = getMetricValueByNames(metricValues, [
+    "Total Engagement",
+    "Engagement",
+    "Followers Gained"
+  ]);
+  const sales = getMetricValueByNames(metricValues, [
+    "Conversions",
+    "Total Conversions",
+    "Sales",
+    "Total Sales"
+  ]);
+  const budgetSpentLKR = getMetricValueByNames(metricValues, [
+    "Ad Spend",
+    "Total Ad Spend",
+    "Spend",
+    "Total Spend",
+    "Budget Spent"
+  ]);
+  const revenue = getMetricValueByNames(metricValues, [
+    "Revenue",
+    "Total Revenue"
+  ]);
+
+  return {
+    ...currentMetrics,
+    ...(impressions !== null ? { impressions } : {}),
+    ...(clicks !== null ? { clicks } : {}),
+    ...(leads !== null ? { leads } : {}),
+    ...(engagement !== null ? { engagement } : {}),
+    ...(sales !== null ? { sales } : {}),
+    ...(budgetSpentLKR !== null ? { budgetSpentLKR } : {}),
+    ...(revenue !== null ? { revenue } : {})
+  };
+};
+
 // POST /api/marketing/campaigns
 // Create campaign (optionally from templateId)
 export const createCampaignMarketing = async (req, res, next) => {
@@ -71,7 +134,10 @@ export const getMyCampaignsMarketing = async (req, res, next) => {
 
     const items = await CampaignMarketing.find(query)
       .sort({ createdAt: -1 })
-      .populate("templateId", "title stage category")
+      .populate(
+        "templateId",
+        "title stage category description durationLabel objective campaignOverview targetAudience idealFor estimatedBudgetLKR estimatedDurationDays budgetBreakdown executionPlan expectedResults finalOutputItems steps metricDefinitions"
+      )
       .populate("owner", "name email role");
 
     res.status(200).json({ items });
@@ -84,7 +150,10 @@ export const getMyCampaignsMarketing = async (req, res, next) => {
 // Owner/admin only (handled by middleware campaignOwnerOrAdmin)
 export const getCampaignByIdMarketing = async (req, res) => {
   const campaign = await CampaignMarketing.findById(req.params.id)
-    .populate("templateId", "title stage category steps")
+    .populate(
+      "templateId",
+      "title stage category description durationLabel objective campaignOverview targetAudience idealFor estimatedBudgetLKR estimatedDurationDays budgetBreakdown executionPlan expectedResults finalOutputItems steps metricDefinitions"
+    )
     .populate("owner", "name email role");
 
   res.status(200).json(campaign);
@@ -138,11 +207,17 @@ export const updateCampaignMarketing = async (req, res, next) => {
         return res.status(400).json({ message: "metricValues must be an array" });
       }
 
-      campaign.metricValues = metricValues.map((item) => ({
+      const normalizedMetricValues = metricValues.map((item) => ({
         name: item.name,
         type: item.type || "number",
         value: Number(item.value || 0)
       }));
+
+      campaign.metricValues = normalizedMetricValues;
+      campaign.metrics = deriveMetricsFromMetricValues(
+        normalizedMetricValues,
+        campaign.metrics || {}
+      );
     }
 
     const updated = await campaign.save();

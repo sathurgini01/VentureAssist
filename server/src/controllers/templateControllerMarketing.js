@@ -70,11 +70,43 @@ const createTemplateMarketing = async (req, res, next) => {
       stage,
       category,
       tags,
+      durationLabel,
+      objective,
+      campaignOverview,
+      targetAudience,
+      idealFor,
       estimatedBudgetLKR,
       estimatedDurationDays,
+      budgetBreakdown,
+      executionPlan,
+      expectedResults,
+      finalOutputItems,
       steps,
       metricDefinitions
     } = req.body;
+
+    const normalizedExecutionPlan = Array.isArray(executionPlan)
+      ? executionPlan.map((dayItem, index) => ({
+          day: Number(dayItem?.day || index + 1),
+          title: String(dayItem?.title || `Day ${index + 1}`).trim(),
+          focus: String(dayItem?.focus || "").trim(),
+          tasks: Array.isArray(dayItem?.tasks)
+            ? dayItem.tasks.map((task) => String(task || "").trim()).filter(Boolean)
+            : []
+        }))
+      : [];
+
+    const normalizedSteps = normalizedExecutionPlan.length
+      ? normalizedExecutionPlan.flatMap((dayItem) =>
+          (dayItem.tasks || []).map((task, taskIndex) => ({
+            title: `P1-D${dayItem.day} | ${task}`,
+            description: dayItem.title,
+            order: dayItem.day * 100 + taskIndex + 1
+          }))
+        )
+      : Array.isArray(steps)
+        ? steps
+        : [];
 
     const created = await TemplateMarketing.create({
       title,
@@ -82,9 +114,18 @@ const createTemplateMarketing = async (req, res, next) => {
       stage,
       category,
       tags: Array.isArray(tags) ? tags : [],
+      durationLabel: durationLabel || "",
+      objective: objective || "",
+      campaignOverview: campaignOverview || "",
+      targetAudience: targetAudience || "",
+      idealFor: Array.isArray(idealFor) ? idealFor : [],
       estimatedBudgetLKR: estimatedBudgetLKR ?? 0,
       estimatedDurationDays: estimatedDurationDays ?? 30,
-      steps: Array.isArray(steps) ? steps : [],
+      budgetBreakdown: Array.isArray(budgetBreakdown) ? budgetBreakdown : [],
+      executionPlan: normalizedExecutionPlan,
+      expectedResults: Array.isArray(expectedResults) ? expectedResults : [],
+      finalOutputItems: Array.isArray(finalOutputItems) ? finalOutputItems : [],
+      steps: normalizedSteps,
       metricDefinitions: Array.isArray(metricDefinitions) ? metricDefinitions : [],
       createdBy: req.user._id
     });
@@ -110,8 +151,17 @@ const updateTemplateMarketing = async (req, res, next) => {
       "stage",
       "category",
       "tags",
+      "durationLabel",
+      "objective",
+      "campaignOverview",
+      "targetAudience",
+      "idealFor",
       "estimatedBudgetLKR",
       "estimatedDurationDays",
+      "budgetBreakdown",
+      "executionPlan",
+      "expectedResults",
+      "finalOutputItems",
       "steps",
       "metricDefinitions"
     ];
@@ -125,6 +175,28 @@ const updateTemplateMarketing = async (req, res, next) => {
         }
       }
     });
+
+    if (req.body.executionPlan !== undefined) {
+      const normalizedExecutionPlan = Array.isArray(req.body.executionPlan)
+        ? req.body.executionPlan.map((dayItem, index) => ({
+            day: Number(dayItem?.day || index + 1),
+            title: String(dayItem?.title || `Day ${index + 1}`).trim(),
+            focus: String(dayItem?.focus || "").trim(),
+            tasks: Array.isArray(dayItem?.tasks)
+              ? dayItem.tasks.map((task) => String(task || "").trim()).filter(Boolean)
+              : []
+          }))
+        : [];
+
+      t.executionPlan = normalizedExecutionPlan;
+      t.steps = normalizedExecutionPlan.flatMap((dayItem) =>
+        (dayItem.tasks || []).map((task, taskIndex) => ({
+          title: `P1-D${dayItem.day} | ${task}`,
+          description: dayItem.title,
+          order: dayItem.day * 100 + taskIndex + 1
+        }))
+      );
+    }
 
     const updated = await t.save();
     res.status(200).json({ message: "Template updated", template: updated });

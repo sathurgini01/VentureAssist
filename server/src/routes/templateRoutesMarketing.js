@@ -29,11 +29,11 @@ router.get(
   allowMarketingRoles("user", "mentor", "admin"),
   getTemplateByIdMarketing
 );
-// Admin create
+// Create template (new user template flow + admin)
 router.post(
   "/",
   protectMarketing,
-  allowMarketingRoles("admin"),
+  allowMarketingRoles("user", "mentor", "admin"),
   [
     body("title").notEmpty().withMessage("Title is required"),
     body("description").notEmpty().withMessage("Description is required"),

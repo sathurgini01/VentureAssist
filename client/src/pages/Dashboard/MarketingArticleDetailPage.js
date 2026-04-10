@@ -138,17 +138,6 @@ function ArticleDetail() {
                   ))}
                 </div>
               </Card>
-
-              <Card title="Comments" subtitle="Discussion area placeholder for future community features.">
-                <div className="activity-log">
-                  <div className="activity-item">
-                    <p className="card-muted">Comment placeholder from a founder.</p>
-                  </div>
-                  <div className="activity-item">
-                    <p className="card-muted">Reply placeholder from a mentor.</p>
-                  </div>
-                </div>
-              </Card>
             </div>
 
             <div className="section-stack">

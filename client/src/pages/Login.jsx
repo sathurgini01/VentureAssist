@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Card from '../components/Card'
 import { useAuth } from '../context/AuthContext.jsx'
 
 function Login() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { login, authLoading, authError } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
@@ -51,7 +50,7 @@ function Login() {
       } else if (normalizedRole === 'mentor') {
         navigate('/', { replace: true })
       } else {
-        navigate(location.state?.from?.pathname || '/', { replace: true })
+        navigate('/', { replace: true })
       }
     } catch (error) {
       // Error is already stored in authError state
