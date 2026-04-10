@@ -49,6 +49,25 @@ function LegalTaskDetailPage() {
 
   const meta = getStatusMeta(submission?.status || 'PENDING')
 
+  const getMentorNameForEvidence = (item) => {
+    if (item?.mentorName) return item.mentorName
+
+    const historyMatch = (submission?.submissionHistory || []).find(
+      (entry) => entry?.fileUrl === item?.fileUrl && entry?.mentorName,
+    )
+    if (historyMatch?.mentorName) return historyMatch.mentorName
+
+    try {
+      const storageKey = `legalEvidenceMentorMap:${taskId}`
+      const localMap = JSON.parse(localStorage.getItem(storageKey) || '{}')
+      if (item?.fileUrl && localMap[item.fileUrl]) return localMap[item.fileUrl]
+    } catch {
+      // ignore localStorage parse issues
+    }
+
+    return submission?.mentorId?.name || 'Not assigned'
+  }
+
   return (
     <div className="dashboard-shell legal-shell">
       <Sidebar links={legalUserLinks} />
@@ -123,6 +142,9 @@ function LegalTaskDetailPage() {
                   <div className="section-stack compact-stack">
                     <div className="legal-submission-status">
                       <span className={`legal-status-pill tone-${meta.tone}`.trim()}>{meta.label}</span>
+                      {submission?.mentorId ? (
+                        <p className="card-muted">Assigned mentor: {submission.mentorId?.name}</p>
+                      ) : null}
                       {submission?.mentorFeedback ? <p className="card-muted">Mentor feedback: {submission.mentorFeedback}</p> : null}
                       {submission?.adminFeedback ? <p className="card-muted">Admin feedback: {submission.adminFeedback}</p> : null}
                     </div>
@@ -132,6 +154,9 @@ function LegalTaskDetailPage() {
                           <div key={`${item.fileUrl}-${index}`} className="legal-evidence-item">
                             <a href={item.fileUrl} target="_blank" rel="noreferrer">Evidence {index + 1}</a>
                             <span className="card-muted">{item.note || 'No note provided'}</span>
+                            <span className="card-muted">
+                              Mentor: {getMentorNameForEvidence(item)}
+                            </span>
                           </div>
                         ))}
                       </div>

@@ -72,39 +72,104 @@ function normalizeResponse(parsed) {
 export async function generateLegalComplianceGuidance({ question, businessProfile }) {
 
   // =========================
-  // MOCK AI MODE (for demo/project)
+  // ✅ FIXED MOCK AI MODE
   // =========================
   if (process.env.LEGAL_AI_MODE === "mock") {
+
+    const q = (question || "").toLowerCase();
+
+    let summary = "";
+    let actionItems = [];
+
+    // 🟢 EXPANSION
+    if (q.includes("expand") || q.includes("branch")) {
+      summary =
+        "Before expanding to another branch, ensure local authority approvals, updated trade licences, and compliance with zoning regulations.";
+
+      actionItems = [
+        "Update trade licence",
+        "Check municipal approvals",
+        "Verify tax compliance for multiple locations"
+      ];
+    }
+
+    // 🟢 STARTUP
+    else if (q.includes("startup") || q.includes("launch")) {
+      summary =
+        "Startups should review business registration, tax registration, contracts, and required industry licences before launching.";
+
+      actionItems = [
+        "Register business legally",
+        "Obtain tax identification number",
+        "Prepare contracts",
+        "Check required licences"
+      ];
+    }
+
+    // 🟢 HIRING (FIXED KEYWORDS)
+    else if (
+      q.includes("hire") ||
+      q.includes("hiring") ||
+      q.includes("employee") ||
+      q.includes("staff")
+    ) {
+      summary =
+        "Before hiring staff, prepare employment contracts, register for EPF/ETF, and comply with labour laws.";
+
+      actionItems = [
+        "Prepare employment contracts",
+        "Register EPF/ETF",
+        "Follow labour law regulations"
+      ];
+    }
+
+    // 🟢 DOCUMENTS
+    else if (q.includes("document") || q.includes("record")) {
+      summary =
+        "Organise your business compliance records by maintaining structured documentation for licences, tax filings, and contracts.";
+
+      actionItems = [
+        "Maintain digital copies",
+        "Organise tax records",
+        "Track licence renewals"
+      ];
+    }
+
+    // 🟢 LICENCES
+    else if (q.includes("licence") || q.includes("license")) {
+      summary =
+        "You should verify trade licences, industry-specific permits, and local authority approvals before operating or expanding your business.";
+
+      actionItems = [
+        "Check trade licence",
+        "Verify local council approvals",
+        "Ensure industry permits"
+      ];
+    }
+
+    // 🟢 DEFAULT
+    else {
+      summary =
+        "Your business should review licences, tax compliance, and legal requirements to ensure smooth operations.";
+
+      actionItems = [
+        "Check business registration",
+        "Ensure tax compliance",
+        "Verify licences"
+      ];
+    }
+
     return {
       parsed: {
-        summary:
-          "Your business should review licences, employee contracts, tax compliance, and local authority approvals before expanding or making legal changes.",
+        summary,
         riskLevel: "MEDIUM",
-        actionItems: [
-          "Verify business registration details",
-          "Review employee contracts and labour law compliance",
-          "Ensure tax registration and VAT compliance",
-          "Check local council or municipal licences",
-          "Update insurance coverage"
-        ],
-        documentsToConsider: [
-          "Business registration certificate",
-          "Tax registration documents",
-          "Employee contracts",
-          "Insurance documents"
-        ],
-        licencesToCheck: [
-          "Trade licence",
-          "Industry-specific licence",
-          "Health or safety permit"
-        ],
-        warnings: [
-          "Legal requirements vary by country and industry",
-          "Consult a qualified lawyer for official legal advice"
-        ],
+        actionItems,
+        documentsToConsider: [],
+        licencesToCheck: [],
+        warnings: [],
         disclaimer: "General guidance only. Not legal advice."
       },
-      rawText: "Mock AI response",
+      rawText: "Mock dynamic response",
       model: "mock",
       provider: "mock"
     };
@@ -149,7 +214,6 @@ export async function generateLegalComplianceGuidance({ question, businessProfil
     };
 
   } catch (error) {
-    // Fallback if Gemini fails
     return {
       parsed: {
         summary:

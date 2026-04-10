@@ -38,11 +38,16 @@ import LegalMentorDashboardPage from "./pages/Mentor/LegalMentorDashboardPage";
 import LegalMentorReviewsPage from "./pages/Mentor/LegalMentorReviewsPage";
 import LegalMentorReviewDetailPage from "./pages/Mentor/LegalMentorReviewDetailPage";
 import LegalMentorHelpRequestsPage from "./pages/Mentor/LegalMentorHelpRequestsPage";
+import LegalMentorTasksPage from "./pages/Mentor/LegalMentorTasksPage";
+import LegalMentorTaskDetailPage from "./pages/Mentor/LegalMentorTaskDetailPage";
 import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
 import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
 import LegalEvidenceUploadPage from './pages/Legal/LegalEvidenceUploadPage'
 import LegalHelpPage from './pages/Legal/LegalHelpPage'
 import LegalHomePage from './pages/Legal/LegalHomePage'
+import LegalMentorDetailPage from './pages/Legal/LegalMentorDetailPage'
+
+import LegalMentorsPage from './pages/Legal/LegalMentorsPage'
 import LegalProgressPage from './pages/Legal/LegalProgressPage'
 import LegalTaskDetailPage from './pages/Legal/LegalTaskDetailPage'
 import Login from './pages/Login'
@@ -254,7 +259,22 @@ function AppShell() {
             </ProtectedRoute>
           }
           />
-
+          <Route 
+            path="/mentor/legal/tasks" 
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorTasksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route 
+            path="/mentor/legal/tasks/:taskId" 
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorTaskDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/toolkits/legal"
@@ -293,6 +313,22 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <LegalHelpPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/mentors"
+            element={
+              <ProtectedRoute>
+                <LegalMentorsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/mentors/:mentorId"
+            element={
+              <ProtectedRoute>
+                <LegalMentorDetailPage />
               </ProtectedRoute>
             }
           />

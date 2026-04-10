@@ -193,13 +193,36 @@
 
 .legal-evidence-item,
 .legal-progress-item {
+  display: block;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.legal-progress-item {
+  margin-bottom: 1rem;
+}
+
+.legal-progress-item-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 18px;
-  background: rgba(15, 118, 110, 0.05);
+  gap: 12px;
+  margin-bottom: 0.85rem;
+}
+
+.legal-progress-item-header strong {
+  font-size: 1rem;
+}
+
+.legal-progress-item p {
+  margin: 0 0 0.75rem;
+}
+
+.legal-progress-item:last-child {
+  margin-bottom: 0;
 }
 
 .legal-evidence-item > div,
@@ -273,6 +296,51 @@
 
 .session-history-item p {
   max-width: 56ch;
+}
+
+/* Task Details in History Display */
+.task-category-badge {
+  display: inline-block;
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin: 4px 0;
+}
+
+.task-detail-description {
+  margin: 6px 0;
+  padding: 8px 0;
+  color: #4b5563;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.history-question {
+  margin: 8px 0;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.history-mentor-reply {
+  margin: 12px 0;
+  padding: 10px;
+  background: #ecfdf5;
+  border-left: 3px solid #059669;
+  border-radius: 4px;
+}
+
+.history-mentor-reply p {
+  margin: 4px 0;
+  color: #065f46;
+  line-height: 1.6;
+}
+
+.history-mentor-reply p:first-child {
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 @media (max-width: 960px) {

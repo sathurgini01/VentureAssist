@@ -31,8 +31,8 @@ const parseResponse = async (res) => {
 
 function getAuthHeaders() {
   const token =
-    localStorage.getItem("auth_token") ||
-    localStorage.getItem("token") ||
+    sessionStorage.getItem("auth_token") ||
+    sessionStorage.getItem("token") ||
     "";
 
   return {
@@ -110,7 +110,7 @@ export const deleteToolkit = async (id) => {
 };
 
 export const getAdminLegalReviews = async () => {
-  const res = await fetch(buildUrl(`/api/legal/mentor/reviews`), {
+  const res = await fetch(buildUrl(`/api/legal/mentor/submissions/history`), {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);

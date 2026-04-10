@@ -1,6 +1,7 @@
 export const legalUserLinks = [
   { to: '/toolkits/legal', label: 'Legal Home' },
   { to: '/toolkits/legal/dashboard', label: 'Task Dashboard' },
+  { to: '/toolkits/legal/mentors', label: 'Mentors' },
   { to: '/toolkits/legal/progress', label: 'Progress' },
   { to: '/toolkits/legal/ai', label: 'AI Assistant' },
 ]

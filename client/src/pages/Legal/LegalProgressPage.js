@@ -44,7 +44,13 @@ function LegalProgressPage() {
   }, [])
 
   const submissionMap = useMemo(
-    () => new Map((submissions || []).map((item) => [String(item.taskId), item])),
+    () =>
+      new Map(
+        (submissions || []).map((item) => [
+          String(item?.taskId?._id || item?.taskId),
+          item,
+        ]),
+      ),
     [submissions],
   )
 
@@ -108,6 +114,7 @@ function LegalProgressPage() {
                       <div>
                         <strong>{task.title}</strong>
                         <p className="card-muted">{task.category} • Updated {formatDate(submission?.updatedAt || task.updatedAt)}</p>
+                        <p className="card-muted">Evidence files: {submission?.evidence?.length || 0}</p>
                       </div>
                       <div className="legal-progress-actions">
                         <span className={`legal-status-pill tone-${meta.tone}`.trim()}>{meta.label}</span>

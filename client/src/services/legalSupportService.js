@@ -1,7 +1,7 @@
 const API_BASE = '/api/legal'
 const TOOLKIT_BASE = '/api/legal'
 
-const getToken = () => localStorage.getItem('auth_token')
+const getToken = () => sessionStorage.getItem('auth_token')
 
 const buildHeaders = (isJson = true) => {
   const headers = {}
@@ -86,6 +86,28 @@ export const createLegalHelpRequest = async (payload) => {
     method: 'POST',
     headers: buildHeaders(true),
     body: JSON.stringify(payload),
+  })
+  return parseResponse(response)
+}
+
+export const getLegalMentors = async () => {
+  const response = await fetch(`${API_BASE}/mentors`, {
+    headers: buildHeaders(false),
+  })
+  return parseResponse(response)
+}
+
+export const getLegalMentorById = async (mentorId) => {
+  const response = await fetch(`${API_BASE}/mentors/${mentorId}`, {
+    headers: buildHeaders(false),
+  })
+  return parseResponse(response)
+}
+
+export const getMyLegalHelpRequests = async (mentorId = '') => {
+  const query = mentorId ? `?mentorId=${mentorId}` : ''
+  const response = await fetch(`${API_BASE}/help-requests/me${query}`, {
+    headers: buildHeaders(false),
   })
   return parseResponse(response)
 }

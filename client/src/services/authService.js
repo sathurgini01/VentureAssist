@@ -51,20 +51,20 @@ export const registerUser = async (name, email, password) => {
 }
 
 export const logout = () => {
-  localStorage.removeItem('auth_token')
-  localStorage.removeItem('auth_user')
+  sessionStorage.removeItem('auth_token')
+  sessionStorage.removeItem('auth_user')
 }
 
 export const getStoredToken = () => {
-  return localStorage.getItem('auth_token')
+  return sessionStorage.getItem('auth_token')
 }
 
 export const getStoredUser = () => {
-  const user = localStorage.getItem('auth_user')
+  const user = sessionStorage.getItem('auth_user')
   return user ? JSON.parse(user) : null
 }
 
 export const storeAuth = (token, user) => {
-  localStorage.setItem('auth_token', token)
-  localStorage.setItem('auth_user', JSON.stringify(user))
+  sessionStorage.setItem('auth_token', token)
+  sessionStorage.setItem('auth_user', JSON.stringify(user))
 }

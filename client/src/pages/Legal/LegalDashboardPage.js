@@ -51,7 +51,12 @@ function LegalDashboardPage() {
 
   const submissionMap = useMemo(
     () =>
-      new Map((submissions || []).map((submission) => [String(submission.taskId), submission])),
+      new Map(
+        (submissions || []).map((submission) => [
+          String(submission?.taskId?._id || submission?.taskId),
+          submission,
+        ]),
+      ),
     [submissions],
   )
 
@@ -111,6 +116,14 @@ function LegalDashboardPage() {
                     <div className="legal-card-body">
                       <span className={`legal-status-pill tone-${meta.tone}`.trim()}>{meta.label}</span>
                       <p className="card-muted">Step order: {task.order ?? 0}</p>
+                      <p className="card-muted">
+                        Last submission: {submissionMap.get(String(task._id))?.updatedAt
+                          ? new Date(submissionMap.get(String(task._id)).updatedAt).toLocaleString()
+                          : 'No submissions yet'}
+                      </p>
+                      <p className="card-muted">
+                        Evidence files: {submissionMap.get(String(task._id))?.evidence?.length || 0}
+                      </p>
                       <div className="inline-actions">
                         <NavLink to={`/toolkits/legal/tasks/${task._id}`}>
                           <Button>Open Task</Button>

@@ -5,7 +5,7 @@ import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import { useAppContext } from '../../context/AppContext'
-import { getLegalTaskById, submitLegalEvidence } from '../../services/legalSupportService'
+import { getLegalMentors, getLegalTaskById, submitLegalEvidence } from '../../services/legalSupportService'
 import { legalUserLinks } from './legalHelpers'
 
 function LegalEvidenceUploadPage() {
@@ -13,20 +13,38 @@ function LegalEvidenceUploadPage() {
   const navigate = useNavigate()
   const { addToast } = useAppContext()
   const [task, setTask] = useState(null)
+  const [mentors, setMentors] = useState([])
+  const [selectedMentorId, setSelectedMentorId] = useState('')
+  const [loadingMentors, setLoadingMentors] = useState(true)
   const [fileUrl, setFileUrl] = useState('')
   const [note, setNote] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     let active = true
-    getLegalTaskById(taskId)
-      .then((data) => {
-        if (active) setTask(data.task)
-      })
-      .catch((error) => {
-        if (active) addToast(error.message || 'Unable to load task.', 'error')
-      })
 
+    const load = async () => {
+      try {
+        setLoadingMentors(true)
+        const [taskData, mentorData] = await Promise.all([
+          getLegalTaskById(taskId),
+          getLegalMentors()
+        ])
+
+        if (!active) return
+        setTask(taskData.task)
+        setMentors(mentorData.mentors || [])
+        if (!selectedMentorId && Array.isArray(mentorData.mentors) && mentorData.mentors.length > 0) {
+          setSelectedMentorId(mentorData.mentors[0]._id)
+        }
+      } catch (error) {
+        if (active) addToast(error.message || 'Unable to load task or mentors.', 'error')
+      } finally {
+        if (active) setLoadingMentors(false)
+      }
+    }
+
+    load()
     return () => {
       active = false
     }
@@ -36,7 +54,22 @@ function LegalEvidenceUploadPage() {
     event.preventDefault()
     try {
       setSubmitting(true)
-      await submitLegalEvidence(taskId, { fileUrl, note })
+      const selectedMentor = mentors.find((mentor) => mentor._id === selectedMentorId)
+      const mentorName = selectedMentor?.name || ''
+      await submitLegalEvidence(taskId, {
+        fileUrl,
+        note,
+        mentorId: selectedMentorId || undefined,
+        mentorName,
+      })
+
+      if (mentorName && fileUrl) {
+        const storageKey = `legalEvidenceMentorMap:${taskId}`
+        const existing = JSON.parse(localStorage.getItem(storageKey) || '{}')
+        existing[fileUrl] = mentorName
+        localStorage.setItem(storageKey, JSON.stringify(existing))
+      }
+
       addToast('Evidence submitted successfully.', 'success')
       navigate(`/toolkits/legal/tasks/${taskId}`)
     } catch (error) {
@@ -56,6 +89,37 @@ function LegalEvidenceUploadPage() {
             <div className="hero-primary-panel">
               <Card title="Upload Evidence" subtitle={task?.title || 'Attach your legal compliance proof.'}>
                 <form className="legal-form-grid" onSubmit={handleSubmit}>
+                  {loadingMentors ? (
+                    <label className="form-group">
+                      <span>Select Mentor</span>
+                      <select disabled>
+                        <option>Loading mentors…</option>
+                      </select>
+                    </label>
+                  ) : mentors.length > 0 ? (
+                    <label className="form-group">
+                      <span>Select Mentor</span>
+                      <select
+                        value={selectedMentorId}
+                        onChange={(event) => setSelectedMentorId(event.target.value)}
+                        required
+                      >
+                        {mentors.map((mentor) => (
+                          <option key={mentor._id} value={mentor._id}>
+                            {mentor.name} — {mentor.expertise || 'Legal expert'}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <label className="form-group">
+                      <span>Select Mentor</span>
+                      <select disabled>
+                        <option>No mentors available</option>
+                      </select>
+                    </label>
+                  )}
+
                   <label className="form-group">
                     <span>Document URL</span>
                     <input

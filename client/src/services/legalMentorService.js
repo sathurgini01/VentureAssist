@@ -1,6 +1,6 @@
 const API = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "")
 
-const getToken = () => localStorage.getItem('auth_token') || localStorage.getItem('token') || ''
+const getToken = () => sessionStorage.getItem('auth_token') || sessionStorage.getItem('token') || ''
 
 const getHeaders = (isJson = false) => {
   const headers = {}
@@ -44,6 +44,30 @@ export const getMentorHelpRequests = async () => {
 
 export const updateSubmission = async (id, data) => {
   const res = await fetch(`${API}/api/legal/mentor/submissions/${id}`, {
+    method: "PATCH",
+    headers: getHeaders(true),
+    body: JSON.stringify(data),
+  });
+  return parseResponse(res)
+};
+
+export const getMentorSubmissionsForUser = async (userId) => {
+  const res = await fetch(`${API}/api/legal/mentor/submissions/user/${userId}`, {
+    headers: getHeaders(),
+  });
+  return parseResponse(res)
+};
+
+export const getMentorSubmissionHistory = async () => {
+  const res = await fetch(`${API}/api/legal/mentor/submissions/history`, {
+    headers: getHeaders(),
+  });
+  const data = await parseResponse(res)
+  return Array.isArray(data) ? data : data?.submissions || []
+};
+
+export const replyToHelpRequest = async (id, data) => {
+  const res = await fetch(`${API}/api/legal/mentor/help-requests/${id}`, {
     method: "PATCH",
     headers: getHeaders(true),
     body: JSON.stringify(data),
