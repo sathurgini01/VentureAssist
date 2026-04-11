@@ -1,12 +1,17 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import Button from '../../components/Button'
 import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
-import StatsCard from '../../components/MarketingStatsCard'
 import Table from '../../components/Table'
 import { useAppContext } from '../../context/AppContext'
-import { CAMPAIGN_METRIC_FIELDS } from '../../data/instagramCampaignPlan'
+import {
+  getCampaignPlanByKey,
+  inferPlanKeyFromTemplateTitle,
+  parsePlanKeyFromNotes,
+} from '../../data/instagramCampaignPlan'
+import { analyzeCampaign } from '../../services/campaignService'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -17,79 +22,297 @@ const dashboardLinks = [
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
+const getMetricValue = (campaign, key, label) => {
+  const metricValues = Array.isArray(campaign?.metricValues) ? campaign.metricValues : []
+  const byKey = metricValues.find((item) => item.name === key)
+  const byLabel = metricValues.find((item) => item.name === label)
+  if (byKey) return Number(byKey.value || 0)
+  if (byLabel) return Number(byLabel.value || 0)
+  return 0
+}
+
+const parseRangeCenter = (text) => {
+  const match = String(text).match(/(\d+[\d,]*)\s*[–-]\s*(\d+[\d,]*)/)
+  if (!match) return null
+  const left = Number(match[1].replace(/,/g, ''))
+  const right = Number(match[2].replace(/,/g, ''))
+  if (Number.isNaN(left) || Number.isNaN(right)) return null
+  return Math.round((left + right) / 2)
+}
+
+const formatMetricValue = (metric, value) => {
+  const type = metric?.type
+    || (String(metric?.label || '').toLowerCase().includes('rate') || String(metric?.label || '').toLowerCase().includes('ctr')
+      ? 'percentage'
+      : String(metric?.label || '').toLowerCase().includes('spend')
+        || String(metric?.label || '').toLowerCase().includes('cpl')
+        || String(metric?.label || '').toLowerCase().includes('cost')
+        ? 'currency'
+        : 'number')
+  if (type === 'currency') return `LKR ${Number(value || 0).toLocaleString()}`
+  if (type === 'percentage') return `${Number(value || 0).toLocaleString()}%`
+  return Number(value || 0).toLocaleString()
+}
+
+const getCampaignPlan = (campaign) => {
+  const planKey = parsePlanKeyFromNotes(campaign?.metrics?.notes)
+    || inferPlanKeyFromTemplateTitle(campaign?.title || campaign?.name)
+  return getCampaignPlanByKey(planKey)
+}
+
+const getAggregate = (campaign, metrics, matchers, { preferTotal = true, sum = false } = {}) => {
+  const normalized = metrics.filter((metric) => matchers.some((matcher) => matcher(metric)))
+  if (normalized.length === 0) return 0
+
+  if (preferTotal) {
+    const totalMetric = normalized.find((metric) => String(metric.label || '').toLowerCase().includes('total') || String(metric.label || '').toLowerCase().includes('overall') || String(metric.label || '').toLowerCase().includes('average'))
+    if (totalMetric) {
+      return getMetricValue(campaign, totalMetric.key, totalMetric.label)
+    }
+  }
+
+  if (sum) {
+    return normalized.reduce((acc, metric) => acc + getMetricValue(campaign, metric.key, metric.label), 0)
+  }
+
+  return getMetricValue(campaign, normalized[0].key, normalized[0].label)
+}
+
 function Analytics() {
-  const { campaigns } = useAppContext()
+  const { campaigns, addToast } = useAppContext()
   const [searchParams] = useSearchParams()
   const requestedCampaignId = searchParams.get('campaign')
   const defaultCampaignId = campaigns[0]?.id || ''
   const [selectedCampaignId, setSelectedCampaignId] = useState(requestedCampaignId || defaultCampaignId)
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false)
+  const [analysisResult, setAnalysisResult] = useState(null)
 
   const selectedCampaign = campaigns.find((item) => item.id === selectedCampaignId) || campaigns[0]
-  const metrics = selectedCampaign?.metrics || {}
+  const template = selectedCampaign?.template || null
+  const usesTemplateFlow = Array.isArray(template?.executionPlan) && template.executionPlan.length > 0
 
-  const impressions = Number(metrics.impressions || 0)
-  const clicks = Number(metrics.clicks || 0)
-  const leads = Number(metrics.leads || 0)
-  const sales = Number(metrics.sales || 0)
-  const budget = Number(metrics.budgetSpentLKR || 0)
-  const revenue = Number(metrics.revenue || 0)
-  const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0
-  const conversionRate = clicks > 0 ? (leads / clicks) * 100 : 0
-  const cpl = leads > 0 ? budget / leads : 0
-  const roi = budget > 0 ? ((revenue - budget) / budget) * 100 : 0
+  const activePlan = getCampaignPlan(selectedCampaign)
+  const allMetrics = activePlan.phases.flatMap((phase) => phase.requiredMetrics)
 
-  const summaryStats = [
-    { title: 'Engagement Rate', value: `${ctr.toFixed(2)}%`, trend: ctr > 2 ? 'good' : ctr > 1 ? 'average' : 'poor' },
-    { title: 'Lead Conversion', value: `${conversionRate.toFixed(2)}%`, trend: conversionRate > 5 ? 'good' : conversionRate > 2 ? 'average' : 'poor' },
-    { title: 'Cost per Lead', value: `LKR ${cpl.toFixed(2)}`, trend: cpl > 0 && cpl < 700 ? 'good' : cpl < 1300 ? 'average' : 'poor' },
-    { title: 'Campaign ROI', value: `${roi.toFixed(2)}%`, trend: roi > 20 ? 'good' : roi > 0 ? 'average' : 'poor' },
-  ]
-
-  const aiSummary = useMemo(() => {
-    const lines = []
-    if (ctr < 1.5) lines.push('Reels and hooks need stronger first 3 seconds to improve attention and clicks.')
-    if (conversionRate < 3) lines.push('Lead conversion is low. Tighten CTA and offer clarity in captions + stories.')
-    if (cpl > 1200) lines.push('CPL is high. Narrow audience targeting and pause weak post boosts.')
-    if (lines.length === 0) lines.push('Campaign is stable. Scale top-performing post formats by 20-30%.')
-    return lines
-  }, [ctr, conversionRate, cpl])
-
-  const weekMetricRows = CAMPAIGN_METRIC_FIELDS.map((field) => ({
-    metric: field.label,
-    value: Number((selectedCampaign?.metricValues || []).find((item) => item.name === field.label)?.value || 0).toLocaleString(),
-    meaning: field.description,
+  const phaseActualRows = activePlan.phases.map((phase) => ({
+    ...phase,
+    metrics: phase.requiredMetrics.map((metric) => ({
+      ...metric,
+      actual: getMetricValue(selectedCampaign, metric.key, metric.label),
+    })),
   }))
 
-  const comparisonRows = campaigns.map((campaign) => {
-    const m = campaign.metrics || {}
-    const imp = Number(m.impressions || 0)
-    const clk = Number(m.clicks || 0)
-    const lds = Number(m.leads || 0)
-    const bgt = Number(m.budgetSpentLKR || 0)
-    const rev = Number(m.revenue || 0)
-    const campaignRoi = bgt > 0 ? ((rev - bgt) / bgt) * 100 : 0
-    return {
-      campaign: campaign.name,
-      status: campaign.status,
-      impressions: imp.toLocaleString(),
-      clicks: clk.toLocaleString(),
-      leads: lds.toLocaleString(),
-      roi: `${campaignRoi.toFixed(2)}%`,
-    }
+  const totalReach = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('reach')],
+    { preferTotal: true, sum: true },
+  )
+
+  const totalLeads = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('lead')],
+    { preferTotal: true, sum: true },
+  )
+
+  const totalSpend = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('spend')],
+    { preferTotal: true, sum: true },
+  )
+
+  const totalEngagement = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('engagement') && !String(metric.label || '').toLowerCase().includes('rate')],
+    { preferTotal: true, sum: true },
+  )
+
+  const engagementRate = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('engagement rate')],
+    { preferTotal: true, sum: false },
+  )
+
+  const avgCtr = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('ctr')],
+    { preferTotal: true, sum: false },
+  )
+
+  const avgCplDirect = getAggregate(
+    selectedCampaign,
+    allMetrics,
+    [(metric) => String(metric.label || '').toLowerCase().includes('cpl') || String(metric.label || '').toLowerCase().includes('cost per lead')],
+    { preferTotal: true, sum: false },
+  )
+
+  const averageCpl = avgCplDirect > 0 ? avgCplDirect : (totalLeads > 0 ? totalSpend / totalLeads : 0)
+
+  const templateMetrics = Array.isArray(selectedCampaign?.metricDefinitions) ? selectedCampaign.metricDefinitions : []
+  const templateMetricRows = templateMetrics.map((metric) => ({
+    metric: metric.name,
+    actual: formatMetricValue(metric, getMetricValue(selectedCampaign, metric.name, metric.name)),
+  }))
+
+  const templateOutcomeRows = useMemo(() => {
+    return (template?.expectedResults || []).map((item) => {
+      const value = String(item).toLowerCase()
+      const metricMatch = templateMetrics.find((metric) => value.includes(String(metric.name || '').toLowerCase()))
+      if (metricMatch) {
+        return {
+          expected: item,
+          actual: formatMetricValue(metricMatch, getMetricValue(selectedCampaign, metricMatch.name, metricMatch.name)),
+          score: 'Tracked',
+        }
+      }
+
+      if (value.includes('lead') || value.includes('conversation')) {
+        const metric = templateMetrics.find((entry) => {
+          const label = String(entry.name || '').toLowerCase()
+          return label.includes('lead') || label.includes('conversation')
+        })
+        const actual = metric ? getMetricValue(selectedCampaign, metric.name, metric.name) : 0
+        const rangeCenter = parseRangeCenter(item)
+        const score = rangeCenter ? (actual >= rangeCenter ? 'On Track' : 'Below Target') : actual > 0 ? 'Tracked' : 'Not Enough Data'
+        return { expected: item, actual: actual ? formatMetricValue(metric, actual) : 'No data', score }
+      }
+
+      if (value.includes('reach') || value.includes('engagement') || value.includes('follower') || value.includes('conversion')) {
+        const metric = templateMetrics.find((entry) => value.includes(String(entry.name || '').toLowerCase()))
+        const actual = metric ? getMetricValue(selectedCampaign, metric.name, metric.name) : 0
+        return { expected: item, actual: actual ? formatMetricValue(metric, actual) : 'Tracked in campaign summary', score: actual > 0 ? 'Tracked' : 'Not Enough Data' }
+      }
+
+      return { expected: item, actual: 'Campaign data captured', score: 'Tracked' }
+    })
+  }, [selectedCampaign, template, templateMetrics])
+
+  const outcomeRows = useMemo(() => {
+    return activePlan.finalExpectedOutcome.map((item) => {
+      const value = String(item).toLowerCase()
+
+      if (value.includes('lead')) {
+        const rangeCenter = parseRangeCenter(item)
+        const score = rangeCenter ? (totalLeads >= rangeCenter ? 'On Track' : 'Below Target') : totalLeads > 0 ? 'Tracked' : 'Not Enough Data'
+        return { expected: item, actual: `${totalLeads.toLocaleString()} Leads`, score }
+      }
+
+      if (value.includes('reach')) {
+        const minMatch = String(item).match(/(\d+[\d,]*)\s*\+/)
+        const min = minMatch ? Number(minMatch[1].replace(/,/g, '')) : null
+        const score = min ? (totalReach >= min ? 'On Track' : 'Below Target') : totalReach > 0 ? 'Tracked' : 'Not Enough Data'
+        return { expected: item, actual: `${totalReach.toLocaleString()} Reach`, score }
+      }
+
+      if (value.includes('engagement rate')) {
+        return {
+          expected: item,
+          actual: `${Number(engagementRate || 0).toFixed(2)}% Engagement Rate`,
+          score: Number(engagementRate || 0) > 0 ? 'Tracked' : 'Not Enough Data',
+        }
+      }
+
+      if (value.includes('cpl') || value.includes('cost per lead')) {
+        const thresholdMatch = String(item).match(/below\s*lkr\s*(\d+[\d,]*)/i)
+        const threshold = thresholdMatch ? Number(thresholdMatch[1].replace(/,/g, '')) : null
+        const score = threshold ? (averageCpl > 0 && averageCpl <= threshold ? 'On Track' : 'Needs Work') : averageCpl > 0 ? 'Tracked' : 'Not Enough Data'
+        return { expected: item, actual: `LKR ${Number(averageCpl || 0).toFixed(2)} Average CPL`, score }
+      }
+
+      if (value.includes('engagement')) {
+        return { expected: item, actual: `${totalEngagement.toLocaleString()} Engagement`, score: totalEngagement > 0 ? 'Tracked' : 'Not Enough Data' }
+      }
+
+      if (value.includes('roi')) {
+        const score = totalLeads > 0 && totalSpend > 0 ? 'Measured' : 'Not Enough Data'
+        return { expected: item, actual: `Spend LKR ${totalSpend.toLocaleString()} | Leads ${totalLeads.toLocaleString()}`, score }
+      }
+
+      return { expected: item, actual: 'Campaign data captured', score: 'Tracked' }
+    })
+  }, [activePlan.finalExpectedOutcome, averageCpl, engagementRate, totalEngagement, totalLeads, totalReach, totalSpend])
+
+  const expectedVsActualRows = phaseActualRows.flatMap((phase) => {
+    const expectedHint = phase.expectedOutput.join(' | ')
+    return phase.metrics.map((metric) => ({
+      phase: `Phase ${phase.phase}`,
+      metric: metric.label,
+      expected: expectedHint,
+      actual: formatMetricValue(metric, metric.actual),
+    }))
   })
+
+  const handleAnalyze = async () => {
+    if (!selectedCampaign?.id) return
+    setLoadingAnalysis(true)
+    setAnalysisResult(null)
+    try {
+      const response = usesTemplateFlow
+        ? await analyzeCampaign(selectedCampaign.id, {
+          context: {
+            templateTitle: selectedCampaign.title,
+            overview: template?.campaignOverview || '',
+            expectedResults: template?.expectedResults || [],
+            finalOutputItems: template?.finalOutputItems || [],
+            metrics: templateMetrics.map((metric) => ({
+              name: metric.name,
+              type: metric.type,
+              required: metric.required,
+              actual: getMetricValue(selectedCampaign, metric.name, metric.name),
+            })),
+          },
+        })
+        : await analyzeCampaign(selectedCampaign.id, {
+          context: {
+            package: activePlan.package,
+            phases: phaseActualRows.map((phase) => ({
+              phase: phase.phase,
+              title: phase.title,
+              objective: phase.objective,
+              expectedOutput: phase.expectedOutput,
+              metrics: phase.metrics.map((metric) => ({
+                key: metric.key,
+                label: metric.label,
+                actual: metric.actual,
+                type: metric.type,
+              })),
+            })),
+            overallExpected: activePlan.finalExpectedOutcome,
+            totalReach,
+            totalSpend,
+            totalLeads,
+            totalEngagement,
+            averageCpl,
+            averageCtr: avgCtr,
+          },
+        })
+
+      setAnalysisResult(response)
+      addToast('Gemini analysis generated successfully.', 'success')
+    } catch (error) {
+      addToast(error?.message || 'Failed to generate Gemini analysis.', 'warning')
+    } finally {
+      setLoadingAnalysis(false)
+    }
+  }
 
   return (
     <div className="dashboard-shell">
       <Sidebar links={dashboardLinks} />
       <div className="dashboard-main">
         <Navbar />
-        <div className="dashboard-content">
+        <div className="dashboard-content analytics-page">
           <div>
-            <h1 className="page-title">Campaign Analytics</h1>
-            <p className="page-subtitle">Week-by-week summary with AI-style optimization guidance (UI phase).</p>
+            <h1 className="page-title">Campaign Analysis</h1>
+            <p className="page-subtitle">Compare planned expectations vs actual results, then run Gemini analysis.</p>
           </div>
 
-          <Card title="Select Campaign" subtitle="Review one campaign at a time.">
+          <Card title="Select Campaign">
             <select className="form-control" value={selectedCampaignId} onChange={(event) => setSelectedCampaignId(event.target.value)}>
               {campaigns.map((campaign) => (
                 <option key={campaign.id} value={campaign.id}>{campaign.name}</option>
@@ -97,52 +320,151 @@ function Analytics() {
             </select>
           </Card>
 
-          <div className="stats-grid">
-            {summaryStats.map((item) => (
-              <StatsCard key={item.title} title={item.title} value={item.value} trend={item.trend} />
-            ))}
-          </div>
+          {usesTemplateFlow ? (
+            <>
+              <Card title="Template Campaign Summary" subtitle={template?.campaignOverview || 'Summary based on the launched campaign template.'}>
+                <div className="section-stack">
+                  <p className="card-muted"><strong>Campaign:</strong> {selectedCampaign?.title}</p>
+                  {template?.targetAudience ? <p className="card-muted"><strong>Target Audience:</strong> {template.targetAudience}</p> : null}
+                  {(template?.finalOutputItems || []).length ? (
+                    <>
+                      <strong>Expected Final Outputs</strong>
+                      <ul>
+                        {(template.finalOutputItems || []).map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                    </>
+                  ) : null}
+                </div>
+              </Card>
 
-          <div className="page-grid analytics-grid">
-            <Card title="AI Suggestion Box" subtitle="Optimization guidance generated from current KPI values.">
-              <div className="activity-log">
-                {aiSummary.map((item) => (
-                  <div key={item} className="activity-item">
-                    <p className="card-muted">{item}</p>
-                  </div>
+              <Card title="Expected vs Actual">
+                <Table
+                  columns={[
+                    { key: 'expected', label: 'Expected Before Campaign' },
+                    { key: 'actual', label: 'Actual Result' },
+                    { key: 'score', label: 'Status' },
+                  ]}
+                  rows={templateOutcomeRows}
+                />
+              </Card>
+
+              <Card title="Tracked Metrics">
+                <Table
+                  columns={[
+                    { key: 'metric', label: 'Metric' },
+                    { key: 'actual', label: 'Actual Value' },
+                  ]}
+                  rows={templateMetricRows}
+                />
+              </Card>
+            </>
+          ) : (
+            <>
+              <div className="template-week-grid">
+                {phaseActualRows.map((phase) => (
+                  <Card key={phase.phase} title={`Phase ${phase.phase} (Expected vs Actual)`}>
+                    <p className="card-muted"><strong>Expected:</strong> {phase.expectedOutput.join(' | ')}</p>
+                    {phase.metrics.map((metric) => (
+                      <p key={metric.key} className="card-muted">
+                        <strong>{metric.label}:</strong> {formatMetricValue(metric, metric.actual)}
+                      </p>
+                    ))}
+                  </Card>
                 ))}
               </div>
-            </Card>
 
-            <Card title="Campaign Score" subtitle="Simple weighted view of campaign health.">
-              <p className="page-title" style={{ margin: 0 }}>{Math.max(0, Math.min(100, Math.round((ctr * 10 + conversionRate * 8 + Math.max(0, 20 - cpl / 100)))))}</p>
-              <p className="card-muted">Score combines engagement, conversion, and efficiency.</p>
-            </Card>
-          </div>
+              <Card title="Overall Campaign Outcome (Expected vs Actual)">
+                <Table
+                  columns={[
+                    { key: 'expected', label: 'Expected Before Campaign' },
+                    { key: 'actual', label: 'Actual Result' },
+                    { key: 'score', label: 'Status' },
+                  ]}
+                  rows={outcomeRows}
+                />
+              </Card>
 
-          <Card title="Weekly Metrics + Definitions" subtitle="Each metric includes clear explanation.">
-            <Table
-              columns={[
-                { key: 'metric', label: 'Metric' },
-                { key: 'value', label: 'Current Value' },
-                { key: 'meaning', label: 'What this means' },
-              ]}
-              rows={weekMetricRows}
-            />
-          </Card>
+              <Card title="Metric-by-Metric Expected vs Actual">
+                <Table
+                  columns={[
+                    { key: 'phase', label: 'Phase' },
+                    { key: 'metric', label: 'Metric' },
+                    { key: 'expected', label: 'Expected Context' },
+                    { key: 'actual', label: 'Actual Value' },
+                  ]}
+                  rows={expectedVsActualRows}
+                />
+              </Card>
+            </>
+          )}
 
-          <Card title="Campaign Comparison" subtitle="Compare key outcomes across campaigns.">
-            <Table
-              columns={[
-                { key: 'campaign', label: 'Campaign' },
-                { key: 'status', label: 'Status' },
-                { key: 'impressions', label: 'Impressions' },
-                { key: 'clicks', label: 'Clicks' },
-                { key: 'leads', label: 'Leads' },
-                { key: 'roi', label: 'ROI' },
-              ]}
-              rows={comparisonRows}
-            />
+          <Card title="Gemini AI Analysis" subtitle="Run model analysis using campaign metrics + expected targets.">
+            <div className="inline-actions">
+              <Button onClick={handleAnalyze} disabled={loadingAnalysis}>
+                {loadingAnalysis ? 'Analyzing...' : 'Analysis'}
+              </Button>
+            </div>
+
+            {analysisResult?.report ? (
+              <div className="section-stack" style={{ marginTop: '1rem' }}>
+                <p><strong>Overview:</strong> {analysisResult.report.overview}</p>
+                <p><strong>Health:</strong> {analysisResult.report.health}</p>
+
+                {Array.isArray(analysisResult.report.keyFindings) ? (
+                  <div>
+                    <strong>Key Findings</strong>
+                    <ul>
+                      {analysisResult.report.keyFindings.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {Array.isArray(analysisResult.report.strengths) ? (
+                  <div>
+                    <strong>Strengths</strong>
+                    <ul>
+                      {analysisResult.report.strengths.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {Array.isArray(analysisResult.report.weaknesses) ? (
+                  <div>
+                    <strong>Weaknesses</strong>
+                    <ul>
+                      {analysisResult.report.weaknesses.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {Array.isArray(analysisResult.report.businessAdvice) ? (
+                  <div>
+                    <strong>Business Advice</strong>
+                    <ul>
+                      {analysisResult.report.businessAdvice.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </div>
+                ) : null}
+
+                {Array.isArray(analysisResult.report.prioritizedActions) ? (
+                  <div>
+                    <strong>Prioritized Actions</strong>
+                    <ul>
+                      {analysisResult.report.prioritizedActions.map((item, index) => (
+                        <li key={`${item.action}-${index}`}>
+                          <strong>[{item.priority}] {item.action}</strong> - {item.reason}
+                          {item.expectedImpact ? ` (Expected: ${item.expectedImpact})` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="card-muted" style={{ marginTop: '0.75rem' }}>
+                Click Analysis to fetch Gemini results.
+              </p>
+            )}
           </Card>
         </div>
       </div>

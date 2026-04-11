@@ -117,6 +117,38 @@
   border-color: rgba(45, 107, 100, 0.12);
 }
 
+.templates-page,
+.mentors-page,
+.analytics-page,
+.articles-page {
+  position: relative;
+}
+
+.templates-page::before,
+.mentors-page::before,
+.analytics-page::before,
+.articles-page::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 220px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 208, 148, 0.2), transparent 34%),
+    radial-gradient(circle at top right, rgba(109, 182, 172, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  z-index: 0;
+}
+
+.templates-page > *,
+.mentors-page > *,
+.analytics-page > *,
+.articles-page > * {
+  position: relative;
+  z-index: 1;
+}
+
 .dashboard-panel {
   display: grid;
   gap: 1rem;
@@ -525,6 +557,16 @@
   flex-wrap: wrap;
 }
 
+.templates-page .toolbar-row,
+.analytics-page .toolbar-row,
+.articles-page .toolbar-row {
+  padding: 0.95rem 1rem;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(245, 250, 248, 0.9));
+  border: 1px solid rgba(61, 139, 128, 0.12);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
+}
+
 .filter-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -552,6 +594,21 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.templates-page .template-grid .card {
+  background:
+    radial-gradient(circle at top right, rgba(122, 191, 184, 0.12), transparent 30%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 250, 248, 0.95));
+  border-color: rgba(61, 139, 128, 0.14);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.05);
+}
+
+.templates-page .card:first-of-type,
+.analytics-page .card:first-of-type,
+.articles-page .card:first-of-type {
+  border-color: rgba(61, 139, 128, 0.16);
+  box-shadow: 0 18px 34px rgba(15, 23, 42, 0.06);
+}
+
 .mentor-layout {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -568,6 +625,14 @@
   background:
     radial-gradient(circle at top right, rgba(15, 118, 110, 0.12), transparent 28%),
     rgba(255, 255, 255, 0.92);
+}
+
+.mentors-page .mentor-showcase-copy,
+.mentors-page .mentor-spotlight,
+.mentors-page .filter-panel,
+.mentors-page .mentor-card-shell .card {
+  border-color: rgba(61, 139, 128, 0.14);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
 }
 
 .mentor-highlight-metrics {
@@ -733,6 +798,20 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.articles-page .article-grid .card {
+  background:
+    radial-gradient(circle at top right, rgba(255, 208, 148, 0.12), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 248, 243, 0.95));
+  border-color: rgba(232, 168, 76, 0.18);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.05);
+}
+
+.articles-page .article-grid .card-title,
+.templates-page .card-title,
+.analytics-page .card-title {
+  color: #17443f;
+}
+
 .article-thumb {
   width: 100%;
   min-height: 160px;
@@ -888,6 +967,58 @@
   border-radius: 18px;
   background: rgba(248, 250, 252, 0.9);
   border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.analytics-page .card,
+.analytics-page .activity-item,
+.analytics-page .review-item {
+  background:
+    radial-gradient(circle at top right, rgba(122, 191, 184, 0.09), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 249, 0.95));
+}
+
+.analytics-page .card {
+  border-color: rgba(61, 139, 128, 0.15);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
+}
+
+.analytics-page table,
+.analytics-page .table-shell {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.analytics-page .status-badge,
+.templates-page .badge,
+.articles-page .badge,
+.mentors-page .badge {
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(232, 168, 76, 0.16));
+  color: #1a4a45;
+  border: 1px solid rgba(61, 139, 128, 0.14);
+}
+
+.templates-page .search-input,
+.templates-page .form-control,
+.analytics-page .search-input,
+.analytics-page .form-control,
+.articles-page .search-input,
+.articles-page .form-control,
+.mentors-page .search-input,
+.mentors-page .form-control {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(61, 139, 128, 0.14);
+}
+
+.templates-page .search-input:focus,
+.templates-page .form-control:focus,
+.analytics-page .search-input:focus,
+.analytics-page .form-control:focus,
+.articles-page .search-input:focus,
+.articles-page .form-control:focus,
+.mentors-page .search-input:focus,
+.mentors-page .form-control:focus {
+  box-shadow: 0 0 0 4px rgba(122, 191, 184, 0.12);
+  border-color: rgba(61, 139, 128, 0.28);
 }
 
 .chart-placeholder {

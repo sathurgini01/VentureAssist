@@ -13,15 +13,27 @@ export const analyzeCampaignMarketing = async (req, res) => {
     }
 
     const m = campaign.metrics || {};
+    const metricValues = Array.isArray(campaign.metricValues) ? campaign.metricValues : [];
+    const getMetricValue = (...names) => {
+      for (const name of names) {
+        const found = metricValues.find((item) => String(item?.name || "").toLowerCase() === String(name || "").toLowerCase());
+        if (found) return Number(found.value || 0);
+      }
+      return 0;
+    };
 
     // If you add impressions/clicks (Option A), these will work.
-    const impressions = Number(m.impressions || 0);
-    const clicks = Number(m.clicks || 0);
+    const impressions = Number(m.impressions || getMetricValue("Impressions", "Total Reach") || 0);
+    const clicks = Number(m.clicks || getMetricValue("Clicks") || 0);
 
-    const leads = Number(m.leads || 0);
-    const engagement = Number(m.engagement || 0);
-    const sales = Number(m.sales || 0);
-    const budget = Number(m.budgetSpentLKR || 0);
+    const leads = Number(
+      m.leads
+      || getMetricValue("Total Leads", "Leads", "Total Conversions", "Conversions", "Total WhatsApp Conversations", "Total Conversations")
+      || 0
+    );
+    const engagement = Number(m.engagement || getMetricValue("Total Engagement", "Engagement", "Followers Gained") || 0);
+    const sales = Number(m.sales || getMetricValue("Sales") || 0);
+    const budget = Number(m.budgetSpentLKR || getMetricValue("Total Ad Spend", "Ad Spend", "Total Spend") || 0);
 
     // Derived metrics
     const ctr = safeDiv(clicks, impressions);
@@ -34,6 +46,13 @@ export const analyzeCampaignMarketing = async (req, res) => {
     const missingData = [];
     if (!impressions) missingData.push("impressions");
     if (!clicks) missingData.push("clicks");
+    if (Array.isArray(campaign.metricDefinitions) && campaign.metricDefinitions.length) {
+      campaign.metricDefinitions.forEach((metric) => {
+        if (metric.required && getMetricValue(metric.name) <= 0) {
+          missingData.push(metric.name);
+        }
+      });
+    }
 
     const snapshot = {
       id: campaign._id.toString(),
@@ -60,6 +79,10 @@ export const analyzeCampaignMarketing = async (req, res) => {
       missingData
     };
 
+    if (req.body?.context && typeof req.body.context === "object") {
+      snapshot.context = req.body.context;
+    }
+
     const report = await analyzeCampaignWithGemini(snapshot);
 
     // Optional: store
@@ -75,6 +98,10 @@ export const analyzeCampaignMarketing = async (req, res) => {
     });
   } catch (err) {
     console.error("AI analyze error:", err);
-    return res.status(500).json({ message: "AI analysis failed", error: err.message });
+    const message = String(err?.message || "AI analysis failed");
+    const status = message.toLowerCase().includes("503") || message.toLowerCase().includes("service unavailable")
+      ? 503
+      : 500;
+    return res.status(status).json({ message: "AI analysis failed", error: message });
   }
 };

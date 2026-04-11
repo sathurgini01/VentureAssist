@@ -5,7 +5,11 @@ import Card from '../../components/Card'
 import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import { useAppContext } from '../../context/AppContext'
-import { CAMPAIGN_METRIC_FIELDS, INSTAGRAM_TWO_WEEK_PLAN } from '../../data/instagramCampaignPlan'
+import {
+  getCampaignPlanByKey,
+  inferPlanKeyFromTemplateTitle,
+  parsePlanKeyFromNotes,
+} from '../../data/instagramCampaignPlan'
 
 const dashboardLinks = [
   { to: '/dashboard', label: 'Dashboard' },
@@ -16,31 +20,23 @@ const dashboardLinks = [
   { to: '/dashboard/articles', label: 'Articles' },
 ]
 
-const steps = ['Basic Info', 'Audience & Budget', 'Content Strategy', 'Review']
-
-const initialForm = {
-  campaignName: 'Instagram Lead Generation Campaign',
-  description: '',
-  startDate: '',
-  targetAudience: '',
-  weeklyBudgetLKR: '',
-  targetReach: '',
-  contentGoal: '',
-  coreHook: '',
-  captionTone: '',
-  hashtagStyle: '',
-  cta: '',
+const inferMetricType = (metric) => {
+  if (metric?.type) return metric.type
+  const label = String(metric?.label || '').toLowerCase()
+  if (label.includes('ctr') || label.includes('rate')) return 'percentage'
+  if (label.includes('spend') || label.includes('cpl') || label.includes('cost') || label.includes('budget')) return 'currency'
+  return 'number'
 }
 
-const buildTasks = () => {
+const createTaskPayload = (plan) => {
   const tasks = []
-  INSTAGRAM_TWO_WEEK_PLAN.forEach((weekData) => {
-    weekData.days.forEach((dayData) => {
-      dayData.tasks.forEach((taskText, idx) => {
+  plan.phases.forEach((phase) => {
+    phase.dayTasks.forEach((dayData) => {
+      dayData.tasks.forEach((task, idx) => {
         tasks.push({
-          title: `W${weekData.week}-D${dayData.day} | ${taskText}`,
+          title: `P${phase.phase}-D${dayData.day} | ${task}`,
           description: dayData.title,
-          order: weekData.week * 1000 + dayData.day * 10 + idx,
+          order: phase.phase * 1000 + dayData.day * 10 + idx,
           isDone: false,
           completedAt: null,
         })
@@ -50,128 +46,183 @@ const buildTasks = () => {
   return tasks
 }
 
-const buildMetricValues = () => CAMPAIGN_METRIC_FIELDS.map((field) => ({
-  name: field.label,
-  type: field.key === 'ctr' ? 'percentage' : field.key === 'budgetSpentLKR' || field.key === 'cpc' || field.key === 'cpm' ? 'currency' : 'number',
-  value: 0,
-}))
+const createMetricValuePayload = (plan) => {
+  const metricEntries = []
+  plan.phases.forEach((phase) => {
+    phase.requiredMetrics.forEach((metric) => {
+      metricEntries.push({
+        name: metric.key,
+        type: inferMetricType(metric),
+        value: 0,
+      })
+    })
+
+    metricEntries.push({ name: `__phase${phase.phase}_saved__`, type: 'number', value: 0 })
+  })
+
+  metricEntries.push({ name: '__campaign_ended__', type: 'number', value: 0 })
+  return metricEntries
+}
+
+const createTaskPayloadFromTemplate = (template) => {
+  const executionPlan = Array.isArray(template?.executionPlan) ? template.executionPlan : []
+  if (!executionPlan.length) return []
+
+  const tasks = []
+  executionPlan.forEach((dayData) => {
+    ;(dayData.tasks || []).forEach((task, index) => {
+      tasks.push({
+        title: `P1-D${dayData.day} | ${task}`,
+        description: dayData.title || '',
+        order: Number(dayData.day || 1) * 100 + index + 1,
+        isDone: false,
+        completedAt: null,
+      })
+    })
+  })
+  return tasks
+}
+
+const createMetricValuePayloadFromTemplate = (template) => {
+  const defs = Array.isArray(template?.metricDefinitions) ? template.metricDefinitions : []
+  const values = defs.map((item) => ({
+    name: item.name,
+    type: item.type || 'number',
+    value: 0,
+  }))
+  values.push({ name: '__phase1_saved__', type: 'number', value: 0 })
+  values.push({ name: '__campaign_ended__', type: 'number', value: 0 })
+  return values
+}
+
+const normalizeTemplateId = (templateId) => {
+  const value = String(templateId || '')
+  if (!value || value.startsWith('virtual-')) return null
+  return value
+}
 
 function CreateCampaign() {
   const navigate = useNavigate()
   const { campaignId } = useParams()
-  const { campaigns, createCampaign, updateCampaign, selectedTemplate, setSelectedTemplate, addToast } = useAppContext()
-  const [currentStep, setCurrentStep] = useState(0)
-  const [error, setError] = useState('')
-  const [formData, setFormData] = useState(initialForm)
+  const { campaigns, selectedTemplate, createCampaign, updateCampaign, setSelectedTemplate, addToast } = useAppContext()
+  const [startDate, setStartDate] = useState('')
 
-  const editingCampaign = campaigns.find((campaign) => campaign.id === campaignId)
+  const editingCampaign = campaigns.find((item) => item.id === campaignId)
+  const activePlanKey = useMemo(() => {
+    if (editingCampaign?.metrics?.notes) {
+      const parsed = parsePlanKeyFromNotes(editingCampaign.metrics.notes)
+      if (parsed) return parsed
+      return inferPlanKeyFromTemplateTitle(editingCampaign.title)
+    }
+
+    if (selectedTemplate?.planKey) return selectedTemplate.planKey
+    if (selectedTemplate?.title || selectedTemplate?.name) {
+      return inferPlanKeyFromTemplateTitle(selectedTemplate?.title || selectedTemplate?.name)
+    }
+
+    return 'instagram'
+  }, [editingCampaign, selectedTemplate])
+
+  const activePlan = useMemo(() => getCampaignPlanByKey(activePlanKey), [activePlanKey])
+  const packageTitle = useMemo(
+    () => selectedTemplate?.title || selectedTemplate?.name || activePlan.package.title,
+    [activePlan, selectedTemplate],
+  )
+  const selectedTemplateSummary = useMemo(() => {
+    if (!selectedTemplate) return null
+    return {
+      title: selectedTemplate.title || selectedTemplate.name || packageTitle,
+      description: selectedTemplate.description || '',
+      stage: selectedTemplate.stage || 'earlyStartup',
+      category: selectedTemplate.category || 'General',
+      durationLabel: selectedTemplate.durationLabel || '',
+      objective: selectedTemplate.objective || '',
+      campaignOverview: selectedTemplate.campaignOverview || '',
+      targetAudience: selectedTemplate.targetAudience || '',
+      idealFor: Array.isArray(selectedTemplate.idealFor) ? selectedTemplate.idealFor : [],
+      estimatedBudgetLKR: Number(selectedTemplate.estimatedBudgetLKR || 0),
+      estimatedDurationDays: Number(selectedTemplate.estimatedDurationDays || 0),
+      budgetBreakdown: Array.isArray(selectedTemplate.budgetBreakdown) ? selectedTemplate.budgetBreakdown : [],
+      executionPlan: Array.isArray(selectedTemplate.executionPlan) ? selectedTemplate.executionPlan : [],
+      expectedResults: Array.isArray(selectedTemplate.expectedResults) ? selectedTemplate.expectedResults : [],
+      finalOutputItems: Array.isArray(selectedTemplate.finalOutputItems) ? selectedTemplate.finalOutputItems : [],
+      steps: Array.isArray(selectedTemplate.steps) ? selectedTemplate.steps : [],
+      metricDefinitions: Array.isArray(selectedTemplate.metricDefinitions)
+        ? selectedTemplate.metricDefinitions
+        : [],
+    }
+  }, [selectedTemplate, packageTitle])
 
   useEffect(() => {
-    if (!selectedTemplate || campaignId) return
-    setFormData((current) => ({
-      ...current,
-      campaignName: selectedTemplate.title || selectedTemplate.name || current.campaignName,
-      description: selectedTemplate.description || current.description,
-    }))
-  }, [selectedTemplate, campaignId])
-
-  useEffect(() => {
-    if (!editingCampaign) return
-    setFormData((current) => ({
-      ...current,
-      campaignName: editingCampaign.name || current.campaignName,
-      description: editingCampaign.metrics?.notes || current.description,
-      weeklyBudgetLKR: String(editingCampaign.metrics?.budgetSpentLKR || ''),
-      targetReach: String(editingCampaign.metrics?.impressions || ''),
-    }))
+    if (editingCampaign?.metrics?.notes) {
+      const match = String(editingCampaign.metrics.notes).match(/Start Date:\s*(\d{4}-\d{2}-\d{2})/)
+      if (match) setStartDate(match[1])
+    }
   }, [editingCampaign])
 
-  const aiGuide = useMemo(() => ([
-    'Hook: Stop wasting ad money until you see this…',
-    'Caption style: Problem → Solution → CTA',
-    'Hashtags: #StartupGrowth #DigitalMarketingTips #EntrepreneurLife',
-    'Thumbnail idea: bold text overlay + contrast background',
-  ]), [])
-
-  const updateField = (event) => {
-    const { name, value } = event.target
-    setFormData((current) => ({ ...current, [name]: value }))
-  }
-
-  const validateCurrentStep = () => {
-    if (currentStep === 0) {
-      if (!formData.campaignName || !formData.description || !formData.startDate) {
-        return 'Please complete campaign name, description, and start date.'
-      }
-    }
-    if (currentStep === 1) {
-      if (!formData.targetAudience || !formData.weeklyBudgetLKR || !formData.targetReach) {
-        return 'Please provide audience, weekly budget, and target reach.'
-      }
-    }
-    if (currentStep === 2) {
-      if (!formData.contentGoal || !formData.coreHook || !formData.cta) {
-        return 'Please complete content goal, hook, and CTA.'
-      }
-    }
-    return ''
-  }
-
-  const handleNext = () => {
-    const stepError = validateCurrentStep()
-    if (stepError) {
-      setError(stepError)
-      addToast(stepError, 'warning')
+  const launchCampaign = async () => {
+    if (!startDate) {
+      addToast('Please select a start date before launching campaign.', 'warning')
       return
     }
-    setError('')
-    setCurrentStep((step) => Math.min(step + 1, steps.length - 1))
-  }
 
-  const handleSave = async () => {
     try {
-      const tasks = buildTasks()
-      const metricValues = buildMetricValues()
+      const tasks = createTaskPayload(activePlan)
+      const metricValues = createMetricValuePayload(activePlan)
+      const customTasks = createTaskPayloadFromTemplate(selectedTemplate)
+      const customMetricValues = createMetricValuePayloadFromTemplate(selectedTemplate)
+      const useTemplateRuntime = customTasks.length > 0
+      const runtimeTasks = useTemplateRuntime ? customTasks : tasks
+      const runtimeMetricValues = useTemplateRuntime ? customMetricValues : metricValues
+      const notes = useTemplateRuntime
+        ? `Template Campaign: ${selectedTemplate?.title || selectedTemplate?.name || packageTitle}\nStart Date: ${startDate}`
+        : `Plan Key: ${activePlan.key}\nPackage: ${packageTitle}\nStart Date: ${startDate}`
 
       if (editingCampaign) {
         await updateCampaign(editingCampaign.id, {
-          title: formData.campaignName,
-          tasks,
-          metricValues,
+          title: packageTitle,
           status: 'running',
+          tasks: runtimeTasks,
+          metricValues: runtimeMetricValues,
+          progress: 0,
           metrics: {
             ...editingCampaign.metrics,
-            impressions: Number(formData.targetReach || 0),
-            budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
-            notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+            notes,
           },
         })
         navigate(`/dashboard/campaigns/${editingCampaign.id}`)
         return
       }
 
+      const templateId = normalizeTemplateId(selectedTemplate?.id)
       const created = await createCampaign({
-        title: formData.campaignName,
-        templateId: selectedTemplate?.id,
+        title: useTemplateRuntime
+          ? (selectedTemplate?.title || selectedTemplate?.name || packageTitle)
+          : packageTitle,
+        ...(templateId ? { templateId } : {}),
       })
 
       await updateCampaign(created.id, {
         status: 'running',
-        tasks,
-        metricValues,
+        tasks: runtimeTasks,
+        metricValues: runtimeMetricValues,
+        progress: 0,
         metrics: {
-          impressions: Number(formData.targetReach || 0),
-          budgetSpentLKR: Number(formData.weeklyBudgetLKR || 0),
-          leads: 0,
+          impressions: 0,
           clicks: 0,
-          notes: `${formData.description}\nGoal: ${formData.contentGoal}\nHook: ${formData.coreHook}`,
+          leads: 0,
+          engagement: 0,
+          sales: 0,
+          budgetSpentLKR: 0,
+          revenue: 0,
+          notes,
         },
       })
 
       setSelectedTemplate(null)
       navigate(`/dashboard/campaigns/${created.id}`)
-    } catch (saveError) {
-      addToast(saveError?.message || 'Failed to create campaign.', 'warning')
+    } catch (error) {
+      addToast(error?.message || 'Failed to launch campaign.', 'warning')
     }
   }
 
@@ -182,126 +233,185 @@ function CreateCampaign() {
         <Navbar />
         <div className="dashboard-content">
           <div>
-            <h1 className="page-title">{editingCampaign ? 'Edit Instagram Campaign' : 'Create Instagram Campaign'}</h1>
-            <p className="page-subtitle">Professional 2-week execution flow (manual execution + weekly optimization).</p>
+            <h1 className="page-title">{packageTitle}</h1>
+            <p className="page-subtitle">Final preview page with complete execution details before launch.</p>
           </div>
 
-          <div className="wizard-steps">
-            {steps.map((step, index) => (
-              <div key={step} className={`wizard-step ${index === currentStep ? 'active' : ''}`.trim()}>
-                <strong>Step {index + 1}</strong>
-                <p className="card-muted">{step}</p>
+          <Card title="Package Overview" subtitle="Platform campaign package before final launch.">
+            <div className="template-preview-summary">
+              <div className="template-preview-pill">
+                <strong>Duration</strong>
+                <span>{selectedTemplateSummary?.durationLabel || activePlan.package.duration}</span>
               </div>
-            ))}
-          </div>
-
-          <div className="wizard-shell">
-            {error ? <p className="error-text">{error}</p> : null}
-
-            {currentStep === 0 ? (
-              <Card title="Campaign Foundation" subtitle="Define campaign context and launch schedule.">
-                <div className="form-grid">
-                  <label className="form-label">
-                    Campaign Name
-                    <input name="campaignName" className="form-control" value={formData.campaignName} onChange={updateField} />
-                  </label>
-                  <label className="form-label">
-                    Start Date
-                    <input type="date" name="startDate" className="form-control" value={formData.startDate} onChange={updateField} />
-                  </label>
-                  <label className="form-label" style={{ gridColumn: '1 / -1' }}>
-                    Description
-                    <textarea name="description" rows="5" className="form-control" value={formData.description} onChange={updateField} />
-                  </label>
-                </div>
-              </Card>
-            ) : null}
-
-            {currentStep === 1 ? (
-              <Card title="Audience + Budget" subtitle="Plan targeting and expected top-of-funnel outcomes.">
-                <div className="form-grid">
-                  <label className="form-label">
-                    Target Audience
-                    <textarea name="targetAudience" rows="4" className="form-control" value={formData.targetAudience} onChange={updateField} placeholder="Example: Founders (22-40), Sri Lanka, startup + marketing interests" />
-                  </label>
-                  <label className="form-label">
-                    Weekly Budget (LKR)
-                    <input type="number" name="weeklyBudgetLKR" className="form-control" value={formData.weeklyBudgetLKR} onChange={updateField} />
-                  </label>
-                  <label className="form-label">
-                    Target Reach
-                    <input type="number" name="targetReach" className="form-control" value={formData.targetReach} onChange={updateField} />
-                  </label>
-                </div>
-              </Card>
-            ) : null}
-
-            {currentStep === 2 ? (
-              <div className="mentor-layout">
-                <Card title="Content Execution Strategy" subtitle="No uploads. Platform provides strategy, captions, hashtags, and tasks.">
-                  <div className="form-grid">
-                    <label className="form-label">
-                      Content Goal
-                      <input name="contentGoal" className="form-control" value={formData.contentGoal} onChange={updateField} placeholder="Awareness, engagement, or lead generation" />
-                    </label>
-                    <label className="form-label">
-                      Core Hook
-                      <input name="coreHook" className="form-control" value={formData.coreHook} onChange={updateField} />
-                    </label>
-                    <label className="form-label">
-                      Caption Tone
-                      <input name="captionTone" className="form-control" value={formData.captionTone} onChange={updateField} placeholder="Professional, bold, educational..." />
-                    </label>
-                    <label className="form-label">
-                      Hashtag Strategy
-                      <input name="hashtagStyle" className="form-control" value={formData.hashtagStyle} onChange={updateField} placeholder="Niche tags + broad discovery tags" />
-                    </label>
-                    <label className="form-label" style={{ gridColumn: '1 / -1' }}>
-                      Primary CTA
-                      <input name="cta" className="form-control" value={formData.cta} onChange={updateField} placeholder="DM for guide / click link / book call" />
-                    </label>
-                  </div>
-                </Card>
-
-                <Card title="AI Suggestion Box" subtitle="Smart starting point for this campaign.">
-                  <div className="activity-log">
-                    {aiGuide.map((item) => (
-                      <div key={item} className="activity-item">
-                        <p className="card-muted">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
+              <div className="template-preview-pill">
+                <strong>Budget</strong>
+                <span>
+                  LKR {(selectedTemplateSummary?.estimatedBudgetLKR || activePlan.package.budget).toLocaleString()}
+                </span>
               </div>
-            ) : null}
-
-            {currentStep === 3 ? (
-              <Card title="Review + Launch" subtitle="Launch a structured 2-week campaign board with weekly metric tracking.">
-                <div className="review-list">
-                  <div className="review-item">
-                    <strong>{formData.campaignName}</strong>
-                    <p className="card-muted">Starts: {formData.startDate || 'Not set'} · Budget: LKR {Number(formData.weeklyBudgetLKR || 0).toLocaleString()} / week</p>
-                    <p className="card-muted">Goal: {formData.contentGoal || 'Not set'} · CTA: {formData.cta || 'Not set'}</p>
-                  </div>
-                  <div className="review-item">
-                    <strong>Execution Plan</strong>
-                    <p className="card-muted">2 weeks · 14 days · {buildTasks().length} detailed tasks</p>
-                    <p className="card-muted">Week 1: Awareness + Engagement · Week 2: Lead Generation + Conversion</p>
-                  </div>
-                </div>
-              </Card>
-            ) : null}
-
-            <div className="toolbar-row">
-              <Button variant="secondary" onClick={() => setCurrentStep((step) => Math.max(step - 1, 0))} disabled={currentStep === 0}>
-                Previous
-              </Button>
-              {currentStep < steps.length - 1 ? (
-                <Button onClick={handleNext}>Next</Button>
-              ) : (
-                <Button onClick={handleSave}>{editingCampaign ? 'Save Campaign' : 'Launch Campaign Plan'}</Button>
-              )}
+              <div className="template-preview-pill">
+                <strong>Goal</strong>
+                <span>{selectedTemplateSummary?.objective || activePlan.package.goal}</span>
+              </div>
             </div>
+
+            {selectedTemplateSummary ? (
+              <div className="section-stack" style={{ marginTop: '1rem' }}>
+                <strong>Selected Template (Short Preview)</strong>
+                <p className="card-muted">{selectedTemplateSummary.description || 'No description available.'}</p>
+                <p className="card-muted">Stage: {selectedTemplateSummary.stage} | Category: {selectedTemplateSummary.category}</p>
+                {selectedTemplateSummary.campaignOverview ? (
+                  <p className="card-muted">Overview: {selectedTemplateSummary.campaignOverview}</p>
+                ) : null}
+                {selectedTemplateSummary.targetAudience ? (
+                  <p className="card-muted">Target Audience: {selectedTemplateSummary.targetAudience}</p>
+                ) : null}
+
+                {(selectedTemplateSummary.idealFor || []).length ? (
+                  <>
+                    <strong>Ideal For</strong>
+                    <ul>
+                      {selectedTemplateSummary.idealFor.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {(selectedTemplateSummary.budgetBreakdown || []).length ? (
+                  <>
+                    <strong>Budget Breakdown</strong>
+                    <ul>
+                      {selectedTemplateSummary.budgetBreakdown.map((item, index) => (
+                        <li key={`${item.label}-${index}`}>
+                          {item.label}: LKR {Number(item.amountLKR || 0).toLocaleString()}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {(selectedTemplateSummary.executionPlan || []).length ? (
+                  <>
+                    <strong>Execution Flow (Short Preview)</strong>
+                    <ul>
+                      {selectedTemplateSummary.executionPlan.map((dayItem, index) => (
+                        <li key={`${dayItem.day}-${index}`}>
+                          Day {dayItem.day}: {dayItem.title}{dayItem.focus ? ` - ${dayItem.focus}` : ''}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="card-muted">The full task checklist appears below before launch.</p>
+                  </>
+                ) : null}
+
+                {selectedTemplateSummary.metricDefinitions.length ? (
+                  <>
+                    <strong>Metrics</strong>
+                    <ul>
+                      {selectedTemplateSummary.metricDefinitions.slice(0, 5).map((metric, index) => (
+                        <li key={`${metric.name}-${index}`}>
+                          {metric.name} ({metric.type}) {metric.required ? '- required' : '- optional'}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : null}
+
+                {(selectedTemplateSummary.expectedResults || []).length ? (
+                  <>
+                    <strong>Expected Results</strong>
+                    <ul>
+                      {selectedTemplateSummary.expectedResults.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
+          </Card>
+
+          {selectedTemplateSummary?.executionPlan?.length ? (
+            <>
+              <Card title="Full Campaign Preview" subtitle="All task details shown before launch.">
+                <div className="activity-log">
+                  {selectedTemplateSummary.executionPlan.map((dayData, index) => (
+                    <div key={`${dayData.day}-${index}`} className="activity-item">
+                      <strong>Day {dayData.day} – {dayData.title}</strong>
+                      {dayData.focus ? <p className="card-muted">Focus: {dayData.focus}</p> : null}
+                      <ul>
+                        {(dayData.tasks || []).map((task) => <li key={task}>{task}</li>)}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                <strong>Required Metrics</strong>
+                <ul>
+                  {(selectedTemplateSummary.metricDefinitions || []).map((metric, index) => (
+                    <li key={`${metric.name}-${index}`}>
+                      <strong>{metric.name}</strong> ({metric.type}) {metric.required ? '- required' : '- optional'}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+
+              <Card title="Final Campaign Outcome Summary">
+                <ul>
+                  {(selectedTemplateSummary.finalOutputItems || []).map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </Card>
+            </>
+          ) : (
+            <>
+              <div className="template-week-grid">
+                {activePlan.phases.map((phase) => (
+                  <Card key={phase.phase} title={`Phase ${phase.phase} – ${phase.title}`} subtitle={phase.objective}>
+                    <p className="card-muted"><strong>Allocated Budget:</strong> LKR {phase.budget.toLocaleString()}</p>
+                    <ul>
+                      {phase.budgetItems.map((item) => (<li key={item}>{item}</li>))}
+                    </ul>
+
+                    <strong>Detailed Tasks</strong>
+                    <div className="activity-log">
+                      {phase.dayTasks.map((dayData) => (
+                        <div key={`${phase.phase}-${dayData.day}`} className="activity-item">
+                          <strong>Day {dayData.day} – {dayData.title}</strong>
+                          <ul>
+                            {dayData.tasks.map((task) => <li key={task}>{task}</li>)}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+
+                    <strong>Required Metrics</strong>
+                    <ul>
+                      {phase.requiredMetrics.map((metric) => (
+                        <li key={metric.key}><strong>{metric.label}:</strong> {metric.description}</li>
+                      ))}
+                    </ul>
+
+                    <strong>Expected Output</strong>
+                    <ul>
+                      {phase.expectedOutput.map((item) => <li key={item}>{item}</li>)}
+                    </ul>
+                  </Card>
+                ))}
+              </div>
+
+              <Card title="Final Campaign Outcome Summary">
+                <ul>
+                  {activePlan.finalExpectedOutcome.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </Card>
+            </>
+          )}
+
+          <div className="toolbar-row">
+            <label className="form-label" style={{ maxWidth: '320px' }}>
+              Start Date
+              <input type="date" className="form-control" value={startDate} onChange={(event) => setStartDate(event.target.value)} />
+            </label>
+            <Button onClick={launchCampaign}>Launch Campaign</Button>
           </div>
         </div>
       </div>

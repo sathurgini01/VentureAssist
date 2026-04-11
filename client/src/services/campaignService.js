@@ -1,6 +1,7 @@
 const API_BASE = '/api/marketing/campaigns'
+const AI_BASE = '/api/ai'
 
-const getToken = () => localStorage.getItem('auth_token')
+const getToken = () => sessionStorage.getItem('auth_token')
 
 const parseError = async (response) => {
   try {
@@ -102,12 +103,30 @@ export async function deleteCampaign(campaignId, token = getToken()) {
   return true
 }
 
+export async function analyzeCampaign(campaignId, payload = {}, token = getToken()) {
+  const response = await fetch(`${AI_BASE}/marketing-campaigns/${campaignId}/analyze`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new Error(await parseError(response))
+  }
+
+  return response.json()
+}
+
 const campaignService = {
   getCampaigns,
   getCampaignById,
   createCampaign,
   updateCampaign,
   deleteCampaign,
+  analyzeCampaign,
 }
 
 export default campaignService

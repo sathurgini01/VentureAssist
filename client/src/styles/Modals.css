@@ -18,3 +18,88 @@
   padding: 1.5rem;
   box-shadow: var(--shadow-soft);
 }
+
+.modal-panel-large {
+  width: min(1080px, 100%);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modal-close {
+  border: 1px solid var(--color-border);
+  background: #fff;
+  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.template-preview-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.template-preview-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.template-preview-pill {
+  border: 1px solid rgba(15, 118, 110, 0.18);
+  border-radius: 14px;
+  background: rgba(240, 253, 250, 0.65);
+  padding: 0.8rem 0.9rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.template-week-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.template-week-card {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 1rem;
+  background: #fff;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.template-week-card h4 {
+  margin: 0;
+}
+
+.template-week-card ul,
+.template-budget-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.template-budget-card {
+  border: 1px dashed rgba(15, 118, 110, 0.35);
+  border-radius: 14px;
+  padding: 1rem;
+  background: rgba(248, 250, 252, 0.85);
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .template-preview-summary,
+  .template-week-grid {
+    grid-template-columns: 1fr;
+  }
+}

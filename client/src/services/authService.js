@@ -1,4 +1,6 @@
 const API_BASE = '/api/marketing/auth'
+const AUTH_TOKEN_KEY = 'auth_token'
+const AUTH_USER_KEY = 'auth_user'
 
 const parseErrorResponse = async (response) => {
   try {
@@ -51,20 +53,24 @@ export const registerUser = async (name, email, password) => {
 }
 
 export const logout = () => {
-  localStorage.removeItem('auth_token')
-  localStorage.removeItem('auth_user')
+  sessionStorage.removeItem(AUTH_TOKEN_KEY)
+  sessionStorage.removeItem(AUTH_USER_KEY)
+  localStorage.removeItem(AUTH_TOKEN_KEY)
+  localStorage.removeItem(AUTH_USER_KEY)
 }
 
 export const getStoredToken = () => {
-  return localStorage.getItem('auth_token')
+  return sessionStorage.getItem(AUTH_TOKEN_KEY)
 }
 
 export const getStoredUser = () => {
-  const user = localStorage.getItem('auth_user')
+  const user = sessionStorage.getItem(AUTH_USER_KEY)
   return user ? JSON.parse(user) : null
 }
 
 export const storeAuth = (token, user) => {
-  localStorage.setItem('auth_token', token)
-  localStorage.setItem('auth_user', JSON.stringify(user))
+  sessionStorage.setItem(AUTH_TOKEN_KEY, token)
+  sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+  localStorage.removeItem(AUTH_TOKEN_KEY)
+  localStorage.removeItem(AUTH_USER_KEY)
 }

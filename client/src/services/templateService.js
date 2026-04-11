@@ -1,6 +1,6 @@
 const API_BASE = '/api/marketing/templates'
 
-const getToken = () => localStorage.getItem('auth_token')
+const getToken = () => sessionStorage.getItem('auth_token')
 
 const parseError = async (response) => {
   try {
@@ -18,12 +18,23 @@ const normalizeTemplate = (item) => ({
   id: item?._id,
   title: item?.title ?? 'Untitled template',
   name: item?.title ?? 'Untitled template',
+  headline: item?.description ?? '',
+  format: item?.stage ?? 'earlyStartup',
   description: item?.description ?? '',
   stage: item?.stage ?? 'earlyStartup',
   category: item?.category ?? 'General',
   tags: Array.isArray(item?.tags) ? item.tags : [],
+  durationLabel: item?.durationLabel ?? '',
+  objective: item?.objective ?? '',
+  campaignOverview: item?.campaignOverview ?? '',
+  targetAudience: item?.targetAudience ?? '',
+  idealFor: Array.isArray(item?.idealFor) ? item.idealFor : [],
   estimatedBudgetLKR: Number(item?.estimatedBudgetLKR ?? 0),
   estimatedDurationDays: Number(item?.estimatedDurationDays ?? 0),
+  budgetBreakdown: Array.isArray(item?.budgetBreakdown) ? item.budgetBreakdown : [],
+  executionPlan: Array.isArray(item?.executionPlan) ? item.executionPlan : [],
+  expectedResults: Array.isArray(item?.expectedResults) ? item.expectedResults : [],
+  finalOutputItems: Array.isArray(item?.finalOutputItems) ? item.finalOutputItems : [],
   steps: Array.isArray(item?.steps) ? item.steps : [],
   metricDefinitions: Array.isArray(item?.metricDefinitions) ? item.metricDefinitions : [],
   createdBy: item?.createdBy,

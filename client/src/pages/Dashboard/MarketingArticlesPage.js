@@ -49,7 +49,7 @@ function Articles() {
       <div className="dashboard-main">
         <Navbar />
 
-        <div className="dashboard-content">
+        <div className="dashboard-content articles-page">
           <div>
             <p className="page-kicker">Knowledge Hub</p>
             <h1 className="page-title">Knowledge Hub</h1>

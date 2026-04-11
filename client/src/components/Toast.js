@@ -7,12 +7,13 @@ function Toast({ id, message, type = 'info' }) {
   const { clearToast } = useAppContext()
 
   useEffect(() => {
+    const duration = type === 'success' ? 1500 : 3500
     const timer = window.setTimeout(() => {
       clearToast(id)
-    }, 3500)
+    }, duration)
 
     return () => window.clearTimeout(timer)
-  }, [clearToast, id])
+  }, [clearToast, id, type])
 
   return (
     <div className={`card toast-card toast-${type}`.trim()}>
