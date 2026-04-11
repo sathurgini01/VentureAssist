@@ -1,4 +1,5 @@
-const API_BASE = '/api/marketing/articles'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/marketing/articles')
 
 const parseErrorMessage = async (response) => {
   try {

@@ -1,3 +1,5 @@
+import { apiBase } from '../config/api.js'
+
 const getToken = () => sessionStorage.getItem('auth_token') || sessionStorage.getItem('token') || ''
 
 const getHeaders = (isJson = false) => {
@@ -25,7 +27,7 @@ const parseResponse = async (response) => {
 }
 
 export const getMentorReviews = async () => {
-  const res = await fetch(`/api/legal/mentor/reviews`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/reviews`, {
     headers: getHeaders(),
   });
   const data = await parseResponse(res)
@@ -33,7 +35,7 @@ export const getMentorReviews = async () => {
 };
 
 export const getMentorHelpRequests = async () => {
-  const res = await fetch(`/api/legal/mentor/help-requests`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/help-requests`, {
     headers: getHeaders(),
   });
   const data = await parseResponse(res)
@@ -41,7 +43,7 @@ export const getMentorHelpRequests = async () => {
 };
 
 export const updateSubmission = async (id, data) => {
-  const res = await fetch(`/api/legal/mentor/submissions/${id}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/submissions/${id}`, {
     method: "PATCH",
     headers: getHeaders(true),
     body: JSON.stringify(data),
@@ -50,14 +52,14 @@ export const updateSubmission = async (id, data) => {
 };
 
 export const getMentorSubmissionsForUser = async (userId) => {
-  const res = await fetch(`/api/legal/mentor/submissions/user/${userId}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/submissions/user/${userId}`, {
     headers: getHeaders(),
   });
   return parseResponse(res)
 };
 
 export const getMentorSubmissionHistory = async () => {
-  const res = await fetch(`/api/legal/mentor/submissions/history`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/submissions/history`, {
     headers: getHeaders(),
   });
   const data = await parseResponse(res)
@@ -65,7 +67,7 @@ export const getMentorSubmissionHistory = async () => {
 };
 
 export const replyToHelpRequest = async (id, data) => {
-  const res = await fetch(`/api/legal/mentor/help-requests/${id}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/help-requests/${id}`, {
     method: "PATCH",
     headers: getHeaders(true),
     body: JSON.stringify(data),

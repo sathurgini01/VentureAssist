@@ -1,5 +1,6 @@
-const API_BASE = '/api/marketing/campaigns'
-const AI_BASE = '/api/ai'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/marketing/campaigns')
+const AI_BASE = apiBase('/api/ai')
 
 const getToken = () => sessionStorage.getItem('auth_token')
 

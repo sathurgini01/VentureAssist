@@ -1,6 +1,7 @@
-const API_MENTORS = '/api/marketing/mentors'
-const API_MENTOR_REQUESTS = '/api/marketing/mentor-requests'
-const API_MENTOR_APPLICATIONS = '/api/marketing/mentor-applications'
+import { apiBase } from '../config/api.js'
+const API_MENTORS = apiBase('/api/marketing/mentors')
+const API_MENTOR_REQUESTS = apiBase('/api/marketing/mentor-requests')
+const API_MENTOR_APPLICATIONS = apiBase('/api/marketing/mentor-applications')
 
 const getToken = () => sessionStorage.getItem('auth_token')
 

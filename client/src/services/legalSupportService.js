@@ -1,5 +1,6 @@
-const API_BASE = '/api/legal'
-const TOOLKIT_BASE = '/api/legal'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/legal')
+const TOOLKIT_BASE = apiBase('/api/legal')
 
 const getToken = () => sessionStorage.getItem('auth_token')
 
@@ -45,7 +46,7 @@ export const getLegalTasks = async (category = '', summary = false) => {
 }
 
 export async function getLegalToolkit() {
-  const response = await fetch('/api/legal/toolkits', {
+  const response = await fetch(apiBase('/api/legal/toolkits'), {
     headers: buildHeaders(false),
   })
   return parseResponse(response)

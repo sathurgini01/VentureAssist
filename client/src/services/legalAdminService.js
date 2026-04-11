@@ -1,3 +1,5 @@
+import { apiBase } from '../config/api.js'
+
 const parseResponse = async (res) => {
   const contentType = res.headers.get("content-type") || "";
   const isJson = contentType.includes("application/json");
@@ -38,14 +40,14 @@ function getAuthHeaders() {
 }
 
 export const getAdminLegalTasks = async () => {
-  const res = await fetch(`/api/legal/admin/tasks`, {
+  const res = await fetch(`${apiBase('/api/legal')}/admin/tasks`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);
 };
 
 export const createAdminLegalTask = async (data) => {
-  const res = await fetch(`/api/legal/admin/tasks`, {
+  const res = await fetch(`${apiBase('/api/legal')}/admin/tasks`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -55,7 +57,7 @@ export const createAdminLegalTask = async (data) => {
 };
 
 export const updateAdminLegalTask = async (taskId, data) => {
-  const res = await fetch(`/api/legal/admin/tasks/${taskId}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/admin/tasks/${taskId}`, {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -65,7 +67,7 @@ export const updateAdminLegalTask = async (taskId, data) => {
 };
 
 export const deleteAdminLegalTask = async (taskId) => {
-  const res = await fetch(`/api/legal/admin/tasks/${taskId}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/admin/tasks/${taskId}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -73,14 +75,14 @@ export const deleteAdminLegalTask = async (taskId) => {
   return parseResponse(res);
 };
 export const getAdminLegalToolkits = async () => {
-  const res = await fetch(`/api/legal/toolkits`, {
+  const res = await fetch(`${apiBase('/api/legal')}/toolkits`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);
 };
 
 export const createToolkit = async (data) => {
-  const res = await fetch(`/api/legal/toolkits`, {
+  const res = await fetch(`${apiBase('/api/legal')}/toolkits`, {
     method: "POST",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -89,7 +91,7 @@ export const createToolkit = async (data) => {
 };
 
 export const updateToolkit = async (id, data) => {
-  const res = await fetch(`/api/legal/toolkits/${id}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/toolkits/${id}`, {
     method: "PUT",
     headers: getAuthHeaders(),
     body: JSON.stringify(data),
@@ -98,7 +100,7 @@ export const updateToolkit = async (id, data) => {
 };
 
 export const deleteToolkit = async (id) => {
-  const res = await fetch(`/api/legal/toolkits/${id}`, {
+  const res = await fetch(`${apiBase('/api/legal')}/toolkits/${id}`, {
     method: "DELETE",
     headers: getAuthHeaders(),
   });
@@ -106,14 +108,14 @@ export const deleteToolkit = async (id) => {
 };
 
 export const getAdminLegalReviews = async () => {
-  const res = await fetch(`/api/legal/mentor/submissions/history`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/submissions/history`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);
 };
 
 export const getAdminLegalHelpRequests = async () => {
-  const res = await fetch(`/api/legal/mentor/help-requests`, {
+  const res = await fetch(`${apiBase('/api/legal')}/mentor/help-requests`, {
     headers: getAuthHeaders(),
   });
   return parseResponse(res);

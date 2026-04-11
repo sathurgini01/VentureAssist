@@ -1,4 +1,5 @@
-const API_BASE = '/api/finance/expenses'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/finance/expenses')
 
 const getToken = () => sessionStorage.getItem('auth_token')
 

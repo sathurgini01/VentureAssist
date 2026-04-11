@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { apiBase } from '../../../config/api.js'
 
 export const BUSINESS_DRAFT_STORAGE_KEY = 'venture-assist-business-draft'
 
@@ -20,7 +21,7 @@ export const EMPTY_IDEA_FORM = {
 const ideaFields = Object.keys(EMPTY_IDEA_FORM)
 
 const businessClient = axios.create({
-  baseURL: '/api/business',
+  baseURL: apiBase('/api/business'),
 })
 
 function extractMessage(error, fallback) {

@@ -1,4 +1,5 @@
-const API_BASE = '/api/marketing/auth'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/marketing/auth')
 const AUTH_TOKEN_KEY = 'auth_token'
 const AUTH_USER_KEY = 'auth_user'
 

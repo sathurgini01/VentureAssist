@@ -1,4 +1,5 @@
-const API_BASE = '/api/marketing/templates'
+import { apiBase } from '../config/api.js'
+const API_BASE = apiBase('/api/marketing/templates')
 
 const getToken = () => sessionStorage.getItem('auth_token')
 
