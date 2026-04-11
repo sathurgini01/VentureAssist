@@ -42,7 +42,7 @@ The Legal Support Module enables users to manage legal-related tasks, upload evi
 ### Legal Support Module
 - 📄 Legal Task Management – Manage legal requirements and compliance tasks
 - 🧰 Legal Toolkit – Access structured legal guides and resources
-- 📎 Evidence Upload System – Upload legal documents securely
+- 📎 Evidence Handling – Stores file references using fileUrl (no direct file upload system implemented)
 - 📨 Mentor Help Requests – Request assistance from legal mentors
 - 🧑‍⚖️ Mentor Review Workflow – Mentors review and respond to legal issues
 - 🤖 AI Legal Assistant – Generate legal guidance using Mock AI
@@ -54,7 +54,7 @@ The Legal Support Module enables users to manage legal-related tasks, upload evi
 - 👥 Mentor Management – Assign and track mentor responses
 - 🔐 Role-Based Access Control (RBAC) – Granular permission control for each role
 - 🛡️ Security Implementation – JWT authentication, input validation, and protected routes
-- 📁 File Upload Handling – Secure document upload using Multer
+- 📎 Evidence Handling – Stores file references using fileUrl (no direct file upload system implemented)
 - 🤖 AI Integration – Smart assistance using OpenAI / Gemini APIs
 - 📊 System Scalability – Modular architecture supporting future expansion
 - 📝 Structured API Design – Clean REST API with controller-service architecture
@@ -72,7 +72,7 @@ The Legal Support Module enables users to manage legal-related tasks, upload evi
 | **Authentication**    | JWT (JSON Web Tokens)                                   |
 | **API Architecture**  | RESTful APIs (Controller–Service Pattern)               |
 | **AI Integration**    | OpenAI API / Gemini API                                 |
-| **File Upload**       | Multer                                                  |
+| **File Upload**       | fileUrl                                                 |
 | **State Management**  | React Context API                                       |
 | **Routing**           | React Router DOM                                        |
 | **Security**          | JWT Auth Middleware, Input Validation, CORS             |
@@ -80,9 +80,6 @@ The Legal Support Module enables users to manage legal-related tasks, upload evi
 | **Deployment**        | Vercel / Netlify (Frontend), Render / Railway (Backend) |
 | **Database Hosting**  | MongoDB Atlas                                           |
 
-### Integrations
-- OpenAI / Gemini API (AI legal assistance)
-- Multer (File upload handling)
 
 ---
 
@@ -92,41 +89,87 @@ The Legal Support Module enables users to manage legal-related tasks, upload evi
 ```
 VentureAssist/
 │
-├── client/
+├── client/                         # Frontend (React + Vite)
+│   ├── public/
+│   │   └── assets/
+│   │
 │   └── src/
-│       ├── pages/
-│       │   ├── Auth/
-│       │   ├── Dashboard/
-│       │   ├── Business/
-│       │   ├── Finance/
-│       │   ├── Legal/
-│       │   │   ├── CreateTask
-│       │   │   ├── UploadEvidence
-│       │   │   ├── RequestMentor
-│       │   │   └── LegalDashboard
-│       │   ├── Mentor/
-│       │   └── Admin/
+│       ├── components/             # Reusable UI components
 │       │
-│       ├── components/
-│       ├── context/
-│       ├── routes/
-│       └── services/
-│
-├── server/
-│   └── src/
-│       ├── controllers/
-│       │   ├── authController.js
-│       │   ├── legalController.js
-│       │   ├── businessController.js
-│       │   └── financeController.js
+│       ├── pages/                  # Main application pages
+│       │   ├── Auth/               # Login / Register pages
+│       │   ├── Dashboard/          # Role-based dashboards
+│       │   ├── Business/           # Business idea module UI
+│       │   ├── Finance/            # Finance module UI
+│       │   ├── Marketing/          # Marketing module UI
+│       │   ├── Legal/              # Legal support module UI
+│       │   ├── Mentor/             # Mentor dashboard/pages
+│       │   └── Admin/              # Admin dashboard/pages
 │       │
-│       ├── routes/
-│       ├── models/
-│       ├── services/
-│       ├── middleware/
-│       └── config/
+│       ├── services/               # API service layer (Axios calls)
+│       ├── context/                # React Context (state management)
+│       ├── routes/                 # App routing configuration
+│       ├── utils/                  # Helper functions
+│       ├── App.jsx
+│       └── main.jsx
 │
-└── README.md
+│   ├── .env                       # Frontend environment variables
+│   └── package.json
+│
+│
+├── server/                        # Backend (Node.js + Express)
+│   ├── src/
+│   │   ├── config/                # DB & environment configs
+│   │   │
+│   │   ├── controllers/           # Request handling logic
+│   │   │   ├── authControllermarketing.js
+│   │   │   ├── business/
+│   │   │   ├── finance/
+│   │   │   ├── marketing/
+│   │   │   └── legal/
+│   │   │
+│   │   ├── routes/                # API route definitions
+│   │   │   ├── authRoutes.js
+│   │   │   ├── businessRoutes.js
+│   │   │   ├── financeRoutes.js
+│   │   │   ├── marketingRoutes.js
+│   │   │   └── legalRoutes.js
+│   │   │
+│   │   ├── models/                # Mongoose schemas
+│   │   │   ├── User.js
+│   │   │   ├── BusinessIdea.js
+│   │   │   ├── Finance.js
+│   │   │   ├── Campaign.js
+│   │   │   ├── LegalTask.js
+│   │   │   ├── Submission.js
+│   │   │   └── HelpRequest.js
+│   │   │
+│   │   ├── services/              # Business logic layer
+│   │   │   ├── business/
+│   │   │   ├── finance/
+│   │   │   ├── marketing/
+│   │   │   └── legal/
+│   │   │
+│   │   ├── middleware/            # Auth & validation middleware
+│   │   │   ├── authMiddleware.js
+│   │   │   └── roleMiddleware.js
+│   │   │
+│   │   └── utils/                 # Utility functions (helpers)
+│   │
+│   ├── uploads/                  # (Optional) file storage (if used)
+│   ├── .env                      # Backend environment variables
+│   ├── package.json
+│   └── server.js                 # Entry point
+│
+│
+├── screenshots/                  # Deployment screenshots
+│   ├── frontend.png
+│   ├── backend.png
+│   ├── frontend-deploy.png
+│   └── backend-deploy.png
+│
+├── README.md
+└── package.json
 ```
 ## 🚀 Getting Started
 
@@ -156,7 +199,7 @@ Before running this project, make sure you have the following installed:
 #### 1️⃣ Clone the Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/sathurgini01/VentureAssist.git
 cd VentureAssist
 ```
 
@@ -186,7 +229,7 @@ Create a `.env` file inside the **server** folder:
 
 ```env
 # Server Configuration
-PORT=5050
+PORT=5000
 NODE_ENV=development
 
 # Database
@@ -205,7 +248,7 @@ GEMINI_API_KEY=your_gemini_api_key
 Create a `.env` file inside the **client** folder:
 
 ```env
-VITE_API_BASE_URL=http://localhost:5050
+VITE_API_BASE_URL=http://localhost:5000
 ```
 
 ---
@@ -245,7 +288,7 @@ Frontend:
 👉 http://localhost:5173  
 
 Backend API:  
-👉 http://localhost:5050  
+👉 http://localhost:5000  
 
 ---
 
@@ -269,7 +312,7 @@ Test modules:
 ### Base URL
 
 ```id="api-base"
-http://localhost:5050/api
+http://localhost:5000/
 ```
 
 ---
@@ -1493,7 +1536,7 @@ VentureAssist ensures secure application behavior:
 * Role-based authorization (User / Mentor / Admin)
 * Protected API routes
 * Input validation
-* Secure file uploads (Multer)
+
 
 ---
 
@@ -1512,7 +1555,7 @@ Configuration is managed through `.env` variables:
 ### Example:
 
 ```env id="cfg1"
-PORT=5050
+PORT=5000
 MONGO_URI=your_database
 JWT_SECRET=your_secret
 OPENAI_API_KEY=your_key
@@ -1564,7 +1607,7 @@ Routes → Controllers → Services → Models → Database
 #### Register User
 
 ```http
-POST http://localhost:5050/api/auth/register
+POST http://localhost:5000/api/auth/register
 Content-Type: application/json
 
 {
@@ -1579,7 +1622,7 @@ Content-Type: application/json
 #### Login User
 
 ```http
-POST http://localhost:5050/api/auth/login
+POST http://localhost:5000/api/auth/login
 Content-Type: application/json
 
 {
@@ -1601,7 +1644,7 @@ Authorization: Bearer {token}
 #### Create Business Idea
 
 ```http
-POST http://localhost:5050/api/business/ideas
+POST http://localhost:5000/api/business/ideas
 Content-Type: application/json
 
 {
@@ -1616,7 +1659,7 @@ Content-Type: application/json
 #### Get All Ideas
 
 ```http
-GET http://localhost:5050/api/business/ideas
+GET http://localhost:5000/api/business/ideas
 ```
 
 ---
@@ -1624,7 +1667,7 @@ GET http://localhost:5050/api/business/ideas
 #### Generate SWOT Analysis
 
 ```http
-POST http://localhost:5050/api/business/ideas/{ideaId}/swot/generate
+POST http://localhost:5000/api/business/ideas/{ideaId}/swot/generate
 ```
 
 ---
@@ -1632,7 +1675,7 @@ POST http://localhost:5050/api/business/ideas/{ideaId}/swot/generate
 #### Get Progress Tracker
 
 ```http
-GET http://localhost:5050/api/business/trackers?ideaId={ideaId}
+GET http://localhost:5000/api/business/trackers?ideaId={ideaId}
 ```
 
 ---
@@ -1642,7 +1685,7 @@ GET http://localhost:5050/api/business/trackers?ideaId={ideaId}
 #### Create Finance Profile
 
 ```http
-POST http://localhost:5050/api/finance
+POST http://localhost:5000/api/finance
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -1658,7 +1701,7 @@ Content-Type: application/json
 #### Add Expense
 
 ```http
-POST http://localhost:5050/api/finance/expenses
+POST http://localhost:5000/api/finance/expenses
 Content-Type: application/json
 
 {
@@ -1673,7 +1716,7 @@ Content-Type: application/json
 #### Add Revenue
 
 ```http
-POST http://localhost:5050/api/finance/revenue
+POST http://localhost:5000/api/finance/revenue
 Content-Type: application/json
 
 {
@@ -1688,7 +1731,7 @@ Content-Type: application/json
 #### Break-even Calculation
 
 ```http
-GET http://localhost:5050/api/finance/breakeven/{profileId}
+GET http://localhost:5000/api/finance/breakeven/{profileId}
 ```
 
 ---
@@ -1698,7 +1741,7 @@ GET http://localhost:5050/api/finance/breakeven/{profileId}
 #### Create Campaign
 
 ```http
-POST http://localhost:5050/api/marketing/campaigns
+POST http://localhost:5000/api/marketing/campaigns
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -1714,7 +1757,7 @@ Content-Type: application/json
 #### Get Campaigns
 
 ```http
-GET http://localhost:5050/api/marketing/campaigns
+GET http://localhost:5000/api/marketing/campaigns
 Authorization: Bearer {token}
 ```
 
@@ -1723,7 +1766,7 @@ Authorization: Bearer {token}
 #### Analyze Campaign (AI)
 
 ```http
-POST http://localhost:5050/api/ai/marketing-campaigns/{campaignId}/analyze
+POST http://localhost:5000/api/ai/marketing-campaigns/{campaignId}/analyze
 Authorization: Bearer {token}
 ```
 
@@ -1734,7 +1777,7 @@ Authorization: Bearer {token}
 #### Get Legal Tasks
 
 ```http
-GET http://localhost:5050/api/legal/tasks
+GET http://localhost:5000/api/legal/tasks
 Authorization: Bearer {token}
 ```
 
@@ -1743,7 +1786,7 @@ Authorization: Bearer {token}
 #### Submit Legal Evidence
 
 ```http
-POST http://localhost:5050/api/legal/tasks/{taskId}/submissions
+POST http://localhost:5000/api/legal/tasks/{taskId}/submissions
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -1757,7 +1800,7 @@ Content-Type: application/json
 #### Request Mentor Help
 
 ```http
-POST http://localhost:5050/api/legal/help-requests
+POST http://localhost:5000/api/legal/help-requests
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -1772,7 +1815,7 @@ Content-Type: application/json
 #### Get My Submissions
 
 ```http
-GET http://localhost:5050/api/legal/submissions/me
+GET http://localhost:5000/api/legal/submissions/me
 Authorization: Bearer {token}
 ```
 
@@ -1781,7 +1824,7 @@ Authorization: Bearer {token}
 #### AI Legal Guidance
 
 ```http
-POST http://localhost:5050/api/legal/ai/compliance
+POST http://localhost:5000/api/legal/ai/compliance
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -1797,7 +1840,7 @@ Content-Type: application/json
 #### Get Mentor Requests
 
 ```http
-GET http://localhost:5050/api/legal/help-requests/me
+GET http://localhost:5000/api/legal/help-requests/me
 Authorization: Bearer {token}
 ```
 
@@ -1806,7 +1849,7 @@ Authorization: Bearer {token}
 #### Mentor Review Submission (Mentor Role)
 
 ```http
-PATCH http://localhost:5050/api/legal/mentor/submissions/{submissionId}
+PATCH http://localhost:5000/api/legal/mentor/submissions/{submissionId}
 Authorization: Bearer {mentor_token}
 Content-Type: application/json
 
@@ -1815,7 +1858,6 @@ Content-Type: application/json
   "feedback": "Documents are valid"
 }
 ```
-
 ---
 
 ### 7. Quick System Test Flow
@@ -1832,7 +1874,242 @@ Register → Login → Create Business Idea
 → AI Analysis
 ```
 
+## 🧪 Testing Instruction Report
+
+This project includes testing to ensure reliability, correctness, and performance of the system.
+
 ---
+
+### 1️⃣ Unit Testing
+
+**Objective:**
+To test individual components (controllers, services) in isolation.
+
+**What was tested:**
+
+* Authentication logic (login/register)
+* Business logic (idea creation, updates)
+* Finance calculations (break-even)
+* Legal module validations
+
+**Method:**
+
+* Manual testing using Postman
+* Verified expected outputs for valid and invalid inputs
+
+---
+
+### ▶️ How to Run Unit Tests
+
+1. Start backend server:
+   cd server
+   npm run dev
+
+2. Use Postman to send requests:
+
+   * Test each API endpoint individually
+   * Validate response correctness
+
+---
+
+### 2️⃣ Integration Testing
+
+**Objective:**
+To verify that different components work together correctly.
+
+**What was tested:**
+
+* Route → Controller → Service → Database flow
+* API endpoint responses
+* Error handling scenarios
+
+**Examples:**
+
+* User Registration → Data stored in MongoDB
+* Login → JWT token generated
+* Legal submission → Saved and retrieved correctly
+
+---
+
+### ▶️ Integration Testing Setup & Execution
+
+1. Start backend server
+2. Connect MongoDB (Atlas/local)
+3. Use Postman to test:
+
+   * Full API workflows
+   * Multi-step processes
+
+---
+
+### 3️⃣ Performance Testing
+
+**Objective:**
+To evaluate system performance under multiple requests.
+
+**What was tested:**
+
+* API response time
+* Handling multiple requests
+* System stability
+
+**Method:**
+
+* Repeated API calls using Postman
+* Observed response time and behavior
+
+---
+
+### ▶️ Performance Testing Setup & Execution
+
+1. Use Postman Collection Runner
+2. Send multiple requests to APIs
+3. Observe:
+
+   * Response time
+   * Error rate
+
+(Optional Tool: Artillery)
+
+---
+
+### 4️⃣ Testing Environment Configuration
+
+* Node.js v16+
+* Express.js backend
+* MongoDB Atlas (cloud database)
+* Postman for API testing
+* Browser for frontend testing
+
+---
+
+### ✅ Testing Summary
+
+* All major APIs tested successfully
+* Proper error handling verified
+* System performs reliably under normal usage
+
+---
+
+## 🌐 Deployment
+
+This project is fully deployed using cloud platforms (Render)
+
+---
+
+### 🚀 Live URLs
+
+| Service        | URL                                  |
+| -------------- | ------------------------------------ |
+| 🌍 Frontend    | https://ventureassist-1.onrender.com |
+| ⚙️ Backend API | https://ventureassist.onrender.com   |
+
+---
+
+### 🖥️ Backend Deployment (Render)
+
+* Platform: Render
+* Service Type: Web Service
+* Root Directory: `/server`
+
+#### Steps:
+
+1. Push backend code to GitHub
+2. Connect GitHub repo to Render
+3. Configure:
+
+   * Build Command: `npm install`
+   * Start Command: `npm start`
+4. Add environment variables:
+
+   * `MONGO_URI`
+   * `JWT_SECRET`
+   * `GEMINI_API_KEY`
+   * `GEMINI_MODEL` 
+
+5. Deploy
+
+---
+
+### 🎨 Frontend Deployment (Render)
+
+* Platform: Render
+* Service Type: Static Site
+* Root Directory: `/client`
+
+#### Steps:
+
+1. Connect frontend repo to Render
+2. Configure:
+
+   * Build Command:
+
+     ```bash
+     npm install && npm run build
+     ```
+   * Publish Directory: `dist`
+3. Set environment variable:
+
+   ```
+   VITE_API_BASE_URL=https://ventureassist.onrender.com
+   ```
+4. Deploy
+
+---
+
+### 🗄️ Database (MongoDB Atlas)
+
+* Cloud-hosted MongoDB database
+* Used for production environment
+* Connected using `MONGO_URI`
+
+---
+
+### 📸 Deployment Evidence
+
+screenshots in `/screenshots` folder:
+
+```bash
+screenshots/
+├── frontend.png
+├── backend.png
+├── frontend deploy.png
+├── backend deploy.png
+```
+
+Example:
+
+```md
+![Frontend](./screenshots/frontend.png)
+![Backend](./screenshots/backend.png)
+![Frontend](./screenshots/frontend deploy.png)
+![Backend](./screenshots/backend deploy.png)
+```
+
+---
+
+### ⚙️ Environment Variables (Important)
+
+⚠️ Do NOT expose secrets in GitHub
+
+**Backend (.env):**
+
+```
+PORT=5000
+MONGO_URI=your_mongodb_url
+JWT_SECRET=your_secret
+OPENAI_API_KEY=your_key
+GEMINI_API_KEY=your_key
+```
+
+**Frontend (.env):**
+
+```
+VITE_API_BASE_URL=https://ventureassist.onrender.com
+```
+
+---
+
 
 ## 🔧 Troubleshooting
 
@@ -1845,7 +2122,7 @@ Error: EADDRINUSE
 👉 Solution:
 
 ```bash
-lsof -i :5050
+lsof -i :5000
 kill -9 <PID>
 ```
 
@@ -1861,11 +2138,11 @@ kill -9 <PID>
 
 ### ❌ API not responding
 
-* Verify backend is running on port 5050
+* Verify backend is running on port 5000
 * Check frontend `.env`:
 
 ```
-VITE_API_BASE_URL=http://localhost:5050
+VITE_API_BASE_URL=http://localhost:5000
 ```
 
 ---
@@ -2160,7 +2437,7 @@ cd client
 npm run dev
 
 # Test API
-curl http://localhost:5050/api
+curl http://localhost:5000/
 ```
 
 ---
