@@ -165,8 +165,8 @@ VentureAssist/
 ├── screenshots/                  # Deployment screenshots
 │   ├── frontend.png
 │   ├── backend.png
-│   ├── frontend-deploy.png
-│   └── backend-deploy.png
+│   ├── frontenddeploy.png
+│   └── backenddeploy.png
 │
 ├── README.md
 └── package.json
@@ -2073,8 +2073,8 @@ screenshots in `/screenshots` folder:
 screenshots/
 ├── frontend.png
 ├── backend.png
-├── frontend deploy.png
-├── backend deploy.png
+├── frontenddeploy.png
+├── backenddeploy.png
 ```
 
 Example:
@@ -2082,8 +2082,8 @@ Example:
 ```md
 ![Frontend](./screenshots/frontend.png)
 ![Backend](./screenshots/backend.png)
-![Frontend](./screenshots/frontend deploy.png)
-![Backend](./screenshots/backend deploy.png)
+![Frontend](./screenshots/frontenddeploy.png)
+![Backend](./screenshots/backenddeploy.png)
 ```
 
 ---
