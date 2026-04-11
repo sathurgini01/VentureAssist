@@ -15,7 +15,7 @@ export default function FinanceProfilePage() {
 
   const [formData, setFormData] = useState({
     category: '', // for expense
-    source: '', // for revenue
+    source: '',
     amount: '',
     description: ''
   })
@@ -31,7 +31,7 @@ export default function FinanceProfilePage() {
         const pData = await getProfileById(profileId)
         setProfile(pData)
       }
-      
+
       if (activeTab === 'expenses') {
         const expData = await getExpenses(profileId)
         setItems(expData)
@@ -102,15 +102,15 @@ export default function FinanceProfilePage() {
       </header>
 
       <main className="finance-container">
-        
+
         <div className="finance-tabs">
-          <button 
+          <button
             className={`finance-tab ${activeTab === 'expenses' ? 'active' : ''}`}
             onClick={() => setActiveTab('expenses')}
           >
             Expenses Tracker
           </button>
-          <button 
+          <button
             className={`finance-tab ${activeTab === 'revenues' ? 'active' : ''}`}
             onClick={() => setActiveTab('revenues')}
           >
@@ -119,7 +119,7 @@ export default function FinanceProfilePage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
-          
+
           {/* Add Form */}
           <div className="finance-card" style={{ height: 'fit-content' }}>
             <h3 style={{ marginBottom: '1.5rem', color: 'var(--finance-text)' }}>
@@ -130,19 +130,19 @@ export default function FinanceProfilePage() {
                 <>
                   <div className="finance-form-group">
                     <label>Category</label>
-                    <input 
-                      type="text" 
-                      value={formData.category} 
-                      onChange={e => setFormData({...formData, category: e.target.value})} 
-                      required 
+                    <input
+                      type="text"
+                      value={formData.category}
+                      onChange={e => setFormData({ ...formData, category: e.target.value })}
+                      required
                       placeholder="e.g. Marketing, Rent..."
                     />
                   </div>
                   <div className="finance-form-group">
                     <label>Description</label>
-                    <textarea 
-                      value={formData.description} 
-                      onChange={e => setFormData({...formData, description: e.target.value})} 
+                    <textarea
+                      value={formData.description}
+                      onChange={e => setFormData({ ...formData, description: e.target.value })}
                       placeholder="Details about expense"
                       rows="3"
                     ></textarea>
@@ -151,24 +151,24 @@ export default function FinanceProfilePage() {
               ) : (
                 <div className="finance-form-group">
                   <label>Source</label>
-                  <input 
-                    type="text" 
-                    value={formData.source} 
-                    onChange={e => setFormData({...formData, source: e.target.value})} 
-                    required 
+                  <input
+                    type="text"
+                    value={formData.source}
+                    onChange={e => setFormData({ ...formData, source: e.target.value })}
+                    required
                     placeholder="e.g. Product Sale, Investment..."
                   />
                 </div>
               )}
-              
+
               <div className="finance-form-group">
                 <label>Amount (LKR)</label>
-                <input 
-                  type="number" 
-                  value={formData.amount} 
-                  onChange={e => setFormData({...formData, amount: e.target.value})} 
-                  required 
-                  min="0.01" 
+                <input
+                  type="number"
+                  value={formData.amount}
+                  onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                  required
+                  min="0.01"
                   step="0.01"
                 />
               </div>
@@ -205,9 +205,9 @@ export default function FinanceProfilePage() {
                         <div style={{ fontWeight: 500 }}>{activeTab === 'expenses' ? item.category : item.source}</div>
                         {item.description && <div style={{ fontSize: '0.8rem', color: 'var(--finance-text-muted)' }}>{item.description}</div>}
                       </td>
-                      <td style={{ 
+                      <td style={{
                         color: activeTab === 'expenses' ? 'var(--finance-danger)' : 'var(--finance-success)',
-                        fontWeight: 600 
+                        fontWeight: 600
                       }}>
                         LKR {item.amount.toLocaleString()}
                       </td>
