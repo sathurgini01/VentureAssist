@@ -109,3 +109,5 @@ export default {
   getExchangeRate,
   getIntelligenceReport,
 }
+
+//services for finance component
