@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { getExchangeRate } from '../../services/financeService'
 import { useAppContext } from '../../context/AppContext'
 
-// Hardcoded realistic mock news
+
 const MOCK_NEWS = [
   { id: 1, title: 'Central Bank Adjusts Interest Rates, Impacting Local Currency', source: 'Financial Times', date: '2 hours ago' },
   { id: 2, title: 'Global Tech Stocks Rally as USD Holds Steady', source: 'Bloomberg', date: '4 hours ago' },
@@ -46,24 +46,24 @@ export default function CurrencyExchangePage() {
       </header>
 
       <main className="finance-container">
-        
+
         <div className="currency-grid">
           <div className="currency-widget">
             <h3>Currency Converter</h3>
             <p className="finance-stat-label" style={{ marginBottom: '1.5rem' }}>
               Convert currencies using real-time rates from our backend service. Essential for managing international expenses and revenues.
             </p>
-            
+
             <form onSubmit={handleConvert}>
               <div className="finance-form-group">
                 <label>Amount</label>
-                <input 
-                  type="number" 
-                  min="0.01" 
+                <input
+                  type="number"
+                  min="0.01"
                   step="0.01"
-                  value={amt} 
-                  onChange={e => setAmt(e.target.value)} 
-                  required 
+                  value={amt}
+                  onChange={e => setAmt(e.target.value)}
+                  required
                 />
               </div>
 
@@ -117,7 +117,7 @@ export default function CurrencyExchangePage() {
               <span>Latest updates affecting global finance</span>
               <span style={{ color: 'var(--finance-accent)', fontSize: '0.8rem', fontWeight: 600 }}>● LIVE</span>
             </p>
-            
+
             <div className="news-list">
               {MOCK_NEWS.map(news => (
                 <div key={news.id} className="news-item">
