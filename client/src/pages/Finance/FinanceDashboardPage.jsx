@@ -14,7 +14,7 @@ export default function FinanceDashboardPage() {
   const [showIntModal, setShowIntModal] = useState(false)
   const [selectedProfileId, setSelectedProfileId] = useState(null)
   const [report, setReport] = useState(null)
-  
+
   const reportRef = useRef(null)
 
   const [formData, setFormData] = useState({
@@ -126,7 +126,7 @@ export default function FinanceDashboardPage() {
             {profiles.map(profile => (
               <div key={profile._id} className="finance-card">
                 <h3>{profile.startupName}</h3>
-                
+
                 <div className="finance-card-stats">
                   <div className="finance-stat">
                     <span className="finance-stat-label">Initial Capital</span>
@@ -174,21 +174,21 @@ export default function FinanceDashboardPage() {
             <form onSubmit={handleCreate}>
               <div className="finance-form-group">
                 <label>Startup Name</label>
-                <input 
-                  type="text" 
-                  value={formData.startupName} 
-                  onChange={e => setFormData({...formData, startupName: e.target.value})} 
-                  required 
+                <input
+                  type="text"
+                  value={formData.startupName}
+                  onChange={e => setFormData({ ...formData, startupName: e.target.value })}
+                  required
                   placeholder="e.g. Acme Corp"
                 />
               </div>
               <div className="finance-form-group">
                 <label>Initial Capital (LKR)</label>
-                <input 
-                  type="number" 
-                  value={formData.initialCapital} 
-                  onChange={e => setFormData({...formData, initialCapital: e.target.value})} 
-                  required 
+                <input
+                  type="number"
+                  value={formData.initialCapital}
+                  onChange={e => setFormData({ ...formData, initialCapital: e.target.value })}
+                  required
                   min="0"
                 />
               </div>
@@ -201,76 +201,76 @@ export default function FinanceDashboardPage() {
         </div>
       )}
 
-      {/* Intelligence Modal */}
+      {/* Intelligence Modal start */}
       {showIntModal && (() => {
         const currentProfile = profiles.find(p => p._id === selectedProfileId)
         return (
-        <div className="finance-modal-overlay">
-          <div className="finance-modal finance-modal-large" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0 }}>Financial Intelligence</h2>
-              <div>
-                <button className="finance-btn finance-btn-secondary" style={{ marginRight: '0.5rem' }} onClick={handleExportPDF}>
-                  Export PDF
-                </button>
-                <button className="finance-btn finance-btn-secondary" onClick={() => setShowIntModal(false)}>
-                  Close
-                </button>
+          <div className="finance-modal-overlay">
+            <div className="finance-modal finance-modal-large" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ margin: 0 }}>Financial Intelligence</h2>
+                <div>
+                  <button className="finance-btn finance-btn-secondary" style={{ marginRight: '0.5rem' }} onClick={handleExportPDF}>
+                    Export PDF
+                  </button>
+                  <button className="finance-btn finance-btn-secondary" onClick={() => setShowIntModal(false)}>
+                    Close
+                  </button>
+                </div>
               </div>
+
+              {!report ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>Analyzing financial data...</div>
+              ) : (
+                <div ref={reportRef} id="printable-intelligence" style={{ padding: '1rem', background: 'white' }}>
+                  <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '2px solid var(--finance-accent)', paddingBottom: '1rem' }}>
+                    <h1 style={{ color: 'var(--finance-primary-dark)', margin: '0 0 0.5rem 0' }}>{currentProfile?.startupName}</h1>
+                    <h3 style={{ color: 'var(--finance-text-muted)', margin: 0 }}>System Generated Overview</h3>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                    <div style={{ background: 'var(--finance-card-bg)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--finance-border)' }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: 'var(--finance-primary)' }}>Current Status</h4>
+                      <div className="finance-stat"><span className="finance-stat-label">Initial Capital</span><span style={{ fontWeight: 600 }}>LKR {currentProfile?.initialCapital?.toLocaleString()}</span></div>
+                      <div className="finance-stat"><span className="finance-stat-label">Burn Rate</span><span style={{ color: 'var(--finance-danger)', fontWeight: 600 }}>LKR {report.burnRate?.toLocaleString()}</span></div>
+                      <div className="finance-stat"><span className="finance-stat-label">Runway</span><span style={{ fontWeight: 600 }}>{report.runway}</span></div>
+                    </div>
+                    <div style={{ background: 'var(--finance-success-light)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--finance-success)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--finance-success)' }}>Health Score: {report.financialHealthScore}/100</h4>
+                      <div style={{ fontWeight: 600, color: 'var(--finance-primary-dark)', marginBottom: '1rem' }}>Risk Level: {report.riskLevel}</div>
+                      <p style={{ margin: 0, lineHeight: 1.6, fontStyle: 'italic', fontSize: '0.95rem' }}>"{report.advice}"</p>
+                    </div>
+                  </div>
+
+                  <h3 style={{ borderBottom: '1px solid var(--finance-border)', paddingBottom: '0.5rem' }}>Financial History & Projections</h3>
+                  <table className="finance-table" style={{ width: '100%', marginTop: '1rem' }}>
+                    <thead>
+                      <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Total Revenue Recorded</td>
+                        <td>LKR {report.totalRevenue?.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>Total Expenses Recorded</td>
+                        <td>LKR {report.totalExpenses?.toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td>Profit Margin</td>
+                        <td style={{ color: report.profitMargin >= 0 ? 'var(--finance-success)' : 'var(--finance-danger)' }}>
+                          {report.profitMargin}%
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-            
-            {!report ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>Analyzing financial data...</div>
-            ) : (
-              <div ref={reportRef} id="printable-intelligence" style={{ padding: '1rem', background: 'white' }}>
-                <div style={{ textAlign: 'center', marginBottom: '2rem', borderBottom: '2px solid var(--finance-accent)', paddingBottom: '1rem' }}>
-                  <h1 style={{ color: 'var(--finance-primary-dark)', margin: '0 0 0.5rem 0' }}>{currentProfile?.startupName}</h1>
-                  <h3 style={{ color: 'var(--finance-text-muted)', margin: 0 }}>System Generated Overview</h3>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-                  <div style={{ background: 'var(--finance-card-bg)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--finance-border)' }}>
-                    <h4 style={{ margin: '0 0 1rem 0', color: 'var(--finance-primary)' }}>Current Status</h4>
-                    <div className="finance-stat"><span className="finance-stat-label">Initial Capital</span><span style={{ fontWeight: 600 }}>LKR {currentProfile?.initialCapital?.toLocaleString()}</span></div>
-                    <div className="finance-stat"><span className="finance-stat-label">Burn Rate</span><span style={{ color: 'var(--finance-danger)', fontWeight: 600 }}>LKR {report.burnRate?.toLocaleString()}</span></div>
-                    <div className="finance-stat"><span className="finance-stat-label">Runway</span><span style={{ fontWeight: 600 }}>{report.runway}</span></div>
-                  </div>
-                  <div style={{ background: 'var(--finance-success-light)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--finance-success)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--finance-success)' }}>Health Score: {report.financialHealthScore}/100</h4>
-                    <div style={{ fontWeight: 600, color: 'var(--finance-primary-dark)', marginBottom: '1rem' }}>Risk Level: {report.riskLevel}</div>
-                    <p style={{ margin: 0, lineHeight: 1.6, fontStyle: 'italic', fontSize: '0.95rem' }}>"{report.advice}"</p>
-                  </div>
-                </div>
-
-                <h3 style={{ borderBottom: '1px solid var(--finance-border)', paddingBottom: '0.5rem' }}>Financial History & Projections</h3>
-                <table className="finance-table" style={{ width: '100%', marginTop: '1rem' }}>
-                  <thead>
-                    <tr>
-                      <th>Metric</th>
-                      <th>Value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Total Revenue Recorded</td>
-                      <td>LKR {report.totalRevenue?.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td>Total Expenses Recorded</td>
-                      <td>LKR {report.totalExpenses?.toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td>Profit Margin</td>
-                      <td style={{ color: report.profitMargin >= 0 ? 'var(--finance-success)' : 'var(--finance-danger)' }}>
-                        {report.profitMargin}%
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
-        </div>
         )
       })()}
     </div>
