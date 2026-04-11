@@ -28,6 +28,7 @@ router.get("/intelligence/:id", protectMarketing, async (req, res) => {
 });
 
 router.post("/", protectMarketing, controller.createProfile);
+router.get("/", protectMarketing, controller.getAllProfiles);
 router.get("/:id", protectMarketing, controller.getProfile);
 router.put("/:id", protectMarketing, controller.updateProfile);
 router.delete("/:id", protectMarketing, controller.deleteProfile);

@@ -34,6 +34,7 @@ const moduleCards = [
     tags: ['Expenses', 'Revenue', 'Profit & Loss'],
     description:
       'Help entrepreneurs stay financially sustainable through expense and revenue tracking, budget monitoring, performance metrics, and planning support.',
+    slug: 'finance',
   },
 ]
 
@@ -43,6 +44,9 @@ function Modules() {
   const getModuleLink = (card) => {
     if (card.slug === 'marketing') {
       return isAuthenticated ? '/dashboard' : '/login'
+    }
+    if (card.slug === 'finance') {
+      return isAuthenticated ? '/finance-dashboard' : '/login'
     }
 
     return '#cta'

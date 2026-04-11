@@ -11,10 +11,15 @@ import './styles/Forms.css'
 import './styles/Tables.css'
 import './styles/Modals.css'
 import './styles/MarketingDashboard.css'
+import './styles/FinanceDashboard.css'
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 import AdminMarketingDevelopmentArticlesPage from './pages/Admin/AdminMarketingDevelopmentArticlesPage'
 import AdminMarketingDevelopmentTemplatesPage from './pages/Admin/AdminMarketingDevelopmentTemplatesPage'
 import AdminMentorApprovalPage from './pages/Admin/AdminMentorApprovalPage'
+import FinanceDashboardPage from './pages/Finance/FinanceDashboardPage'
+import FinanceProfilePage from './pages/Finance/FinanceProfilePage'
+import BreakEvenPage from './pages/Finance/BreakEvenPage'
+import CurrencyExchangePage from './pages/Finance/CurrencyExchangePage'
 import Analytics from './pages/Dashboard/MarketingAnalyticsPage'
 import Articles from './pages/Dashboard/MarketingArticlesPage'
 import BecomeMentor from './pages/Dashboard/MarketingBecomeMentorPage'
@@ -125,6 +130,38 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <BecomeMentor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance-dashboard"
+            element={
+              <ProtectedRoute>
+                <FinanceDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance-dashboard/breakeven/:profileId"
+            element={
+              <ProtectedRoute>
+                <BreakEvenPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance-dashboard/exchange"
+            element={
+              <ProtectedRoute>
+                <CurrencyExchangePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance-dashboard/:profileId"
+            element={
+              <ProtectedRoute>
+                <FinanceProfilePage />
               </ProtectedRoute>
             }
           />
