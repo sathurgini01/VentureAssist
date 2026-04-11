@@ -13,9 +13,12 @@ import './styles/Modals.css'
 import './styles/MarketingDashboard.css'
 import './styles/FinanceDashboard.css'
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
+import AdminBusinessIdeaManagementPage from './pages/Admin/AdminBusinessIdeaManagementPage'
 import AdminMarketingDevelopmentArticlesPage from './pages/Admin/AdminMarketingDevelopmentArticlesPage'
 import AdminMarketingDevelopmentTemplatesPage from './pages/Admin/AdminMarketingDevelopmentTemplatesPage'
 import AdminMentorApprovalPage from './pages/Admin/AdminMentorApprovalPage'
+import AdminMentorFormPage from './pages/Admin/AdminMentorFormPage'
+import AdminToolkitFormPage from './pages/Admin/AdminToolkitFormPage'
 import FinanceDashboardPage from './pages/Finance/FinanceDashboardPage'
 import FinanceProfilePage from './pages/Finance/FinanceProfilePage'
 import BreakEvenPage from './pages/Finance/BreakEvenPage'
@@ -36,6 +39,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
+import businessRoutes from './routes/businessRoutes'
 
 function AppShell() {
   const { toasts } = useAppContext()
@@ -53,6 +57,7 @@ function AppShell() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          {businessRoutes}
           <Route
             path="/profile"
             element={
@@ -202,6 +207,46 @@ function AppShell() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business-idea-management"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminBusinessIdeaManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business-idea-management/mentors/new"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminMentorFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business-idea-management/mentors/:mentorId/edit"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminMentorFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business-idea-management/toolkits/new"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminToolkitFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/business-idea-management/toolkits/:toolkitId/edit"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminToolkitFormPage />
               </ProtectedRoute>
             }
           />

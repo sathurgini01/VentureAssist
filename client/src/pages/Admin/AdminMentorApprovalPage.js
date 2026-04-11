@@ -10,10 +10,16 @@ const adminLinks = [
   { to: '/admin/mentor-approvals', label: 'Mentor Approve' },
 ]
 
+const compactButtonStyle = {
+  minHeight: '32px',
+  padding: '0.4rem 0.8rem',
+  fontSize: '0.8rem',
+  boxShadow: 'none',
+}
+
 function AdminMentorApprovalPage() {
   const [notes, setNotes] = useState({})
-  const { mentorApplications, reviewMentorApplication } = useAppContext()
-  const pendingApplications = mentorApplications.filter((item) => item.status === 'pending')
+  const { mentorApplications, reviewMentorApplication, removeMentorApplication } = useAppContext()
 
   return (
     <div className="dashboard-shell">
@@ -29,34 +35,83 @@ function AdminMentorApprovalPage() {
 
           <Table
             columns={[
-              { key: 'name', label: 'Name' },
-              { key: 'expertise', label: 'Expertise' },
-              { key: 'experience', label: 'Experience' },
-              { key: 'qualification', label: 'Qualification' },
-              { key: 'appliedDate', label: 'Applied Date' },
-              { key: 'status', label: 'Status' },
+              {
+                key: 'applicant',
+                label: 'Applicant',
+                render: (_, row) => (
+                  <div style={{ minWidth: '150px' }}>
+                    <strong>{row.name}</strong>
+                    <div className="card-muted">{row.email}</div>
+                    <div className="card-muted">{row.phoneNumber || 'No phone number'}</div>
+                  </div>
+                ),
+              },
+              {
+                key: 'details',
+                label: 'Details',
+                render: (_, row) => (
+                  <div style={{ minWidth: '280px', maxWidth: '340px' }}>
+                    <div><strong>Expertise:</strong> {row.expertise || 'Not provided'}</div>
+                    <div><strong>Qualification:</strong> {row.qualification || 'Not provided'}</div>
+                    <div><strong>Experience:</strong> {row.experience || 'Not provided'}</div>
+                    <div><strong>Bio:</strong> {row.bio || 'Not provided'}</div>
+                  </div>
+                ),
+              },
+              {
+                key: 'statusInfo',
+                label: 'Status',
+                render: (_, row) => (
+                  <div style={{ minWidth: '120px' }}>
+                    <div><strong>{row.status}</strong></div>
+                    <div className="card-muted">{row.appliedDate}</div>
+                    <div className="card-muted">{row.adminNote || 'No admin note yet'}</div>
+                  </div>
+                ),
+              },
               {
                 key: 'actions',
                 label: 'Actions',
                 render: (_, row) => (
-                  <div className="section-stack">
-                    <input
-                      className="form-control"
-                      placeholder="Admin note"
-                      value={notes[row.id] || ''}
-                      onChange={(event) => setNotes((current) => ({ ...current, [row.id]: event.target.value }))}
-                    />
-                    <div className="inline-actions">
-                      <Button onClick={() => reviewMentorApplication(row.id, 'Approved', notes[row.id] || '')}>Approve</Button>
-                      <Button variant="secondary" onClick={() => reviewMentorApplication(row.id, 'Rejected', notes[row.id] || '')}>
-                        Reject
+                  row.status === 'pending' ? (
+                    <div className="section-stack" style={{ minWidth: '180px' }}>
+                      <input
+                        className="form-control"
+                        placeholder="Admin note"
+                        value={notes[row.id] || ''}
+                        onChange={(event) => setNotes((current) => ({ ...current, [row.id]: event.target.value }))}
+                      />
+                      <div className="inline-actions">
+                        <Button
+                          onClick={() => reviewMentorApplication(row.id, 'Approved', notes[row.id] || '')}
+                          style={{ ...compactButtonStyle, background: '#16a34a', color: '#fff' }}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => reviewMentorApplication(row.id, 'Rejected', notes[row.id] || '')}
+                          style={{ ...compactButtonStyle, background: '#dc2626', color: '#fff' }}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ minWidth: '90px' }}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => removeMentorApplication(row.id)}
+                        style={{ ...compactButtonStyle, background: '#dc2626', color: '#fff' }}
+                      >
+                        Delete
                       </Button>
                     </div>
-                  </div>
+                  )
                 ),
               },
             ]}
-            rows={pendingApplications}
+            rows={mentorApplications}
           />
         </div>
       </div>

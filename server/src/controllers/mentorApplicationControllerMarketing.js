@@ -1,10 +1,14 @@
 import MentorApplicationMarketing from "../models/MentorApplicationMarketing.js";
 import User from "../models/User.js";
+import Mentor from "../models/mentorModel.js";
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\+?[0-9\s\-()]{7,15}$/;
 
 // POST /api/marketing/mentor-applications  (user)
 export const applyForMentorMarketing = async (req, res, next) => {
   try {
-    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability } = req.body;
+    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability, mentorName, mentorEmail, phoneNumber, expertiseSkills, shortBio } = req.body;
     const normalizeExpertiseArea = (value) => {
       const raw = String(value || "").trim().toLowerCase();
       if (!raw) return "";
@@ -34,8 +38,21 @@ export const applyForMentorMarketing = async (req, res, next) => {
       return res.status(400).json({ message: "You already have a pending application" });
     }
 
+    if (!emailPattern.test(String(mentorEmail || req.user.email || "").trim())) {
+      return res.status(400).json({ message: "Enter a valid email address" });
+    }
+
+    if (!phonePattern.test(String(phoneNumber || "").trim())) {
+      return res.status(400).json({ message: "Enter a valid phone number" });
+    }
+
     const created = await MentorApplicationMarketing.create({
       userId: req.user._id,
+      mentorName: mentorName || req.user.name || "",
+      mentorEmail: mentorEmail || req.user.email || "",
+      phoneNumber: phoneNumber || "",
+      expertiseSkills: expertiseSkills || "",
+      shortBio: shortBio || bio || "",
       expertiseAreas: normalizedExpertiseAreas,
       qualification: qualification || "",
       yearsExperience: Number(yearsExperience || 0),
@@ -97,10 +114,31 @@ export const approveMentorApplicationMarketing = async (req, res, next) => {
     await app.save();
 
     // ✅ Promote user to mentor
-    await User.findByIdAndUpdate(app.userId, {
+    const user = await User.findByIdAndUpdate(app.userId, {
       role: "mentor",
       mentorExpertiseAreas: finalExpertiseAreas
-    });
+    }, { new: true });
+
+    const mentorName = app.mentorName || user?.name || "Mentor";
+    const mentorEmail = app.mentorEmail || user?.email || "";
+
+    const existingMentor = await Mentor.findOne({ email: mentorEmail });
+
+    const mentorPayload = {
+      name: mentorName,
+      email: mentorEmail,
+      phoneNumber: app.phoneNumber || "",
+      expertise: app.expertiseSkills || app.qualification || "General Business Support",
+      bio: app.shortBio || app.bio || `${mentorName} supports founders with practical business guidance.`,
+      imageUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(mentorName)}&background=0f766e&color=ffffff`,
+      assignedBusinessIdeas: []
+    };
+
+    if (existingMentor) {
+      await Mentor.findByIdAndUpdate(existingMentor._id, mentorPayload, { new: true, runValidators: true });
+    } else {
+      await Mentor.create(mentorPayload);
+    }
 
     res.status(200).json({ message: "Application approved, user is now mentor", application: app });
   } catch (err) {
@@ -119,6 +157,17 @@ export const rejectMentorApplicationMarketing = async (req, res, next) => {
     await app.save();
 
     res.status(200).json({ message: "Application rejected", application: app });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteMentorApplicationMarketing = async (req, res, next) => {
+  try {
+    const deleted = await MentorApplicationMarketing.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Application not found" });
+
+    res.status(200).json({ message: "Application deleted" });
   } catch (err) {
     next(err);
   }

@@ -9,7 +9,8 @@ import {
   applyForMentorMarketing,
   getMentorApplicationsMarketing,
   approveMentorApplicationMarketing,
-  rejectMentorApplicationMarketing
+  rejectMentorApplicationMarketing,
+  deleteMentorApplicationMarketing
 } from "../controllers/mentorApplicationControllerMarketing.js";
 
 const router = express.Router();
@@ -26,7 +27,12 @@ router.post(
     body("yearsExperience").optional().isInt({ min: 0 }),
     body("bio").optional().isString(),
     body("portfolioLink").optional().isString(),
-    body("availability").optional().isString()
+    body("availability").optional().isString(),
+    body("mentorName").optional().isString(),
+    body("mentorEmail").optional().isString(),
+    body("phoneNumber").optional().isString(),
+    body("expertiseSkills").optional().isString(),
+    body("shortBio").optional().isString()
   ],
   validate,
   applyForMentorMarketing
@@ -38,5 +44,6 @@ router.get("/", getMentorApplicationsMarketing);
 // admin actions
 router.put("/:id/approve", allowMarketingRoles("admin"), approveMentorApplicationMarketing);
 router.put("/:id/reject", allowMarketingRoles("admin"), rejectMentorApplicationMarketing);
+router.delete("/:id", allowMarketingRoles("admin"), deleteMentorApplicationMarketing);
 
 export default router;

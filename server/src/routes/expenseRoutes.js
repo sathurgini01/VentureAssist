@@ -1,11 +1,12 @@
 import { Router } from "express";
 import * as controller from "../controllers/expenseController.js";
+import { protectMarketing } from "../middleware/authMiddlewareMarketing.js";
 
 const router = Router();
 
-router.post("/", controller.addExpense);
-router.get("/:profileId", controller.getExpenses);
-router.put("/:id", controller.updateExpense);
-router.delete("/:id", controller.deleteExpense);
+router.post("/", protectMarketing, controller.addExpense);
+router.get("/:profileId", protectMarketing, controller.getExpenses);
+router.put("/:id", protectMarketing, controller.updateExpense);
+router.delete("/:id", protectMarketing, controller.deleteExpense);
 
 export default router;

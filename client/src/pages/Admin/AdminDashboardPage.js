@@ -12,8 +12,8 @@ const adminLinks = [
 const adminModules = [
   {
     title: 'Business Idea Management',
-    subtitle: 'Will be linked later.',
-    disabled: true,
+    subtitle: 'Open mentor and toolkit management for the business module.',
+    to: '/admin/business-idea-management',
   },
   {
     title: 'Marketing & Development',

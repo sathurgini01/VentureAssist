@@ -4,6 +4,8 @@ const mentorRequestSchema = new mongoose.Schema(
   {
     mentorId: { type: mongoose.Schema.Types.ObjectId, ref: "Mentor", required: true },
     ideaId: { type: mongoose.Schema.Types.ObjectId, ref: "Idea", required: false },
+    userName: { type: String, default: "" },
+    userEmail: { type: String, default: "" },
     message: { type: String, required: true },
     preferredTime: { type: String, required: true },
     status: { type: String, enum: ["Pending", "Accepted", "Rejected"], default: "Pending" },

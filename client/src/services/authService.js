@@ -5,13 +5,13 @@ const AUTH_USER_KEY = 'auth_user'
 const parseErrorResponse = async (response) => {
   try {
     const data = await response.json()
-    
+
     // Handle validation errors
     if (data.errors && Array.isArray(data.errors)) {
       const errorMessages = data.errors.map(e => e.message).join(', ')
       return errorMessages || data.message || 'Request failed'
     }
-    
+
     return data.message || 'Request failed'
   } catch {
     return 'Request failed'

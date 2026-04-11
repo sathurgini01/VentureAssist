@@ -29,7 +29,7 @@ export const initTrackerForIdea = async (req, res, next) => {
 
 export const getTrackerByIdea = async (req, res, next) => {
   try {
-    const { ideaId } = req.query;
+    const ideaId = req.params.ideaId || req.query.ideaId;
     if (!ideaId) return res.status(400).json({ message: "ideaId is required" });
 
     const tracker = await Tracker.findOne({ ideaId });

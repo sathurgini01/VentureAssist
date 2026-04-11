@@ -1,6 +1,6 @@
 const API_BASE = '/api/finance'
 
-const getToken = () => localStorage.getItem('auth_token')
+const getToken = () => sessionStorage.getItem('auth_token')
 
 const parseError = async (response) => {
   try {

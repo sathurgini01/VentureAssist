@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   --teal-deep: #1a4a45;
   --teal-mid: #2d6b64;
