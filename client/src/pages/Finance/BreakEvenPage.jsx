@@ -27,7 +27,7 @@ export default function BreakEvenPage() {
     const totalDays = Math.round(decimalMonths * 30)
     const m = Math.floor(totalDays / 30)
     const d = totalDays % 30
-    
+
     if (m === 0) return `${d} Days`
     if (d === 0) return `${m} Months`
     return `${m} Months, ${d} Days`
@@ -45,7 +45,7 @@ export default function BreakEvenPage() {
           <Link to="/finance-dashboard" className="finance-nav-link">Dashboard</Link>
         </div>
       </header>
-      
+
       <main className="finance-container">
         <div className="finance-card" style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <h3>Calculate Break-Even Point</h3>
@@ -53,9 +53,9 @@ export default function BreakEvenPage() {
             This tool uses your profile's initial capital, monthly revenue, and monthly expenses to calculate how many months it will take to break even.
           </p>
 
-          <button 
-            className="finance-btn" 
-            onClick={calculate} 
+          <button
+            className="finance-btn"
+            onClick={calculate}
             disabled={loading}
             style={{ fontSize: '1.2rem', padding: '1rem 2rem' }}
           >
@@ -68,8 +68,8 @@ export default function BreakEvenPage() {
                 {formatTime(months)}
               </h2>
               <p style={{ color: 'var(--finance-primary-dark)', margin: 0, fontWeight: 500 }}>
-                {months === -1 
-                  ? 'Your expenses currently exceed your revenue. You will not break even unless you increase revenue or cut expenses.' 
+                {months === -1
+                  ? 'Your expenses currently exceed your revenue. You will not break even unless you increase revenue or cut expenses.'
                   : 'Estimated time to recover your initial capital.'}
               </p>
             </div>
@@ -79,3 +79,6 @@ export default function BreakEvenPage() {
     </div>
   )
 }
+
+//updated
+
