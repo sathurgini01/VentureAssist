@@ -1,0 +1,65 @@
+.admin-toolkit {
+  max-width: 980px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.admin-toolkit h2 {
+  margin-bottom: 1rem;
+}
+
+.toolkit-form {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.toolkit-form input {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.toolkit-form button {
+  width: fit-content;
+  padding: 0.65rem 0.9rem;
+  border: none;
+  border-radius: 8px;
+  background: #0f766e;
+  color: #fff;
+  cursor: pointer;
+}
+
+.toolkit-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.toolkit-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem;
+  background: #fff;
+}
+
+.toolkit-card h3 {
+  margin: 0 0 0.35rem;
+}
+
+.toolkit-card p {
+  margin: 0 0 0.75rem;
+  color: #334155;
+}
+
+.toolkit-card button {
+  margin-right: 0.5rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 7px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  cursor: pointer;
+}

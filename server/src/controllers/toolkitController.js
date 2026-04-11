@@ -38,15 +38,28 @@ export const getToolkitById = async (req, res, next) => {
  * CREATE TOOLKIT (Admin Only)
  * POST /api/legal/toolkits
  */
+const normalizeTags = (tags) => {
+  if (Array.isArray(tags)) return tags.map((tag) => String(tag).trim()).filter(Boolean);
+  if (typeof tags === 'string') {
+    return tags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
 export const createToolkit = async (req, res, next) => {
   try {
-    const { title, category, type, url, active } = req.body;
+    const { title, category, type, url, description, tags, active } = req.body;
 
     const toolkit = await LegalToolkit.create({
       title,
       category,
       type,
       url,
+      description: description || '',
+      tags: normalizeTags(tags),
       active,
     });
 
@@ -65,10 +78,16 @@ export const createToolkit = async (req, res, next) => {
  */
 export const updateToolkit = async (req, res, next) => {
   try {
+    const toolkitData = {
+      ...req.body,
+      description: req.body.description || '',
+      tags: normalizeTags(req.body.tags),
+    };
+
     const toolkit = await LegalToolkit.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      { new: true }
+      toolkitData,
+      { returnDocument: "after" }
     );
 
     if (!toolkit) {

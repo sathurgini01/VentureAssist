@@ -47,7 +47,7 @@ export const getTaskById = async (req, res, next) => {
 export const getMySubmissions = async (req, res, next) => {
   try {
     const submissions = await LegalSubmission.find({ userId: req.user._id })
-      .select("taskId status updatedAt");
+      .select("taskId status updatedAt createdAt evidence mentorFeedback adminFeedback mentorId");
 
     res.json({ submissions });
   } catch (err) {
@@ -61,27 +61,12 @@ export const getMySubmissions = async (req, res, next) => {
  */
 export const getMySubmissionForTask = async (req, res, next) => {
   try {
-    let submission = await LegalSubmission.findOne({
+    const submission = await LegalSubmission.findOne({
       userId: req.user._id,
       taskId: req.params.taskId
-    }).sort({ updatedAt: -1, createdAt: -1 });
-
-    // Fallback: if client accidentally sends submissionId in :taskId slot,
-    // still return the user's submission instead of showing stale PENDING.
-    if (!submission && /^[a-fA-F0-9]{24}$/.test(req.params.taskId)) {
-      submission = await LegalSubmission.findOne({
-        _id: req.params.taskId,
-        userId: req.user._id
-      });
-    }
-
-    // Final fallback: return the user's latest submission instead of default PENDING
-    // (helps when client sends wrong taskId but expects latest approved status check).
-    if (!submission) {
-      submission = await LegalSubmission.findOne({
-        userId: req.user._id
-      }).sort({ updatedAt: -1, createdAt: -1 });
-    }
+    })
+      .sort({ updatedAt: -1, createdAt: -1 })
+      .populate("mentorId", "name email");
 
     if (!submission) return res.json({ submission: { status: "PENDING" } });
 

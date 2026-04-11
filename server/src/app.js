@@ -94,7 +94,7 @@ app.use("/api/legal", mentorLegalRoutes);
 
 // ✅ Mentor Applications route (Added)
 app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
-
+app.use(express.json());
 // Error handling
 app.use(notFoundMarketing);
 app.use(errorHandlerMarketing);

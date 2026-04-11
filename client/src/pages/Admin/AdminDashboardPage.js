@@ -20,11 +20,13 @@ const adminModules = [
     subtitle: 'Open module pages for Articles and Templates.',
     to: '/admin/marketing-development/articles',
   },
+  
   {
-    title: 'Law Management',
-    subtitle: 'Will be linked later.',
-    disabled: true,
+  title: 'Law Management',
+  subtitle: 'Manage legal workflows and compliance.',
+  to: '/admin/legal/dashboard',
   },
+  
   {
     title: 'Finance Management',
     subtitle: 'Will be linked later.',

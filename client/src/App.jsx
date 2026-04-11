@@ -12,6 +12,7 @@ import './styles/Tables.css'
 import './styles/Modals.css'
 import './styles/MarketingDashboard.css'
 import './styles/FinanceDashboard.css'
+import './styles/LegalToolkit.css'
 import AdminDashboardPage from './pages/Admin/AdminDashboardPage'
 import AdminBusinessIdeaManagementPage from './pages/Admin/AdminBusinessIdeaManagementPage'
 import AdminMarketingDevelopmentArticlesPage from './pages/Admin/AdminMarketingDevelopmentArticlesPage'
@@ -36,6 +37,27 @@ import Templates from './pages/Dashboard/MarketingTemplatesPage'
 import UserDashboard from './pages/Dashboard/MarketingUserDashboardPage'
 import About from './pages/About'
 import Home from './pages/Home'
+import AdminLegalTasksPage from "./pages/Admin/AdminLegalTasksPage";
+import AdminLegalDashboardPage from "./pages/Admin/AdminLegalDashboardPage";
+import AdminLegalToolkitsPage from "./pages/Admin/AdminLegalToolkitsPage";
+import AdminLegalReviewsPage from "./pages/Admin/AdminLegalReviewsPage";
+import AdminLegalHelpRequestsPage from "./pages/Admin/AdminLegalHelpRequestsPage";
+import LegalMentorDashboardPage from "./pages/Mentor/LegalMentorDashboardPage";
+import LegalMentorReviewsPage from "./pages/Mentor/LegalMentorReviewsPage";
+import LegalMentorReviewDetailPage from "./pages/Mentor/LegalMentorReviewDetailPage";
+import LegalMentorHelpRequestsPage from "./pages/Mentor/LegalMentorHelpRequestsPage";
+import LegalMentorTasksPage from "./pages/Mentor/LegalMentorTasksPage";
+import LegalMentorTaskDetailPage from "./pages/Mentor/LegalMentorTaskDetailPage";
+import LegalAiAssistantPage from './pages/Legal/LegalAiAssistantPage'
+import LegalDashboardPage from './pages/Legal/LegalDashboardPage'
+import LegalEvidenceUploadPage from './pages/Legal/LegalEvidenceUploadPage'
+import LegalHelpPage from './pages/Legal/LegalHelpPage'
+import LegalHomePage from './pages/Legal/LegalHomePage'
+import LegalMentorDetailPage from './pages/Legal/LegalMentorDetailPage'
+
+import LegalMentorsPage from './pages/Legal/LegalMentorsPage'
+import LegalProgressPage from './pages/Legal/LegalProgressPage'
+import LegalTaskDetailPage from './pages/Legal/LegalTaskDetailPage'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Register from './pages/Register'
@@ -198,6 +220,177 @@ function AppShell() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/admin/legal/tasks"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalTasksPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/legal/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/legal/toolkits"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalToolkitsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/legal/reviews"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/legal/help-requests"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLegalHelpRequestsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/mentor/legal/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mentor/LegalMentorDashboardPage"
+            element={<Navigate to="/mentor/legal/dashboard" replace />}
+          />
+          <Route
+            path="/mentor/legal/reviews"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorReviewsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mentor/legal/reviews/:id"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorReviewDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mentor/legal/help-requests"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorHelpRequestsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mentor/legal/tasks"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorTasksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/mentor/legal/tasks/:taskId"
+            element={
+              <ProtectedRoute allowedRoles={['mentor', 'admin']}>
+                <LegalMentorTaskDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/toolkits/legal"
+            element={
+              <ProtectedRoute key="legal-home">
+                <LegalHomePage key="legal-home-page" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/dashboard"
+            element={
+              <ProtectedRoute key="legal-dashboard">
+                <LegalDashboardPage key="legal-dashboard-page" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId"
+            element={
+              <ProtectedRoute>
+                <LegalTaskDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId/evidence"
+            element={
+              <ProtectedRoute>
+                <LegalEvidenceUploadPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/tasks/:taskId/help"
+            element={
+              <ProtectedRoute>
+                <LegalHelpPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/mentors"
+            element={
+              <ProtectedRoute>
+                <LegalMentorsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/mentors/:mentorId"
+            element={
+              <ProtectedRoute>
+                <LegalMentorDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/progress"
+            element={
+              <ProtectedRoute>
+                <LegalProgressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/toolkits/legal/ai"
+            element={
+              <ProtectedRoute>
+                <LegalAiAssistantPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/admin"
             element={<Navigate to="/admin/dashboard" replace />}

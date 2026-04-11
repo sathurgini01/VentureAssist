@@ -8,17 +8,42 @@ import LegalHelpRequest from "../models/LegalHelpRequest.js";
  */
 export const submitEvidence = async (req, res, next) => {
   try {
-    const { fileUrl, note } = req.body;
+    const { fileUrl, note, mentorId, mentorName } = req.body;
     if (!fileUrl) return res.status(400).json({ message: "fileUrl is required" });
 
-    const submission = await LegalSubmission.findOneAndUpdate(
-      { userId: req.user._id, taskId: req.params.taskId },
-      {
-        $set: { status: "UNDER_REVIEW" },
-        $push: { evidence: { fileUrl, note } }
-      },
-      { upsert: true, new: true }
-    );
+    let submission = await LegalSubmission.findOne({
+      userId: req.user._id,
+      taskId: req.params.taskId,
+    });
+
+    if (!submission) {
+      submission = new LegalSubmission({
+        userId: req.user._id,
+        taskId: req.params.taskId,
+        mentorId: mentorId || null,
+      });
+    }
+
+    const nextRound = (submission.submissionHistory?.length || 0) + 1;
+
+    submission.status = "UNDER_REVIEW";
+    if (mentorId) submission.mentorId = mentorId;
+
+    submission.evidence.push({ fileUrl, note, mentorName: mentorName || "" });
+    submission.submissionHistory.push({
+      round: nextRound,
+      fileUrl,
+      note: note || "",
+      mentorName: mentorName || "",
+      mentorId: mentorId || null,
+      submittedAt: new Date(),
+      status: "UNDER_REVIEW",
+      mentorFeedback: "",
+      adminFeedback: "",
+      reviewedAt: null,
+    });
+
+    await submission.save();
 
     res.status(201).json({ submission });
   } catch (err) {
@@ -33,14 +58,16 @@ export const submitEvidence = async (req, res, next) => {
  */
 export const createHelpRequest = async (req, res, next) => {
   try {
-    const { taskId, message } = req.body;
-    if (!taskId || !message) {
-      return res.status(400).json({ message: "taskId and message are required" });
+    const { taskId, message, mentorId, mentorName } = req.body;
+    if (!message) {
+      return res.status(400).json({ message: "message is required" });
     }
 
     const request = await LegalHelpRequest.create({
       userId: req.user._id,
-      taskId,
+      taskId: taskId || null,
+      mentorId: mentorId || null,
+      mentorName: mentorName || "",
       message
     });
 

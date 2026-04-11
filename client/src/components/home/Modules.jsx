@@ -54,6 +54,11 @@ function Modules() {
       return '/business'
     }
 
+    if (card.title === 'Law & Order') {
+      return isAuthenticated ? '/toolkits/legal' : '/login'
+    }
+
+
     return '#cta'
   }
 

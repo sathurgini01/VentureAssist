@@ -24,12 +24,5 @@ export default defineConfig({
     include: /src\/.*\.[jt]sx?$/,
     exclude: [],
   },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-      },
-    },
-  },
   plugins: [react(), tailwindcss()],
 })
