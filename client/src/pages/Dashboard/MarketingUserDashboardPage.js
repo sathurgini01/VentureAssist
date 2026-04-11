@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Button from '../../components/Button'
 import Card from '../../components/Card'
@@ -7,6 +7,7 @@ import Navbar from '../../components/MarketingNavbar'
 import Sidebar from '../../components/MarketingSidebar'
 import StatsCard from '../../components/MarketingStatsCard'
 import Table from '../../components/Table'
+import VentureGreetingBanner from '../../components/VentureGreetingBanner'
 import { useAppContext } from '../../context/AppContext'
 import { useAuth } from '../../context/AuthContext.jsx'
 
@@ -21,165 +22,122 @@ const dashboardLinks = [
 
 function UserDashboard() {
   const { user } = useAuth()
-  const { addToast, campaigns, mentorRequests, userInfo } = useAppContext()
+  const { campaigns, mentorRequests, addToast } = useAppContext()
   const [showActionModal, setShowActionModal] = useState(false)
-  const focusItems = ['Launch Smarter', 'Track Progress', 'Book Mentors']
-
-  const scrollToSessions = () => {
-    document.getElementById('my-sessions-section')?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-  }
-
-  const recentCampaigns = useMemo(
-    () => [
-      ...campaigns.slice(0, 3).map((campaign) => ({
-        id: campaign.id,
-        name: campaign.name,
-        status: campaign.status,
-        platform: campaign.platform,
-        impressions: campaign.impressions,
-      })),
-    ],
-    [campaigns],
-  )
 
   const pendingRequests = useMemo(
-    () =>
-      mentorRequests.filter(
-        (request) =>
-          request.status === 'pending' &&
-          request.userId === (userInfo?.id ?? 'guest-user'),
-      ),
-    [mentorRequests, userInfo?.id],
+    () => mentorRequests.filter((item) => item.status === 'pending'),
+    [mentorRequests],
   )
 
   const confirmedSessions = useMemo(
-    () =>
-      mentorRequests.filter(
-        (request) =>
-          request.status === 'accepted' &&
-          request.userId === (userInfo?.id ?? 'guest-user'),
-      ),
-    [mentorRequests, userInfo?.id],
+    () => mentorRequests.filter((item) => item.status === 'accepted'),
+    [mentorRequests],
   )
 
   const stats = useMemo(
     () => [
-      { label: 'Active Campaigns', value: String(campaigns.length).padStart(2, '0'), helper: 'Current mock workspace' },
-      { label: 'Total Impressions', value: '148K', helper: 'Across all platforms' },
-      { label: 'Mentor Sessions', value: String(confirmedSessions.length).padStart(2, '0'), helper: 'Confirmed sessions' },
+      {
+        label: 'Total Campaigns',
+        value: campaigns.length,
+        helper: 'All campaign records in your workspace.',
+      },
+      {
+        label: 'Pending Requests',
+        value: pendingRequests.length,
+        helper: 'Mentor requests waiting for responses.',
+      },
+      {
+        label: 'Confirmed Sessions',
+        value: confirmedSessions.length,
+        helper: 'Approved sessions with mentors.',
+      },
     ],
-    [campaigns.length, confirmedSessions.length],
+    [campaigns.length, pendingRequests.length, confirmedSessions.length],
   )
+
+  const recentCampaigns = useMemo(
+    () => [...campaigns].slice(0, 5),
+    [campaigns],
+  )
+
+  const scrollToSessions = () => {
+    const target = document.getElementById('my-sessions-section')
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 
   return (
     <div className="dashboard-shell">
       <Sidebar links={dashboardLinks} />
-
       <div className="dashboard-main">
         <Navbar />
+        <div className="dashboard-content dashboard-panel">
+          <VentureGreetingBanner />
 
-        <div className="dashboard-content">
-          <section className="dashboard-hero">
-            <div className="hero-primary-panel">
-              <Card
-                title="Dashboard"
-                subtitle="Track campaign activity, mentor engagement, and your next actions."
-              >
-                <div className="hero-copy">
-                  <div className="dashboard-hero-ribbon">
-                    <span className="dashboard-hero-kicker">Workspace Focus</span>
-                    <div className="dashboard-hero-tags">
-                      {focusItems.map((item) => (
-                        <span key={item}>{item}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="card-muted">
-                    Everything in this workspace is aligned around execution: create campaigns, monitor traction,
-                    connect with mentors, and keep your next steps visible.
-                  </p>
-                  <div className="quick-actions">
-                    <NavLink to="/dashboard/campaigns/new">
-                      <Button>New Campaign</Button>
-                    </NavLink>
-                    <NavLink to="/dashboard/templates">
-                      <Button variant="secondary">Browse Templates</Button>
-                    </NavLink>
-                    <NavLink to="/dashboard/mentors">
-                      <Button variant="secondary">Find Mentor</Button>
-                    </NavLink>
-                    <NavLink to="/dashboard/analytics">
-                      <Button variant="ghost">View Analytics</Button>
-                    </NavLink>
-                    <Button variant="ghost" onClick={scrollToSessions}>My Sessions</Button>
-                    <NavLink to="/dashboard/become-mentor">
-                      <Button variant="secondary">Become a Mentor</Button>
-                    </NavLink>
-                    {String(user?.role || '').toLowerCase() === 'mentor' ? (
-                      <NavLink to="/mentor-hub/businessIdea">
-                        <Button variant="secondary">Mentor Hub</Button>
-                      </NavLink>
-                    ) : null}
-                  </div>
-                </div>
-              </Card>
-            </div>
+          <section className="hero-layout">
+            <Card>
+              <h1 className="page-title">Dashboard</h1>
+              <p className="page-subtitle">
+                Track campaign activity, mentor engagement, and your next actions.
+              </p>
 
-            <div className="hero-secondary-panel">
-              <Card
-                title="Session Snapshot"
-                subtitle="A cleaner overview of your mentorship activity."
-              >
-                <div className="section-stack compact-stack">
-                  <div className="session-stat-row">
-                    <div className="session-stat">
-                      <strong>{pendingRequests.length}</strong>
-                      <span className="card-muted">Pending requests</span>
-                    </div>
-                    <div className="session-stat">
-                      <strong>{confirmedSessions.length}</strong>
-                      <span className="card-muted">Confirmed sessions</span>
-                    </div>
-                  </div>
-                  <div className="inline-actions">
-                    <Button variant="secondary" onClick={scrollToSessions}>
-                      Open My Sessions
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        addToast('Session planner placeholder opened.')
-                        setShowActionModal(true)
-                      }}
-                    >
-                      Session Planner
-                    </Button>
-                  </div>
+              <div className="workspace-focus-card">
+                <span className="workspace-focus-label">Workspace Focus</span>
+                <div className="workspace-focus-tags">
+                  <span>Launch Smarter</span>
+                  <span>Track Progress</span>
+                  <span>Book Mentors</span>
                 </div>
-              </Card>
-            </div>
+              </div>
+
+              <p className="dashboard-intro-copy">
+                Everything in this workspace is aligned around execution: create campaigns,
+                monitor traction, connect with mentors, and keep your next steps visible.
+              </p>
+
+              <div className="section-stack compact-stack">
+                <div className="inline-actions action-row-primary">
+                  <NavLink to="/dashboard/templates">
+                    <Button>New Campaign</Button>
+                  </NavLink>
+                  <NavLink to="/dashboard/templates">
+                    <Button variant="secondary">Browse Templates</Button>
+                  </NavLink>
+                  <NavLink to="/dashboard/mentors">
+                    <Button variant="secondary">Find Mentor</Button>
+                  </NavLink>
+                </div>
+
+                <div className="inline-actions action-row-secondary">
+                  <NavLink to="/dashboard/analytics">
+                    <Button variant="ghost">View Analytics</Button>
+                  </NavLink>
+                  <Button variant="ghost" onClick={scrollToSessions}>My Sessions</Button>
+                  <NavLink to="/dashboard/become-mentor">
+                    <Button variant="secondary">Become a Mentor</Button>
+                  </NavLink>
+                  {String(user?.role || '').toLowerCase() === 'mentor' ? (
+                    <NavLink to="/mentor-hub/businessIdea">
+                      <Button variant="secondary">Mentor Hub</Button>
+                    </NavLink>
+                  ) : null}
+                </div>
+              </div>
+            </Card>
           </section>
 
           <section className="page-grid">
             {stats.map((stat) => (
               <div key={stat.label} className="dashboard-stat-card">
-                <StatsCard
-                  label={stat.label}
-                  value={stat.value}
-                  helper={stat.helper}
-                />
+                <StatsCard label={stat.label} value={stat.value} helper={stat.helper} />
               </div>
             ))}
           </section>
 
           <section className="dashboard-split">
-            <Card
-              title="Recent Campaigns"
-              subtitle="Mock table placeholder ready for future API data."
-            >
+            <Card title="Recent Campaigns" subtitle="Latest campaign records in your account.">
               <Table
                 columns={[
                   { key: 'name', label: 'Name' },
@@ -190,10 +148,7 @@ function UserDashboard() {
                     key: 'actions',
                     label: 'Actions',
                     render: (_, row) => (
-                      <Button
-                        variant="secondary"
-                        onClick={() => addToast(`Viewing ${row.name}`)}
-                      >
+                      <Button variant="secondary" onClick={() => addToast(`Viewing ${row.name}`)}>
                         View
                       </Button>
                     ),
@@ -203,16 +158,13 @@ function UserDashboard() {
               />
             </Card>
 
-            <Card
-              title="Pending Requests"
-              subtitle="Mentor session requests waiting for review."
-            >
+            <Card title="Pending Requests" subtitle="Mentor session requests waiting for review.">
               <div className="session-list">
                 {pendingRequests.length > 0 ? pendingRequests.map((request) => (
                   <div key={request.id} className="session-item">
                     <strong>{request.mentorName}</strong>
                     <span className="session-meta">{request.topic}</span>
-                    <span className="session-meta">{request.preferredTime}</span>
+                    <span className="session-meta">{request.preferredDateTime || request.preferredTime || 'To be confirmed'}</span>
                     <span className="badge">Pending</span>
                   </div>
                 )) : (
@@ -226,17 +178,14 @@ function UserDashboard() {
           </section>
 
           <section id="my-sessions-section" className="dashboard-split">
-            <Card
-              title="Confirmed Sessions"
-              subtitle="Accepted sessions and their confirmed meeting details."
-            >
+            <Card title="Confirmed Sessions" subtitle="Accepted sessions and meeting details.">
               <div className="session-list">
                 {confirmedSessions.length > 0 ? confirmedSessions.map((session) => (
                   <div key={session.id} className="session-item">
                     <strong>{session.mentorName}</strong>
                     <span className="session-meta">{session.topic}</span>
-                    <span className="session-meta">{session.confirmedDateTime}</span>
-                    <span className="badge">{session.medium}</span>
+                    <span className="session-meta">{session.confirmedDateTime || session.preferredDateTime || 'Time pending'}</span>
+                    <span className="badge">{session.medium || 'Online'}</span>
                   </div>
                 )) : (
                   <div className="session-item">
@@ -247,25 +196,17 @@ function UserDashboard() {
               </div>
             </Card>
 
-            <Card
-              title="Mentor Application"
-              subtitle="Interested in mentoring founders on the platform?"
-            >
-              <p className="card-muted">
-                Share your background, expertise, availability, and pricing through the mentor application form.
-              </p>
+            <Card title="Quick Actions" subtitle="Shortcuts for your next step.">
               <div className="inline-actions">
+                <Button onClick={() => setShowActionModal(true)}>Open Action Center</Button>
                 <NavLink to="/dashboard/become-mentor">
-                  <Button>Open Application</Button>
+                  <Button variant="secondary">Open Mentor Application</Button>
                 </NavLink>
               </div>
             </Card>
           </section>
 
-          <Card
-            title="Workspace Navigation"
-            subtitle="Quick links for the main founder workflow."
-          >
+          <Card title="Workspace Navigation" subtitle="Quick links for the founder workflow.">
             <div className="quick-actions">
               {dashboardLinks.map((link) => (
                 <NavLink key={link.to} to={link.to}>
@@ -296,5 +237,3 @@ function UserDashboard() {
 }
 
 export default UserDashboard
-
-

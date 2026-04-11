@@ -1,4 +1,5 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { useEffect } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AppProvider, useAppContext } from './context/AppContext'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
@@ -63,12 +64,23 @@ import Profile from './pages/Profile'
 import Register from './pages/Register'
 import businessRoutes from './routes/businessRoutes'
 
+function ScrollToTop() {
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
+  return null
+}
+
 function AppShell() {
   const { toasts } = useAppContext()
   const { isAuthenticated } = useAuth()
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="app-shell">
         <Routes>
           <Route path="/" element={<Home />} />
