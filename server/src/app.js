@@ -48,16 +48,16 @@ const __dirname = path.dirname(__filename);
 app.use(express.json());
 app.use(cors());
 
-// ✅ VERY IMPORTANT: app.js is inside /src, public is outside /src
-// so go up one level: ../public
 const publicPath = path.join(__dirname, "..", "public");
 app.use(express.static(publicPath));
 
 app.get("/", (req, res) => res.send("VentureAssist Backend Running..."));
 
-// Routes (order doesn’t matter, but keep consistent)
-// Marketing Auth (common)
+// Auth
 app.use("/api/marketing/auth", authRoutesMarketing);
+app.use("/api/auth", authRoutesMarketing);
+
+// Marketing
 app.use("/api/marketing/articles", articleRoutesMarketing);
 app.use("/api/marketing/templates", templateRoutesMarketing);
 app.use("/api/marketing/campaigns", campaignRoutesMarketing);
@@ -66,25 +66,15 @@ app.use("/api/marketing/mentor-requests", mentorRequestRoutesMarketing);
 app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
 app.use("/api/ai", aiRoutes);
 
-
+// Finance
 app.use("/api/finance", financeRoutes);
 app.use("/api/finance/expenses", expenseRoutes);
 app.use("/api/finance/revenue", revenueRoutes);
 
-// Marketing Mentor Applications
-app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
-
-// Business module
+// Business
 app.use("/api/business", businessRoutes);
 
-// Health check
-app.get("/", (req, res) => {
-  res.send("VentureAssist Backend Running...");
-});
-
-// Routes
-app.use("/api/marketing/auth", authRoutesMarketing);
-app.use("/api/auth", authRoutesMarketing);
+// Legal
 app.use("/api/legal", legalRoutes);
 app.use("/api/legal", legalActionRoutes);
 app.use("/api/legal", toolkitRoutes);
@@ -92,14 +82,9 @@ app.use("/api/legal", adminLegalRoutes);
 app.use("/api/legal", legalAiRoutes);
 app.use("/api/legal", mentorLegalRoutes);
 
-// ✅ Mentor Applications route (Added)
-app.use("/api/marketing/mentor-applications", mentorApplicationRoutesMarketing);
-app.use(express.json());
-// Error handling
+// Error handling (must be last)
 app.use(notFoundMarketing);
 app.use(errorHandlerMarketing);
-
-// ✅ Must be LAST
 app.use(notFound);
 app.use(errorHandler);
 
