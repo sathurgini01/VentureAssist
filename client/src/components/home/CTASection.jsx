@@ -45,7 +45,9 @@ function CTASection() {
         availability: formData.availability,
       })
       setShowMentorForm(false)
-    } catch {}
+    } catch (error) {
+      addToast(error?.message || 'Failed to submit mentor application.', 'error')
+    }
   }
 
   return (
