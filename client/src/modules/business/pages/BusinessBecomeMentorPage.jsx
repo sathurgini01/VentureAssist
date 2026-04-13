@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAppContext } from '../../../context/AppContext'
 import { useAuth } from '../../../context/AuthContext.jsx'
 import { ActionButton, ActionLink, BusinessPageHeader, SectionCard } from '../components/BusinessComponents'
-import { isValidEmail, isValidPhoneNumber } from '../services/validation'
+import { isValidEmail } from '../services/validation'
 
 const initialForm = {
   mentorName: '',
   mentorEmail: '',
-  phoneNumber: '',
   expertiseSkills: '',
   shortBio: '',
 }
@@ -42,7 +41,6 @@ function BusinessBecomeMentorPage() {
     const payload = {
       mentorName: form.mentorName.trim(),
       mentorEmail: form.mentorEmail.trim(),
-      phoneNumber: form.phoneNumber.trim(),
       expertiseSkills: form.expertiseSkills.trim(),
       shortBio: form.shortBio.trim(),
       qualification: form.expertiseSkills.trim(),
@@ -52,11 +50,6 @@ function BusinessBecomeMentorPage() {
 
     if (!isValidEmail(payload.mentorEmail)) {
       addToast('Enter a valid email address.', 'error')
-      return
-    }
-
-    if (!isValidPhoneNumber(payload.phoneNumber)) {
-      addToast('Enter a valid phone number.', 'error')
       return
     }
 
@@ -111,17 +104,6 @@ function BusinessBecomeMentorPage() {
               value={form.mentorEmail}
               onChange={(event) => setForm((current) => ({ ...current, mentorEmail: event.target.value }))}
               pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-              required
-            />
-          </label>
-
-          <label>
-            <span className="mb-2 block text-sm font-semibold text-slate-700">Phone Number</span>
-            <input
-              className="w-full rounded-[20px] border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
-              value={form.phoneNumber}
-              onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))}
-              pattern="^\+?[0-9\s\-()]{7,15}$"
               required
             />
           </label>

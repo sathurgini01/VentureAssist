@@ -3,12 +3,11 @@ import User from "../models/User.js";
 import Mentor from "../models/mentorModel.js";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phonePattern = /^\+?[0-9\s\-()]{7,15}$/;
 
 // POST /api/marketing/mentor-applications  (user)
 export const applyForMentorMarketing = async (req, res, next) => {
   try {
-    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability, mentorName, mentorEmail, phoneNumber, expertiseSkills, shortBio } = req.body;
+    const { expertiseAreas, qualification, yearsExperience, bio, portfolioLink, availability, mentorName, mentorEmail, expertiseSkills, shortBio } = req.body;
     const normalizeExpertiseArea = (value) => {
       const raw = String(value || "").trim().toLowerCase();
       if (!raw) return "";
@@ -42,15 +41,11 @@ export const applyForMentorMarketing = async (req, res, next) => {
       return res.status(400).json({ message: "Enter a valid email address" });
     }
 
-    if (!phonePattern.test(String(phoneNumber || "").trim())) {
-      return res.status(400).json({ message: "Enter a valid phone number" });
-    }
-
     const created = await MentorApplicationMarketing.create({
       userId: req.user._id,
       mentorName: mentorName || req.user.name || "",
       mentorEmail: mentorEmail || req.user.email || "",
-      phoneNumber: phoneNumber || "",
+      phoneNumber: "",
       expertiseSkills: expertiseSkills || "",
       shortBio: shortBio || bio || "",
       expertiseAreas: normalizedExpertiseAreas,
