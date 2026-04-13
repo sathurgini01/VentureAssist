@@ -137,7 +137,13 @@ router.get("/mentor/reviews", protectMarketing, allowMarketingRoles("mentor", "a
   try {
     const filter = { status: "UNDER_REVIEW" };
     if (req.user.role === "mentor") {
-      filter.$or = [{ mentorId: req.user._id }, { mentorId: null }];
+      const mentorDoc = await Mentor.findOne({ email: req.user.email });
+      const mentorDocId = mentorDoc?._id || null;
+      filter.$or = [
+        { mentorId: req.user._id },
+        { mentorId: null },
+        ...(mentorDocId ? [{ mentorId: mentorDocId }] : []),
+      ];
     }
 
     const submissions = await LegalSubmission.find(filter)
@@ -303,7 +309,13 @@ router.get("/mentor/submissions/history", protectMarketing, allowMarketingRoles(
 /** GET /api/legal/mentor/help-requests */
 router.get("/mentor/help-requests", protectMarketing, allowMarketingRoles("mentor", "admin"), async (req, res, next) => {
   try {
-    const filter = req.user.role === "admin" ? {} : { mentorId: req.user._id };
+    let filter = {};
+    if (req.user.role !== "admin") {
+      const mentorDoc = await Mentor.findOne({ email: req.user.email });
+      const mentorDocId = mentorDoc?._id || null;
+      const ids = [req.user._id, ...(mentorDocId ? [mentorDocId] : [])];
+      filter = { mentorId: { $in: ids } };
+    }
 
     const requests = await LegalHelpRequest.find(filter)
       .populate("taskId", "title category description")
