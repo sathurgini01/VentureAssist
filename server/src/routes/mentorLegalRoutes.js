@@ -251,7 +251,10 @@ router.get("/mentor/submissions/history", protectMarketing, allowMarketingRoles(
   try {
     const filter = {};
     if (req.user.role === "mentor") {
-      filter.mentorId = req.user._id;
+      const mentorDoc = await Mentor.findOne({ email: req.user.email });
+      const mentorDocId = mentorDoc?._id || null;
+      const ids = [req.user._id, ...(mentorDocId ? [mentorDocId] : [])];
+      filter.mentorId = { $in: ids };
     }
 
     const submissions = await LegalSubmission.find(filter)
