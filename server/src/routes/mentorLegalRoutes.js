@@ -81,9 +81,12 @@ router.get("/mentors", protectMarketing, async (req, res, next) => {
     const normalizedLegalMentors = legalMentors.map((mentor) => normalizeLegalMentor(mentor));
     const merged = [...normalizedLegalMentors, ...fallbackMentors];
 
-    const uniqueMentors = merged.filter((mentor, index, list) => {
-      const key = String(mentor._id);
-      return list.findIndex((item) => String(item._id) === key) === index;
+    const seenEmails = new Set();
+    const uniqueMentors = merged.filter((mentor) => {
+      const key = (mentor.email || String(mentor._id)).toLowerCase().trim();
+      if (seenEmails.has(key)) return false;
+      seenEmails.add(key);
+      return true;
     });
 
     res.json({ mentors: uniqueMentors });
