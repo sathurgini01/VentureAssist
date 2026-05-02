@@ -1,0 +1,121 @@
+config:
+  target: "http://localhost:5050"
+  phases:
+    # Warm-up: gradual ramp-up over 30 seconds
+    - name: "Warm-up"
+      duration: 30
+      arrivalRate: 5
+      rampTo: 20
+    # Sustained load: hold 20 virtual users/sec for 60 seconds
+    - name: "Sustained Load"
+      duration: 60
+      arrivalRate: 20
+    # Stress test: spike to 50 users/sec for 30 seconds
+    - name: "Stress Test"
+      duration: 30
+      arrivalRate: 50
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  # ── Health Check ────────────────────────────────────────────────────────────
+  - name: "Health Check"
+    weight: 10
+    flow:
+      - get:
+          url: "/"
+          expect:
+            - statusCode: 200
+
+  # ── User Registration & Login ────────────────────────────────────────────────
+  - name: "Auth Flow"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Perf User {{ $randomString() }}"
+            email: "perf_{{ $randomString() }}@test.com"
+            password: "perfpass123"
+          capture:
+            - json: "$.token"
+              as: "authToken"
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "perf_{{ $randomString() }}@test.com"
+            password: "perfpass123"
+
+  # ── Business Ideas CRUD ──────────────────────────────────────────────────────
+  - name: "Business Ideas"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Biz Perf {{ $randomString() }}"
+            email: "biz_{{ $randomString() }}@test.com"
+            password: "bizperf123"
+          capture:
+            - json: "$.token"
+              as: "bizToken"
+      - post:
+          url: "/api/business/ideas"
+          headers:
+            Authorization: "Bearer {{ bizToken }}"
+          json:
+            title: "Perf Idea {{ $randomString() }}"
+            description: "Performance test idea"
+            industry: "Technology"
+      - get:
+          url: "/api/business/ideas"
+          headers:
+            Authorization: "Bearer {{ bizToken }}"
+
+  # ── Legal Tasks ──────────────────────────────────────────────────────────────
+  - name: "Legal Tasks"
+    weight: 20
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Legal Perf {{ $randomString() }}"
+            email: "legal_{{ $randomString() }}@test.com"
+            password: "legalperf123"
+          capture:
+            - json: "$.token"
+              as: "legalToken"
+      - get:
+          url: "/api/legal/tasks"
+          headers:
+            Authorization: "Bearer {{ legalToken }}"
+
+  # ── Marketing Campaigns ──────────────────────────────────────────────────────
+  - name: "Marketing Campaigns"
+    weight: 25
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            name: "Mkt Perf {{ $randomString() }}"
+            email: "mkt_{{ $randomString() }}@test.com"
+            password: "mktperf123"
+          capture:
+            - json: "$.token"
+              as: "mktToken"
+      - post:
+          url: "/api/marketing/campaigns"
+          headers:
+            Authorization: "Bearer {{ mktToken }}"
+          json:
+            name: "Perf Campaign {{ $randomString() }}"
+            budget: 10000
+            targetAudience: "Performance Test Audience"
+            platform: "Instagram"
+            startDate: "2026-06-01"
+            endDate: "2026-07-01"
+      - get:
+          url: "/api/marketing/campaigns"
+          headers:
+            Authorization: "Bearer {{ mktToken }}"
